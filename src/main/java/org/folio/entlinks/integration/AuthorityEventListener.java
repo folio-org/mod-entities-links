@@ -61,10 +61,14 @@ public class AuthorityEventListener {
 
     var authorityWithLinksIds =
       repository.countLinksByAuthorityIds(incomingAuthorityIds).stream().map(LinkCountView::getId).toList();
-    events.removeIf(event -> {
-      log.info("Skip message. Authority record [id: {}] doesn't have links", event.getId());
-      return !authorityWithLinksIds.contains(event.getId());
-    });
+    var iterator = events.iterator();
+    while (iterator.hasNext()) {
+      var event = iterator.next();
+      if (!authorityWithLinksIds.contains(event.getId())) {
+        log.debug("Skip message. Authority record [id: {}] doesn't have links", event.getId());
+        iterator.remove();
+      }
+    }
     return events;
   }
 

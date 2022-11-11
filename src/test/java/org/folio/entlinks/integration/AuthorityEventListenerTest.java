@@ -88,6 +88,7 @@ class AuthorityEventListenerTest {
     var event = TestUtils.authorityEvent(type, newRecord, oldRecord);
 
     mockSuccessHandling();
+    when(consumerRecord.key()).thenReturn(authId.toString());
     when(consumerRecord.value()).thenReturn(event);
     when(repository.countLinksByAuthorityIds(List.of(authId))).thenReturn(singletonList(new LinksCount(authId, 1L)));
 
@@ -105,6 +106,7 @@ class AuthorityEventListenerTest {
     var event = TestUtils.authorityEvent(type, newRecord, oldRecord);
 
     mockSuccessHandling();
+    when(consumerRecord.key()).thenReturn(authId.toString());
     when(consumerRecord.value()).thenReturn(event);
     when(repository.countLinksByAuthorityIds(List.of(authId))).thenReturn(emptyList());
 
@@ -121,6 +123,7 @@ class AuthorityEventListenerTest {
     var event = TestUtils.authorityEvent("UPDATE", newRecord, oldRecord);
 
     mockFailedHandling(new RuntimeException("test message"));
+    when(consumerRecord.key()).thenReturn(authId.toString());
     when(consumerRecord.value()).thenReturn(event);
     when(repository.countLinksByAuthorityIds(List.of(authId))).thenReturn(singletonList(new LinksCount(authId, 1L)));
 

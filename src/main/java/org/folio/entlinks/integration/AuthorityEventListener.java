@@ -28,18 +28,16 @@ public class AuthorityEventListener {
   private final AuthorityChangeHandlingService authorityChangeHandlingService;
   private final MessageBatchProcessor messageBatchProcessor;
 
-  @KafkaListener(
-    id = "mod-entities-links-authority-listener",
-    containerFactory = "authorityListenerFactory",
-    topicPattern = "#{folioKafkaProperties.listener['authority'].topicPattern}",
-    groupId = "#{folioKafkaProperties.listener['authority'].groupId}",
-    concurrency = "#{folioKafkaProperties.listener['authority'].concurrency}")
+  @KafkaListener(id = "mod-entities-links-authority-listener",
+                 containerFactory = "authorityListenerFactory",
+                 topicPattern = "#{folioKafkaProperties.listener['authority'].topicPattern}",
+                 groupId = "#{folioKafkaProperties.listener['authority'].groupId}",
+                 concurrency = "#{folioKafkaProperties.listener['authority'].concurrency}")
   public void handleEvents(List<ConsumerRecord<String, InventoryEvent>> consumerRecords) {
     log.info("Processing authorities from Kafka events [number of records: {}]", consumerRecords.size());
 
-    var inventoryEvents = consumerRecords.stream()
-      .map(ConsumerRecord::value)
-      .collect(Collectors.groupingBy(InventoryEvent::getTenant));
+    var inventoryEvents =
+      consumerRecords.stream().map(ConsumerRecord::value).collect(Collectors.groupingBy(InventoryEvent::getTenant));
 
     inventoryEvents.forEach(this::handleAuthorityEventsForTenant);
   }
@@ -47,7 +45,7 @@ public class AuthorityEventListener {
   private void handleAuthorityEventsForTenant(String tenant, List<InventoryEvent> events) {
     executionService.executeSystemUserScoped(tenant, () -> {
       var batch = retainAuthoritiesWithLinks(events);
-      log.info("Triggering updates for authority records [number of records: {}]", batch.size());
+      log.info("Triggering updates for authority records [number of records: {}, tenant: {}]", batch.size(), tenant);
       messageBatchProcessor.consumeBatchWithFallback(batch, DEFAULT_KAFKA_RETRY_TEMPLATE_NAME,
         authorityChangeHandlingService::handleAuthoritiesChanges, this::logFailedEvent);
       return null;
@@ -56,13 +54,10 @@ public class AuthorityEventListener {
 
   private List<InventoryEvent> retainAuthoritiesWithLinks(List<InventoryEvent> inventoryEvents) {
     var events = new ArrayList<>(inventoryEvents);
-    var incomingAuthorityIds = events.stream()
-      .map(InventoryEvent::getId)
-      .toList();
+    var incomingAuthorityIds = events.stream().map(InventoryEvent::getId).toList();
 
-    var authorityWithLinksIds = repository.countLinksByAuthorityIds(incomingAuthorityIds).stream()
-      .map(LinkCountView::getId)
-      .toList();
+    var authorityWithLinksIds =
+      repository.countLinksByAuthorityIds(incomingAuthorityIds).stream().map(LinkCountView::getId).toList();
     events.removeIf(event -> {
       log.info("Skip message. Authority record [id: {}] doesn't have links", event.getId());
       return !authorityWithLinksIds.contains(event.getId());
@@ -76,8 +71,8 @@ public class AuthorityEventListener {
       return;
     }
 
-    log.warn(() -> new FormattedMessageFactory()
-      .newMessage("Failed to process authority event [eventType: {}, id: {}, tenant: {}]",
-        event.getType(), event.getId(), event.getTenant()), e);
+    log.warn(() -> new FormattedMessageFactory().newMessage(
+      "Failed to process authority event [eventType: {}, id: {}, tenant: {}]", event.getType(), event.getId(),
+      event.getTenant()), e);
   }
 }

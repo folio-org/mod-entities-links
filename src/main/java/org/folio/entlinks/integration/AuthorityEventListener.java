@@ -4,6 +4,7 @@ import static org.folio.spring.tools.config.RetryTemplateConfiguration.DEFAULT_K
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -37,7 +38,9 @@ public class AuthorityEventListener {
     log.info("Processing authorities from Kafka events [number of records: {}]", consumerRecords.size());
 
     var inventoryEvents =
-      consumerRecords.stream().map(ConsumerRecord::value).collect(Collectors.groupingBy(InventoryEvent::getTenant));
+      consumerRecords.stream()
+        .map(consumerRecord -> consumerRecord.value().id(UUID.fromString(consumerRecord.key())))
+        .collect(Collectors.groupingBy(InventoryEvent::getTenant));
 
     inventoryEvents.forEach(this::handleAuthorityEventsForTenant);
   }

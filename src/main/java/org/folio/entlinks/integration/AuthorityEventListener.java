@@ -64,7 +64,7 @@ public class AuthorityEventListener {
       .map(LinkCountView::getId)
       .toList();
     events.removeIf(event -> {
-      log.debug("Skip message. Authority record [id: {}] doesn't have links", event.getId());
+      log.info("Skip message. Authority record [id: {}] doesn't have links", event.getId());
       return !authorityWithLinksIds.contains(event.getId());
     });
     return events;

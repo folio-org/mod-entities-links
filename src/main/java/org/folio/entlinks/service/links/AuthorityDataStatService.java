@@ -114,7 +114,7 @@ public class AuthorityDataStatService {
     var jobCompleted = dataStat.getLbUpdated() + dataStat.getLbFailed() == dataStat.getLbTotal();
     if (jobCompleted) {
       dataStat.setCompletedAt(currentTs());
-      updateStatStatus(dataStat);
+      updateStatStatus(dataStat, reports);
     }
 
     log.info("Saving stats data [statsId: {}, status: {}]", dataStat.getId(), dataStat.getStatus());
@@ -129,14 +129,22 @@ public class AuthorityDataStatService {
       .count();
   }
 
-  private void updateStatStatus(AuthorityDataStat dataStat) {
+  private void updateStatStatus(AuthorityDataStat dataStat, List<LinkUpdateReport> reports) {
     if (dataStat.getLbFailed() == 0) {
       dataStat.setStatus(AuthorityDataStatStatus.COMPLETED_SUCCESS);
-    } else if (dataStat.getLbFailed() == dataStat.getLbTotal()) {
+      return;
+    }
+
+    if (dataStat.getLbFailed() == dataStat.getLbTotal()) {
       dataStat.setStatus(AuthorityDataStatStatus.FAILED);
     } else {
       dataStat.setStatus(AuthorityDataStatStatus.COMPLETED_WITH_ERRORS);
     }
+    reports.stream()
+        .map(LinkUpdateReport::getFailCause)
+        .filter(StringUtils::isNotBlank)
+        .findFirst()
+        .ifPresent(dataStat::setFailCause);
   }
 
   private InstanceAuthorityLinkStatus mapReportStatus(LinkUpdateReport report) {

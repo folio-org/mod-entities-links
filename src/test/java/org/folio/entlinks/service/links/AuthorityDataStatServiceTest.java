@@ -119,7 +119,7 @@ class AuthorityDataStatServiceTest {
     var dataStat = dataStatCaptor.getValue();
 
     assertDataStat(dataStat,
-      successReports.size(), failReports.size(), AuthorityDataStatStatus.IN_PROGRESS);
+      successReports.size(), failReports.size(), AuthorityDataStatStatus.IN_PROGRESS, null);
   }
 
   @Test
@@ -134,7 +134,7 @@ class AuthorityDataStatServiceTest {
     verify(statRepository).save(dataStatCaptor.capture());
     var dataStat = dataStatCaptor.getValue();
 
-    assertDataStat(dataStat, reports.size(), 0, AuthorityDataStatStatus.COMPLETED_SUCCESS);
+    assertDataStat(dataStat, reports.size(), 0, AuthorityDataStatStatus.COMPLETED_SUCCESS, null);
   }
 
   @Test
@@ -153,7 +153,7 @@ class AuthorityDataStatServiceTest {
     var dataStat = dataStatCaptor.getValue();
 
     assertDataStat(dataStat,
-      successReports.size(), failReports.size(), AuthorityDataStatStatus.COMPLETED_WITH_ERRORS);
+      successReports.size(), failReports.size(), AuthorityDataStatStatus.COMPLETED_WITH_ERRORS, REPORT_ERROR);
   }
 
   @Test
@@ -168,7 +168,7 @@ class AuthorityDataStatServiceTest {
     verify(statRepository).save(dataStatCaptor.capture());
     var dataStat = dataStatCaptor.getValue();
 
-    assertDataStat(dataStat, 0, reports.size(), AuthorityDataStatStatus.FAILED);
+    assertDataStat(dataStat, 0, reports.size(), AuthorityDataStatStatus.FAILED, REPORT_ERROR);
   }
 
   private Consumer<InstanceAuthorityLink> linkAsserter(InstanceAuthorityLinkStatus status, String errorCause) {
@@ -178,15 +178,15 @@ class AuthorityDataStatServiceTest {
     };
   }
 
-  private void assertDataStat(AuthorityDataStat dataStat, int updated, int failed, AuthorityDataStatStatus status) {
+  private void assertDataStat(AuthorityDataStat dataStat, int updated, int failed, AuthorityDataStatStatus status,
+                              String failCause) {
     var softAssertions = new SoftAssertions();
 
     softAssertions.assertThat(dataStat.getLbUpdated())
       .isEqualTo(updated);
     softAssertions.assertThat(dataStat.getLbFailed())
       .isEqualTo(failed);
-    softAssertions.assertThat(dataStat.getFailCause())
-      .isBlank();
+    softAssertions.assertThat(dataStat.getFailCause()).isEqualTo(failCause);
     softAssertions.assertThat(dataStat.getStatus())
       .isEqualTo(status);
     if (status.equals(AuthorityDataStatStatus.IN_PROGRESS)) {

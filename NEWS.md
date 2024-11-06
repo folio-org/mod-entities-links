@@ -38,6 +38,7 @@
 * Return only ids in response when idOnly=true ([MODELINKS-237](https://issues.folio.org/browse/MODELINKS-227))
 * Fix totalRecords count when idOnly=true ([MODELINKS-239](https://issues.folio.org/browse/MODELINKS-239))
 * Add parsing errors handling on bulk api ([MODELINKS-249](https://issues.folio.org/browse/MODELINKS-249))
+* Persist failure info of authority-instance link update in authority data stat ([MODELINKS-115](https://issues.folio.org/browse/MODELINKS-115))
 
 ### Tech Dept
 * Fix issue that causes repeated update of same entity with latest Hibernate versions ([MODELINKS-237](https://issues.folio.org/browse/MODELINKS-227))

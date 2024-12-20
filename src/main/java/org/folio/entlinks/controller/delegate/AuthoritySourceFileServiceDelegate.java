@@ -33,6 +33,7 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -44,7 +45,7 @@ public class AuthoritySourceFileServiceDelegate {
   private static final String AUTHORITY_TABLE_NAME = "authority";
   private static final String AUTHORITY_ARCHIVE_TABLE_NAME = "authority_archive";
 
-  private final AuthoritySourceFileService service;
+  private final @Qualifier("authoritySourceFileService") AuthoritySourceFileService service;
   private final AuthoritySourceFileMapper mapper;
   private final UserTenantsService tenantsService;
   private final AuthoritySourceFileDomainEventPublisher eventPublisher;
@@ -72,7 +73,7 @@ public class AuthoritySourceFileServiceDelegate {
 
     service.createSequence(created.getSequenceName(), created.getHridStartNumber());
 
-    propagationService.propagate(getPropagationData(entity, null), CREATE, context.getTenantId());
+    propagationService.propagate(getPropagationData(created, null), CREATE, context.getTenantId());
     return mapper.toDto(created);
   }
 

@@ -254,6 +254,11 @@ public class IntegrationTestBase {
   }
 
   @SneakyThrows
+  protected static ResultActions tryPatch(String uri, Object body, HttpHeaders headers, Object... args) {
+    return tryDoHttpMethod(patch(uri, args), body, headers);
+  }
+
+  @SneakyThrows
   protected static ResultActions doPatch(String uri, Object body, Object... args) {
     return tryPatch(uri, body, args).andExpect(status().is2xxSuccessful());
   }

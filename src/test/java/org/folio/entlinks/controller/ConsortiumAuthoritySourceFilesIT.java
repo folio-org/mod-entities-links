@@ -1,22 +1,29 @@
 package org.folio.entlinks.controller;
 
 import static org.folio.entlinks.controller.ConsortiumLinksSuggestionsIT.COLLEGE_TENANT_ID;
+import static org.folio.spring.integration.XOkapiHeaders.TENANT;
+import static org.folio.spring.integration.XOkapiHeaders.USER_ID;
 import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
 import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
+import static org.folio.support.base.TestConstants.UPDATER_USER_ID;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authoritySourceFilesEndpoint;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.exception.AuthorityArchiveConstraintException;
 import org.folio.spring.testing.extension.DatabaseCleanup;
@@ -89,6 +96,57 @@ class ConsortiumAuthoritySourceFilesIT extends IntegrationTestBase {
         + " Authority Archive/Authority.")));
 
     assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, CENTRAL_TENANT_ID));
+  }
+
+  @Test
+  @SneakyThrows
+  @DisplayName("CREATE/PATCH: Creating/Updating source file should preserve user's id for shadow copies in metadata")
+  void createAndUpdateSourceFile_positive_shouldPreserveCreatedByAndUpdatedByUserIdForShadowCopies() {
+    var sourceFileId = UUID.randomUUID();
+    var dto = new AuthoritySourceFilePostDto()
+        .id(sourceFileId).name("authority source file").code("code").type("type");
+
+    var headers = tenantHeaders(CENTRAL_TENANT_ID);
+    headers.put(USER_ID, Collections.singletonList(UPDATER_USER_ID));
+    // create source file with user id = UPDATER_USER_ID
+    doPost(authoritySourceFilesEndpoint(), dto, headers);
+
+    awaitUntilAsserted(() ->
+        assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, COLLEGE_TENANT_ID)));
+    headers.put(TENANT, Collections.singletonList(COLLEGE_TENANT_ID));
+    tryGet(authoritySourceFilesEndpoint(), headers)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("totalRecords", is(1)))
+        .andExpect(jsonPath("authoritySourceFiles[0]._version", is(0)))
+        .andExpect(jsonPath("authoritySourceFiles[0].metadata", notNullValue()))
+        .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdDate", notNullValue()))
+        .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedDate", notNullValue()))
+        .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(UPDATER_USER_ID)))
+        .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedByUserId", is(UPDATER_USER_ID)));
+
+    var patch = new AuthoritySourceFilePatchDto(0).name("updated").code("codeUpdated");
+    headers = tenantHeaders(CENTRAL_TENANT_ID);
+    headers.put(USER_ID, Collections.singletonList(UPDATER_USER_ID));
+    // update source file with user id = UPDATER_USER_ID
+    tryPatch(authoritySourceFilesEndpoint(sourceFileId), patch, headers)
+        .andExpect(status().isNoContent());
+
+    awaitUntilAsserted(() ->
+        assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_SOURCE_FILE_TABLE, COLLEGE_TENANT_ID,
+            "name = 'updated' and _version = 1")));
+    awaitUntilAsserted(() ->
+        assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_SOURCE_FILE_CODE_TABLE, COLLEGE_TENANT_ID,
+            "code = 'codeUpdated'")));
+    headers.put(TENANT, Collections.singletonList(COLLEGE_TENANT_ID));
+    tryGet(authoritySourceFilesEndpoint(), headers)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("totalRecords", is(1)))
+        .andExpect(jsonPath("authoritySourceFiles[0]._version", is(1)))
+        .andExpect(jsonPath("authoritySourceFiles[0].metadata", notNullValue()))
+        .andExpect(jsonPath("authoritySourceFiles[0].codes", hasSize(1)))
+        .andExpect(jsonPath("authoritySourceFiles[0].codes[0]", is(patch.getCode())))
+        .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(UPDATER_USER_ID)))
+        .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedByUserId", is(UPDATER_USER_ID)));
   }
 
   private ResultMatcher errorMessageMatch(Matcher<String> errorMessageMatcher) {

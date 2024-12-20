@@ -5,6 +5,8 @@ import static org.folio.entlinks.client.SettingsClient.AuthoritiesExpirationSett
 import static org.folio.entlinks.integration.SettingsService.AUTHORITIES_EXPIRE_SETTING_KEY;
 import static org.folio.entlinks.integration.SettingsService.AUTHORITIES_EXPIRE_SETTING_SCOPE;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -28,6 +30,7 @@ import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
 import org.folio.entlinks.integration.SettingsService;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
+import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityArchivePropagationService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
 import org.folio.spring.FolioExecutionContext;
@@ -43,6 +46,8 @@ import org.springframework.data.domain.Pageable;
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class AuthorityArchiveServiceDelegateTest {
+
+  private static final String TENANT_ID = "tenantId";
 
   @Mock
   private AuthorityArchiveService service;
@@ -67,6 +72,9 @@ class AuthorityArchiveServiceDelegateTest {
 
   @Mock
   private FolioExecutionContext context;
+
+  @Mock
+  private ConsortiumTenantsService tenantsService;
 
   @InjectMocks
   private AuthorityArchiveServiceDelegate delegate;
@@ -107,38 +115,61 @@ class AuthorityArchiveServiceDelegateTest {
   void shouldExpireAuthorityArchivesWithDefaultRetentionPeriod() {
     var archive = new AuthorityArchive();
     var dto = new AuthorityDto();
+    when(tenantsService.getConsortiumTenants(TENANT_ID)).thenReturn(List.of(TENANT_ID));
     archive.setUpdatedDate(Timestamp.from(Instant.now().minus(10, ChronoUnit.DAYS)));
     when(authorityMapper.toDto(archive)).thenReturn(dto);
     when(settingsService.getAuthorityExpireSetting()).thenReturn(Optional.empty());
     when(authorityArchiveProperties.getRetentionPeriodInDays()).thenReturn(7);
     when(authorityArchiveRepository.streamByUpdatedTillDate(any(LocalDateTime.class))).thenReturn(Stream.of(archive));
-    when(context.getTenantId()).thenReturn("tenantId");
+    when(context.getTenantId()).thenReturn(TENANT_ID);
 
     delegate.expire();
 
     verify(service).delete(archive);
     verify(eventPublisher).publishHardDeleteEvent(dto);
     verify(propagationService)
-        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, "tenantId");
+        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, TENANT_ID);
+  }
+
+  @Test
+  void shouldExpireMemberTenantAuthorityArchivesWithDefaultRetentionPeriod() {
+    var archive = new AuthorityArchive();
+    var dto = new AuthorityDto();
+    when(tenantsService.getConsortiumTenants(TENANT_ID)).thenReturn(List.of());
+    archive.setUpdatedDate(Timestamp.from(Instant.now().minus(10, ChronoUnit.DAYS)));
+    when(authorityMapper.toDto(archive)).thenReturn(dto);
+    when(settingsService.getAuthorityExpireSetting()).thenReturn(Optional.empty());
+    when(authorityArchiveProperties.getRetentionPeriodInDays()).thenReturn(7);
+    when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class), anyString()))
+        .thenReturn(Stream.of(archive));
+    when(context.getTenantId()).thenReturn(TENANT_ID);
+
+    delegate.expire();
+
+    verify(service).delete(archive);
+    verify(eventPublisher).publishHardDeleteEvent(dto);
+    verify(propagationService, never())
+        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, TENANT_ID);
   }
 
   @Test
   void shouldExpireAuthorityArchivesWithRetentionPeriodFromSettings() {
     var archive = new AuthorityArchive();
     var dto = new AuthorityDto();
+    when(tenantsService.getConsortiumTenants(TENANT_ID)).thenReturn(List.of(TENANT_ID));
     var setting = new SettingsClient.SettingEntry(UUID.randomUUID(), AUTHORITIES_EXPIRE_SETTING_SCOPE,
         AUTHORITIES_EXPIRE_SETTING_KEY, new AuthoritiesExpirationSettingValue(true, 1));
     archive.setUpdatedDate(Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS)));
     when(authorityMapper.toDto(archive)).thenReturn(dto);
     when(settingsService.getAuthorityExpireSetting()).thenReturn(Optional.of(setting));
     when(authorityArchiveRepository.streamByUpdatedTillDate(any(LocalDateTime.class))).thenReturn(Stream.of(archive));
-    when(context.getTenantId()).thenReturn("tenantId");
+    when(context.getTenantId()).thenReturn(TENANT_ID);
 
     delegate.expire();
 
     verify(service).delete(archive);
     verify(eventPublisher).publishHardDeleteEvent(dto);
     verify(propagationService)
-        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, "tenantId");
+        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, TENANT_ID);
   }
 }

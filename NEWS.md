@@ -15,6 +15,8 @@
 ### Bug fixes
 * Fix context mix-up on data propagation ([MODELINKS-273](https://folio-org.atlassian.net/browse/MODELINKS-273))
 * Close input stream on s3 file read ([MODELINKS-278](https://folio-org.atlassian.net/browse/MODELINKS-278))
+* Shadow copies of deleted Shared MARC authority from Central tenant are not deleted from Member tenants
+  after specified retention period ([MODELINKS-279](https://folio-org.atlassian.net/browse/MODELINKS-279))
 
 ### Tech Dept
 * Add missing interface `source-storage-batch` dependency in module descriptor ([MODELINKS-275](https://folio-org.atlassian.net/browse/MODELINKS-275))

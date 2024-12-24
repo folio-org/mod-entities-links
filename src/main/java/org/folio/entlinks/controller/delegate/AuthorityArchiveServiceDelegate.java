@@ -29,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthorityArchiveServiceDelegate {
 
+  private static final String CONSORTIUM_SOURCE_PREFIX = "CONSORTIUM-";
+
   private final AuthorityArchiveService authorityArchiveService;
   private final SettingsService settingsService;
   private final AuthorityArchiveRepository authorityArchiveRepository;
@@ -60,7 +62,8 @@ public class AuthorityArchiveServiceDelegate {
     }
 
     var tillDate = LocalDateTime.now().minusDays(retention.get());
-    try (Stream<AuthorityArchive> archives = authorityArchiveRepository.streamByUpdatedTillDate(tillDate)) {
+    try (Stream<AuthorityArchive> archives = authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(
+        tillDate, CONSORTIUM_SOURCE_PREFIX)) {
       archives.forEach(this::process);
     }
   }

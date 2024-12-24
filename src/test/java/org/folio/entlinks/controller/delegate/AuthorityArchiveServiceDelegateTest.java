@@ -5,6 +5,7 @@ import static org.folio.entlinks.client.SettingsClient.AuthoritiesExpirationSett
 import static org.folio.entlinks.integration.SettingsService.AUTHORITIES_EXPIRE_SETTING_KEY;
 import static org.folio.entlinks.integration.SettingsService.AUTHORITIES_EXPIRE_SETTING_SCOPE;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -43,6 +44,8 @@ import org.springframework.data.domain.Pageable;
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class AuthorityArchiveServiceDelegateTest {
+
+  private static final String TENANT_ID = "tenantId";
 
   @Mock
   private AuthorityArchiveService service;
@@ -87,8 +90,8 @@ class AuthorityArchiveServiceDelegateTest {
     var dtoResult = (AuthorityIdDtoCollection) result;
     assertThat(dtoResult.getTotalRecords()).isEqualTo(total);
     assertThat(dtoResult.getAuthorities())
-      .extracting(AuthorityIdDto::getId)
-      .containsExactlyElementsOf(page.getContent());
+        .extracting(AuthorityIdDto::getId)
+        .containsExactlyElementsOf(page.getContent());
   }
 
   @Test
@@ -111,15 +114,16 @@ class AuthorityArchiveServiceDelegateTest {
     when(authorityMapper.toDto(archive)).thenReturn(dto);
     when(settingsService.getAuthorityExpireSetting()).thenReturn(Optional.empty());
     when(authorityArchiveProperties.getRetentionPeriodInDays()).thenReturn(7);
-    when(authorityArchiveRepository.streamByUpdatedTillDate(any(LocalDateTime.class))).thenReturn(Stream.of(archive));
-    when(context.getTenantId()).thenReturn("tenantId");
+    when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class), anyString()))
+        .thenReturn(Stream.of(archive));
+    when(context.getTenantId()).thenReturn(TENANT_ID);
 
     delegate.expire();
 
     verify(service).delete(archive);
     verify(eventPublisher).publishHardDeleteEvent(dto);
     verify(propagationService)
-        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, "tenantId");
+        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, TENANT_ID);
   }
 
   @Test
@@ -131,14 +135,15 @@ class AuthorityArchiveServiceDelegateTest {
     archive.setUpdatedDate(Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS)));
     when(authorityMapper.toDto(archive)).thenReturn(dto);
     when(settingsService.getAuthorityExpireSetting()).thenReturn(Optional.of(setting));
-    when(authorityArchiveRepository.streamByUpdatedTillDate(any(LocalDateTime.class))).thenReturn(Stream.of(archive));
-    when(context.getTenantId()).thenReturn("tenantId");
+    when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class), anyString()))
+        .thenReturn(Stream.of(archive));
+    when(context.getTenantId()).thenReturn(TENANT_ID);
 
     delegate.expire();
 
     verify(service).delete(archive);
     verify(eventPublisher).publishHardDeleteEvent(dto);
     verify(propagationService)
-        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, "tenantId");
+        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, TENANT_ID);
   }
 }

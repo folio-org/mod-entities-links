@@ -27,10 +27,10 @@ public class ExtendedTenantService extends TenantService {
                                KafkaAdminService kafkaAdminService,
                                FolioSpringLiquibase folioSpringLiquibase,
                                FolioExecutionContext folioExecutionContext,
-                               PrepareSystemUserService folioPrepareSystemUserService,
+                               PrepareSystemUserService prepareSystemUserService,
                                ReferenceDataLoader referenceDataLoader) {
     super(jdbcTemplate, context, folioSpringLiquibase);
-    this.folioPrepareSystemUserService = folioPrepareSystemUserService;
+    this.folioPrepareSystemUserService = prepareSystemUserService;
     this.folioExecutionContext = folioExecutionContext;
     this.kafkaAdminService = kafkaAdminService;
     this.referenceDataLoader = referenceDataLoader;

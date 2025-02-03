@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class ExtendedTenantService extends TenantService {
 
-  private final PrepareSystemUserService folioPrepareSystemUserService;
+  private final PrepareSystemUserService prepareSystemUserService;
   private final FolioExecutionContext folioExecutionContext;
   private final KafkaAdminService kafkaAdminService;
   private final ReferenceDataLoader referenceDataLoader;
@@ -30,7 +30,7 @@ public class ExtendedTenantService extends TenantService {
                                PrepareSystemUserService prepareSystemUserService,
                                ReferenceDataLoader referenceDataLoader) {
     super(jdbcTemplate, context, folioSpringLiquibase);
-    this.folioPrepareSystemUserService = prepareSystemUserService;
+    this.prepareSystemUserService = prepareSystemUserService;
     this.folioExecutionContext = folioExecutionContext;
     this.kafkaAdminService = kafkaAdminService;
     this.referenceDataLoader = referenceDataLoader;
@@ -46,7 +46,7 @@ public class ExtendedTenantService extends TenantService {
     super.afterTenantUpdate(tenantAttributes);
     kafkaAdminService.createTopics(folioExecutionContext.getTenantId());
     kafkaAdminService.restartEventListeners();
-    folioPrepareSystemUserService.setupSystemUser();
+    prepareSystemUserService.setupSystemUser();
   }
 
   @Override

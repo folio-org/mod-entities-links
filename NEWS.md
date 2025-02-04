@@ -24,6 +24,7 @@
 ### Tech Dept
 * Add missing interface `source-storage-batch` dependency in module descriptor ([MODELINKS-275](https://folio-org.atlassian.net/browse/MODELINKS-275))
 * Add migration for deleted authorities ([MODELINKS-270](https://folio-org.atlassian.net/browse/MODELINKS-270))
+* Add users.item.put to tenant endpoint module permissions ([MODELINKS-292](https://folio-org.atlassian.net/browse/MODELINKS-292))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

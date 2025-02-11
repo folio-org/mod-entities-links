@@ -80,6 +80,11 @@
     </dependency>
 
     <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-service-tools-spring-dev</artifactId>
       <version>${folio-service-tools.version}</version>

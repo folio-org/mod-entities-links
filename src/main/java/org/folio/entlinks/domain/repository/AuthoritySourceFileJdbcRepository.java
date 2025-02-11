@@ -28,18 +28,18 @@ public class AuthoritySourceFileJdbcRepository {
 
   public void insert(AuthoritySourceFile entity) {
     var sourceType = getFullPath(folioExecutionContext, "authority_source_file_source");
-    var sqlValues = "%s::%s,%s".formatted(getParamPlaceholder(3), sourceType, getParamPlaceholder(9));
+    var sqlValues = "%s::%s,%s".formatted(getParamPlaceholder(3), sourceType, getParamPlaceholder(10));
 
     var sql = """
-                INSERT INTO %s (id, name, source, type, base_url_protocol, base_url, hrid_start_number, _version,
-                created_date, updated_date, created_by_user_id, updated_by_user_id)
+                INSERT INTO %s (id, name, source, type, base_url_protocol, base_url, hrid_start_number, selectable,
+                _version, created_date, updated_date, created_by_user_id, updated_by_user_id)
                 VALUES (%s);
         """;
     jdbcTemplate.update(sql.formatted(getFullPath(folioExecutionContext, AUTHORITY_SOURCE_FILE_TABLE), sqlValues),
         entity.getId(), entity.getName(),
         entity.getSource().name(), entity.getType(), entity.getBaseUrlProtocol(), entity.getBaseUrl(),
-        entity.getHridStartNumber(), 0, entity.getCreatedDate(), entity.getUpdatedDate(), entity.getCreatedByUserId(),
-        entity.getUpdatedByUserId());
+        entity.getHridStartNumber(), entity.isSelectable(), 0, entity.getCreatedDate(), entity.getUpdatedDate(),
+        entity.getCreatedByUserId(), entity.getUpdatedByUserId());
 
     if (isNotEmpty(entity.getAuthoritySourceFileCodes())) {
       var sourceFileCode = entity.getAuthoritySourceFileCodes().iterator().next();
@@ -53,7 +53,7 @@ public class AuthoritySourceFileJdbcRepository {
     var sourceType = getFullPath(folioExecutionContext, "authority_source_file_source");
     var sql = """
                 UPDATE %s
-                SET name=?, source=?::%s, type=?, base_url_protocol=?, base_url=?, hrid_start_number=?,
+                SET name=?, source=?::%s, type=?, base_url_protocol=?, base_url=?, hrid_start_number=?, selectable=?,
                 created_date=?, updated_date=?, created_by_user_id=?, updated_by_user_id=?, _version=?
                 WHERE id = ? and _version = ?;
         """;
@@ -61,7 +61,7 @@ public class AuthoritySourceFileJdbcRepository {
     var id = entity.getId();
     jdbcTemplate.update(sql.formatted(getFullPath(folioExecutionContext, AUTHORITY_SOURCE_FILE_TABLE), sourceType),
         entity.getName(), entity.getSource().name(), entity.getType(),
-        entity.getBaseUrlProtocol(), entity.getBaseUrl(), entity.getHridStartNumber(),
+        entity.getBaseUrlProtocol(), entity.getBaseUrl(), entity.getHridStartNumber(), entity.isSelectable(),
         entity.getCreatedDate(), entity.getUpdatedDate(), entity.getCreatedByUserId(),
         entity.getUpdatedByUserId(), entity.getVersion(), id, version);
 

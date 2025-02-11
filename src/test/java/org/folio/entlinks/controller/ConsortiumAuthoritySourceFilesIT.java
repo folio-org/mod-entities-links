@@ -95,7 +95,7 @@ class ConsortiumAuthoritySourceFilesIT extends IntegrationTestBase {
   void createAndUpdateSourceFile_positive_shouldPreserveCreatedByAndUpdatedByUserIdForShadowCopies() {
     var sourceFileId = UUID.randomUUID();
     var dto = new AuthoritySourceFilePostDto()
-        .id(sourceFileId).name("authority source file").code("code").type("type");
+        .id(sourceFileId).name("authority source file").code("code").type("type").selectable(true);
 
     // create source file with user id = UPDATER_USER_ID
     doPost(authoritySourceFilesEndpoint(), dto, tenantAndUserIdHeaders(CENTRAL_TENANT_ID, UPDATER_USER_ID));
@@ -109,13 +109,14 @@ class ConsortiumAuthoritySourceFilesIT extends IntegrationTestBase {
         .andExpect(status().isOk())
         .andExpect(jsonPath("totalRecords", is(1)))
         .andExpect(jsonPath("authoritySourceFiles[0]._version", is(0)))
+        .andExpect(jsonPath("authoritySourceFiles[0].selectable", is(true)))
         .andExpect(jsonPath("authoritySourceFiles[0].metadata", notNullValue()))
         .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdDate", notNullValue()))
         .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedDate", notNullValue()))
         .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(UPDATER_USER_ID)))
         .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedByUserId", is(UPDATER_USER_ID)));
 
-    var patch = new AuthoritySourceFilePatchDto(0).name("updated").code("codeUpdated");
+    var patch = new AuthoritySourceFilePatchDto(0).name("updated").code("codeUpdated").selectable(false);
     // update source file with user id = UPDATER_USER_ID
     tryPatch(authoritySourceFilesEndpoint(sourceFileId), patch,
         tenantAndUserIdHeaders(CENTRAL_TENANT_ID, UPDATER_USER_ID))
@@ -128,13 +129,14 @@ class ConsortiumAuthoritySourceFilesIT extends IntegrationTestBase {
         assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_SOURCE_FILE_CODE_TABLE, COLLEGE_TENANT_ID,
             "code = 'codeUpdated'")));
 
-    tryGet(authoritySourceFilesEndpoint(), tenantHeaders(CENTRAL_TENANT_ID))
+    tryGet(authoritySourceFilesEndpoint(), tenantHeaders(COLLEGE_TENANT_ID))
         .andExpect(status().isOk())
         .andExpect(jsonPath("totalRecords", is(1)))
         .andExpect(jsonPath("authoritySourceFiles[0]._version", is(1)))
         .andExpect(jsonPath("authoritySourceFiles[0].metadata", notNullValue()))
         .andExpect(jsonPath("authoritySourceFiles[0].codes", hasSize(1)))
         .andExpect(jsonPath("authoritySourceFiles[0].codes[0]", is(patch.getCode())))
+        .andExpect(jsonPath("authoritySourceFiles[0].selectable", is(false)))
         .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(UPDATER_USER_ID)))
         .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedByUserId", is(UPDATER_USER_ID)));
 

@@ -75,6 +75,12 @@
 
     <dependency>
       <groupId>org.folio</groupId>
+      <artifactId>util</artifactId>
+      <version>35.3.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
       <artifactId>folio-service-tools-spring-dev</artifactId>
       <version>${folio-service-tools.version}</version>
     </dependency>

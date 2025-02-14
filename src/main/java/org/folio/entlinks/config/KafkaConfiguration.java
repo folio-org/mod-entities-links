@@ -1,11 +1,14 @@
 package org.folio.entlinks.config;
 
+import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
@@ -17,6 +20,7 @@ import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.rspec.domain.dto.SpecificationUpdatedEvent;
 import org.folio.rspec.domain.dto.UpdateRequestEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -74,8 +78,11 @@ public class KafkaConfiguration {
    */
   @Bean
   public ConsumerFactory<String, SpecificationUpdatedEvent> specificationConsumerFactory(
-    KafkaProperties kafkaProperties) {
-    return consumerFactoryForEvent(kafkaProperties, SpecificationUpdatedEvent.class);
+    KafkaProperties kafkaProperties,
+    @Value("#{folioKafkaProperties.listener['specification-storage'].autoOffsetReset}")
+    OffsetResetStrategy autoOffsetReset) {
+    var overrideProperties = Map.<String, Object>of(AUTO_OFFSET_RESET_CONFIG, autoOffsetReset.toString());
+    return consumerFactoryForEvent(kafkaProperties, SpecificationUpdatedEvent.class, overrideProperties);
   }
 
   /**
@@ -221,10 +228,16 @@ public class KafkaConfiguration {
   }
 
   private <T> ConsumerFactory<String, T> consumerFactoryForEvent(KafkaProperties kafkaProperties, Class<T> eventClass) {
+    return consumerFactoryForEvent(kafkaProperties, eventClass, Collections.emptyMap());
+  }
+
+  private <T> ConsumerFactory<String, T> consumerFactoryForEvent(KafkaProperties kafkaProperties, Class<T> eventClass,
+                                                                 Map<String, Object> overrideProps) {
     var deserializer = new JsonDeserializer<>(eventClass, objectMapper, false);
     Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties(null));
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
+    config.putAll(overrideProps);
     return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
   }
 

@@ -99,6 +99,7 @@ folio:
         concurrency: 1
         topic-pattern: (${folio.environment}\.)(.*\.)specification-storage\.specification\.updated
         group-id: ${folio.environment}-mod-entities-specification-storage-group
+        auto-offset-reset: EARLIEST
   instance-authority:
     change:
       numPartitions: ${KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS:100}

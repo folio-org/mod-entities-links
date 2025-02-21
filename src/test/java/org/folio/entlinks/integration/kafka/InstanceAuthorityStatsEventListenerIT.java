@@ -86,7 +86,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
     var linksChangeEvent = Objects.requireNonNull(getReceivedEvent()).value();
 
     // prepare and send instance authority stats event
-    var linkId = linksChangeEvent.getUpdateTargets().get(0).getLinks().get(0).getLinkId();
+    var linkId = linksChangeEvent.getUpdateTargets().getFirst().getLinks().getFirst().getLinkId();
     var failCause = "test";
     var event = new LinkUpdateReport()
       .tenant(TENANT_ID)

@@ -151,7 +151,7 @@ class AuthoritySourceFileMapperTest {
 
     assertThat(dtos).isNotNull();
     assertThat(sourceFiles).hasSize(dtos.size());
-    AuthoritySourceFileDto dto1 = dtos.get(0);
+    AuthoritySourceFileDto dto1 = dtos.getFirst();
     assertThat(sourceFile.getId()).isEqualTo(dto1.getId());
     assertThat(sourceFile.getName()).isEqualTo(dto1.getName());
     assertThat(sourceFile.getType()).isEqualTo(dto1.getType());
@@ -167,13 +167,15 @@ class AuthoritySourceFileMapperTest {
     AuthoritySourceFileDtoCollection dtoCollection = mapper.toAuthoritySourceFileCollection(sourceFilesPage);
 
     List<AuthoritySourceFileDto> dtos = dtoCollection.getAuthoritySourceFiles();
-    AuthoritySourceFile sourceFile = sourceFilesList.get(0);
+    AuthoritySourceFile sourceFile = sourceFilesList.getFirst();
     assertThat(dtoCollection).isNotNull();
     assertThat(sourceFilesList).hasSize(dtoCollection.getTotalRecords());
-    assertThat(sourceFile.getId()).isEqualTo(dtos.get(0).getId());
-    assertThat(sourceFile.getName()).isEqualTo(dtos.get(0).getName());
-    assertThat(sourceFile.getType()).isEqualTo(dtos.get(0).getType());
-    assertThat(sourceFile.getBaseUrl()).isEqualTo(dtos.get(0).getBaseUrl());
+
+    var fileDto = dtos.getFirst();
+    assertThat(sourceFile.getId()).isEqualTo(fileDto.getId());
+    assertThat(sourceFile.getName()).isEqualTo(fileDto.getName());
+    assertThat(sourceFile.getType()).isEqualTo(fileDto.getType());
+    assertThat(sourceFile.getBaseUrl()).isEqualTo(fileDto.getBaseUrl());
 
   }
 

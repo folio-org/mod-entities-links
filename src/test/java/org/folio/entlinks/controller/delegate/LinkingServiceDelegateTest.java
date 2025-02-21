@@ -18,7 +18,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -101,8 +100,8 @@ class LinkingServiceDelegateTest {
       .map(UUID::toString)
       .toList();
     var instanceTitles = instanceIds.stream()
-      .collect(Collectors.toMap(id -> id, id -> RandomStringUtils.randomAlphanumeric(5)));
-    var nextLinkTime = fromTimestamp(linksMock.get(linksMock.size() - 1).getUpdatedAt());
+      .collect(Collectors.toMap(id -> id, id -> RandomStringUtils.insecure().nextAlphanumeric(5)));
+    var nextLinkTime = fromTimestamp(linksMock.getLast().getUpdatedAt());
 
     testGetLinkedBibUpdateStats_positive(linksMock, linksForStats, instanceIds, instanceTitles, nextLinkTime);
   }
@@ -115,7 +114,7 @@ class LinkingServiceDelegateTest {
       .map(UUID::toString)
       .toList();
     var instanceTitles = instanceIds.stream()
-      .collect(Collectors.toMap(id -> id, id -> RandomStringUtils.randomAlphanumeric(5)));
+      .collect(Collectors.toMap(id -> id, id -> RandomStringUtils.insecure().nextAlphanumeric(5)));
 
     testGetLinkedBibUpdateStats_positive(linksMock, linksMock, instanceIds, instanceTitles, null);
   }
@@ -125,7 +124,7 @@ class LinkingServiceDelegateTest {
     var linksMock = links(2, "error");
     var instanceId = linksMock.get(0).getInstanceId();
     linksMock.get(1).setInstanceId(instanceId);
-    var instanceTitle = RandomStringUtils.randomAlphanumeric(5);
+    var instanceTitle = RandomStringUtils.insecure().nextAlphanumeric(5);
     var instanceTitles = Map.of(instanceId.toString(), instanceTitle);
 
     testGetLinkedBibUpdateStats_positive(linksMock, linksMock,
@@ -139,7 +138,7 @@ class LinkingServiceDelegateTest {
       .map(InstanceAuthorityLink::getInstanceId)
       .map(UUID::toString)
       .toList();
-    var instanceTitles = Map.of(instanceIds.get(0), RandomStringUtils.randomAlphanumeric(5));
+    var instanceTitles = Map.of(instanceIds.getFirst(), RandomStringUtils.insecure().nextAlphanumeric(5));
 
     testGetLinkedBibUpdateStats_positive(linksMock, linksMock, instanceIds, instanceTitles, null);
   }
@@ -148,7 +147,7 @@ class LinkingServiceDelegateTest {
   void getLinkedBibUpdateStats_negative_invalidDates() {
     var status = LinkStatus.ACTUAL;
     var fromDate = OffsetDateTime.now();
-    var toDate = fromDate.minus(1, ChronoUnit.DAYS);
+    var toDate = fromDate.minusDays(1);
     var limit = 2;
 
     var exception = Assertions.assertThrows(RequestBodyValidationException.class,
@@ -242,7 +241,7 @@ class LinkingServiceDelegateTest {
                                                     OffsetDateTime next) {
     var status = LinkStatus.ACTUAL;
     var fromDate = OffsetDateTime.now();
-    var toDate = fromDate.plus(1, ChronoUnit.DAYS);
+    var toDate = fromDate.plusDays(1);
     var limit = 2;
     var expectedStats = stats(linksForStats);
 

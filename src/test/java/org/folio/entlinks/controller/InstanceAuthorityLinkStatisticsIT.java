@@ -38,7 +38,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -93,7 +92,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   }
 
   @BeforeEach
-  public void setup() {
+  void setup() {
     var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
     var authority1 = authority(0, 0);
@@ -202,12 +201,12 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
   @Test
   void getLinkedBibUpdateStats_positive_noStatsFoundForStatus() throws Exception {
-    var instanceId = INSTANCE_IDS.get(0);
+    var instanceId = INSTANCE_IDS.getFirst();
     var links = linksDtoCollection(linksDto(instanceId, LINKS));
     doPut(linksInstanceEndpoint(), links, instanceId);
 
     var toDate = OffsetDateTime.now();
-    var fromDate = toDate.minus(1, ChronoUnit.DAYS);
+    var fromDate = toDate.minusDays(1);
     perform(getStatsRequest(LinkStatus.ERROR, fromDate, toDate))
       .andExpect(statsMatch(empty()))
       .andExpect(nextMatch(null));
@@ -215,11 +214,11 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
   @Test
   void getLinkedBibUpdateStats_positive() throws Exception {
-    var instanceId = INSTANCE_IDS.get(0);
+    var instanceId = INSTANCE_IDS.getFirst();
     var links = linksDtoCollection(linksDto(instanceId, LINKS));
     doPut(linksInstanceEndpoint(), links, instanceId);
 
-    var stats = stats(links.getLinks(), null, null, INSTANCE_TITLES.get(0));
+    var stats = stats(links.getLinks(), null, null, INSTANCE_TITLES.getFirst());
 
     perform(getStatsRequest())
       .andExpect(statsMatch(hasSize(2)))
@@ -229,11 +228,11 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
   @Test
   void getLinkedBibUpdateStats_positive_noParams() throws Exception {
-    var instanceId = INSTANCE_IDS.get(0);
+    var instanceId = INSTANCE_IDS.getFirst();
     var links = linksDtoCollection(linksDto(instanceId, LINKS));
     doPut(linksInstanceEndpoint(), links, instanceId);
 
-    var stats = stats(links.getLinks(), null, null, INSTANCE_TITLES.get(0));
+    var stats = stats(links.getLinks(), null, null, INSTANCE_TITLES.getFirst());
 
     perform(get(linksStatsInstanceEndpoint()))
       .andExpect(statsMatch(hasSize(2)))
@@ -264,7 +263,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
   @Test
   void getLinkedBibUpdateStats_positive_withSkippedAndNext() throws Exception {
-    var instanceId1 = INSTANCE_IDS.get(0);
+    var instanceId1 = INSTANCE_IDS.getFirst();
     var links1 = linksDtoCollection(linksDto(instanceId1, LINKS));
     doPut(linksInstanceEndpoint(), links1, instanceId1);
 
@@ -291,12 +290,12 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
     var stats2 = stats(singletonList(links2.getLinks().get(1)),
       null, OffsetDateTime.now(), INSTANCE_TITLES.get(1))
       .getStats();
-    var next = toDate.minus(1, ChronoUnit.SECONDS);
+    var next = toDate.minusSeconds(1);
     var nextStartsWith = next.toString().substring(0, 19);
     var stats = new BibStatsDtoCollection()
       .stats(new LinkedList<>(stats1))
       .next(next);
-    stats.getStats().add(stats2.get(0));
+    stats.getStats().add(stats2.getFirst());
 
     perform(getStatsRequest(LinkStatus.ACTUAL, fromDate, toDate).param("limit", "3"))
       .andExpect(statsMatch(hasSize(3)))
@@ -306,7 +305,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
   @Test
   void getLinkedBibUpdateStats_positive_onlyOneDateAndLinksSkipped() throws Exception {
-    var instanceId1 = INSTANCE_IDS.get(0);
+    var instanceId1 = INSTANCE_IDS.getFirst();
     var links1 = linksDtoCollection(linksDto(instanceId1, LINKS));
     doPut(linksInstanceEndpoint(), links1, instanceId1);
 
@@ -328,7 +327,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   @Test
   void getLinkedBibUpdateStats_negative_invalidDates() throws Exception {
     var fromDate = OffsetDateTime.now();
-    var toDate = fromDate.minus(1, ChronoUnit.DAYS);
+    var toDate = fromDate.minusDays(1);
     perform(getStatsRequest(LinkStatus.ACTUAL, fromDate, toDate))
       .andExpect(status().isUnprocessableEntity())
       .andExpect(errorTotalMatch(1))
@@ -339,7 +338,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
   private MockHttpServletRequestBuilder getStatsRequest() {
     var toDate = OffsetDateTime.now();
-    var fromDate = toDate.minus(1, ChronoUnit.DAYS);
+    var fromDate = toDate.minusDays(1);
     return getStatsRequest(LinkStatus.ACTUAL, fromDate, toDate);
   }
 

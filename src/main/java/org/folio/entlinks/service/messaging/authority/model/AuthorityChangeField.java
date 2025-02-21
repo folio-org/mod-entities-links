@@ -2,6 +2,7 @@ package org.folio.entlinks.service.messaging.authority.model;
 
 import lombok.Getter;
 
+@Getter
 public enum AuthorityChangeField {
 
   PERSONAL_NAME("personalName", "100"),
@@ -16,9 +17,7 @@ public enum AuthorityChangeField {
   GENRE_TERM("genreTerm", "100"),
   NATURAL_ID("naturalId", "010");
 
-  @Getter
   private final String fieldName;
-  @Getter
   private final String type;
 
   AuthorityChangeField(String fieldName, String type) {

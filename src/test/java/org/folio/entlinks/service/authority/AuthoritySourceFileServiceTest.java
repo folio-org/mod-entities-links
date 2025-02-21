@@ -188,8 +188,8 @@ class AuthoritySourceFileServiceTest {
 
     verifyNoInteractions(repository);
     assertThat(thrown.getInvalidParameters()).hasSize(1);
-    assertThat(thrown.getInvalidParameters().get(0).getKey()).isEqualTo("code");
-    assertThat(thrown.getInvalidParameters().get(0).getValue()).isEqualTo(code);
+    assertThat(thrown.getInvalidParameters().getFirst().getKey()).isEqualTo("code");
+    assertThat(thrown.getInvalidParameters().getFirst().getValue()).isEqualTo(code);
   }
 
   @ValueSource(ints = 0)
@@ -220,8 +220,8 @@ class AuthoritySourceFileServiceTest {
     assertThat(actual).isEqualTo(expected);
     verify(repository).findById(id);
     verify(repository).saveAndFlush(argThat(authoritySourceFileMatch(expected)));
-    verify(jdbcRepository).createSequence(eq(existing.getSequenceName()), eq(modified.getHridStartNumber()));
-    verify(jdbcRepository).dropSequence(eq(existing.getSequenceName()));
+    verify(jdbcRepository).createSequence(existing.getSequenceName(), modified.getHridStartNumber());
+    verify(jdbcRepository).dropSequence(existing.getSequenceName());
   }
 
   @ValueSource(ints = 1)
@@ -254,8 +254,8 @@ class AuthoritySourceFileServiceTest {
     verify(repository).findById(id);
     verify(repository).saveAndFlush(argThat(authoritySourceFileMatch(expected)));
 
-    verify(jdbcRepository).createSequence(eq(existing.getSequenceName()), eq(modified.getHridStartNumber()));
-    verify(jdbcRepository).dropSequence(eq(existing.getSequenceName()));
+    verify(jdbcRepository).createSequence(existing.getSequenceName(), modified.getHridStartNumber());
+    verify(jdbcRepository).dropSequence(existing.getSequenceName());
   }
 
   @Test
@@ -292,8 +292,8 @@ class AuthoritySourceFileServiceTest {
     var thrown = assertThrows(RequestBodyValidationException.class, () -> service.update(differentId, entity));
 
     assertThat(thrown.getInvalidParameters()).hasSize(1);
-    assertThat(thrown.getInvalidParameters().get(0).getKey()).isEqualTo("id");
-    assertThat(thrown.getInvalidParameters().get(0).getValue()).isEqualTo(id.toString());
+    assertThat(thrown.getInvalidParameters().getFirst().getKey()).isEqualTo("id");
+    assertThat(thrown.getInvalidParameters().getFirst().getValue()).isEqualTo(id.toString());
     verifyNoInteractions(repository);
   }
 
@@ -310,8 +310,8 @@ class AuthoritySourceFileServiceTest {
     var thrown = assertThrows(RequestBodyValidationException.class, () -> service.update(id, entity));
 
     assertThat(thrown.getInvalidParameters()).hasSize(1);
-    assertThat(thrown.getInvalidParameters().get(0).getKey()).isEqualTo("code");
-    assertThat(thrown.getInvalidParameters().get(0).getValue())
+    assertThat(thrown.getInvalidParameters().getFirst().getKey()).isEqualTo("code");
+    assertThat(thrown.getInvalidParameters().getFirst().getValue())
         .isEqualTo(sourceFileCode.getCode());
     assertThat(thrown.getMessage())
         .isEqualTo("Authority Source File prefix should be non-empty sequence of letters");

@@ -1,6 +1,6 @@
-## v3.2.0 YYYY-mm-DD
+## v4.0.0 YYYY-mm-DD
 ### Breaking changes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Upgrade to Java 21 ([MODELINKS-300](https://folio-org.atlassian.net/browse/MODELINKS-300))
 
 ### New APIs versions
 * Provides `API_NAME vX.Y`

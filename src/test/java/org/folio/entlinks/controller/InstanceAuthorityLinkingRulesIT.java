@@ -29,6 +29,7 @@ import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.json.JsonCompareMode;
 
 @Log4j2
 @IntegrationTest
@@ -58,14 +59,14 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
   @SneakyThrows
   void getLinkingRules_positive() {
     doGet(linkingRulesEndpoint())
-      .andExpect(content().json(asJson(defaultRules, objectMapper), true));
+      .andExpect(content().json(asJson(defaultRules, objectMapper), JsonCompareMode.STRICT));
   }
 
   @Test
   @SneakyThrows
   void getLinkingRulesById_positive() {
     doGet(linkingRulesEndpoint(1))
-      .andExpect(content().json(asJson(defaultRules.get(0), objectMapper), true));
+      .andExpect(content().json(asJson(defaultRules.getFirst(), objectMapper), JsonCompareMode.STRICT));
   }
 
   @Test
@@ -86,7 +87,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
     doPatch(linkingRulesEndpoint(1), request);
 
     doGet(linkingRulesEndpoint(1))
-      .andExpect(content().json(asJson(defaultRules.get(0).autoLinkingEnabled(false), objectMapper)));
+      .andExpect(content().json(asJson(defaultRules.getFirst().autoLinkingEnabled(false), objectMapper)));
   }
 
   @Test
@@ -101,7 +102,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
     doPatch(linkingRulesEndpoint(1), request);
 
     doGet(linkingRulesEndpoint(1))
-      .andExpect(content().json(asJson(defaultRules.get(0), objectMapper), true));
+      .andExpect(content().json(asJson(defaultRules.getFirst(), objectMapper), JsonCompareMode.STRICT));
   }
 
   @Test

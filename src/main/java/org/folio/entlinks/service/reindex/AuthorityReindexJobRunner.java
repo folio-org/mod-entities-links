@@ -1,5 +1,17 @@
 package org.folio.entlinks.service.reindex;
 
+import static org.folio.entlinks.domain.entity.AuthorityBase.HEADING_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.HEADING_TYPE_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.IDENTIFIERS_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.ID_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.NATURAL_ID_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.NOTES_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.SAFT_HEADINGS_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.SFT_HEADINGS_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.SOURCE_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.SOURCE_FILE_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.SUBJECT_HEADING_CODE_COLUMN;
+import static org.folio.entlinks.domain.entity.AuthorityBase.VERSION_COLUMN;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -88,43 +100,43 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
                                    TypeReference<AuthorityNote[]> noteTypeRef) {
     var authority = new Authority();
     try {
-      var id = rs.getString(Authority.ID_COLUMN);
+      var id = rs.getString(ID_COLUMN);
       authority.setId(UUID.fromString(id));
-      var naturalId = rs.getString(Authority.NATURAL_ID_COLUMN);
+      var naturalId = rs.getString(NATURAL_ID_COLUMN);
       authority.setNaturalId(naturalId);
-      Optional.ofNullable(rs.getString(Authority.SOURCE_FILE_COLUMN))
+      Optional.ofNullable(rs.getString(SOURCE_FILE_COLUMN))
           .ifPresent(sourceFileId -> {
             var sourceFile = new AuthoritySourceFile();
             sourceFile.setId(UUID.fromString(sourceFileId));
             authority.setAuthoritySourceFile(sourceFile);
           });
-      var source = rs.getString(Authority.SOURCE_COLUMN);
+      var source = rs.getString(SOURCE_COLUMN);
       authority.setSource(source);
-      var heading = rs.getString(Authority.HEADING_COLUMN);
+      var heading = rs.getString(HEADING_COLUMN);
       authority.setHeading(heading);
-      var headingType = rs.getString(Authority.HEADING_TYPE_COLUMN);
+      var headingType = rs.getString(HEADING_TYPE_COLUMN);
       authority.setHeadingType(headingType);
-      var version = rs.getInt(Authority.VERSION_COLUMN);
+      var version = rs.getInt(VERSION_COLUMN);
       authority.setVersion(version);
-      var subjectHeadingCode = rs.getString(Authority.SUBJECT_HEADING_CODE_COLUMN);
+      var subjectHeadingCode = rs.getString(SUBJECT_HEADING_CODE_COLUMN);
       authority.setSubjectHeadingCode(subjectHeadingCode != null ? subjectHeadingCode.charAt(0) : null);
 
-      var array = rs.getArray(Authority.SFT_HEADINGS_COLUMN);
+      var array = rs.getArray(SFT_HEADINGS_COLUMN);
       if (array != null) {
         var sftHeadings = objectMapper.readValue(array.toString(), headingRefType);
         authority.setSftHeadings(Arrays.asList(sftHeadings));
       }
-      array = rs.getArray(Authority.SAFT_HEADINGS_COLUMN);
+      array = rs.getArray(SAFT_HEADINGS_COLUMN);
       if (array != null) {
         var saftHeadings = objectMapper.readValue(array.toString(), headingRefType);
         authority.setSaftHeadings(Arrays.asList(saftHeadings));
       }
-      array = rs.getArray(Authority.IDENTIFIERS_COLUMN);
+      array = rs.getArray(IDENTIFIERS_COLUMN);
       if (array != null) {
         var identifiers = objectMapper.readValue(array.toString(), identifierTypeRef);
         authority.setIdentifiers(Arrays.asList(identifiers));
       }
-      array = rs.getArray(Authority.NOTES_COLUMN);
+      array = rs.getArray(NOTES_COLUMN);
       if (array != null) {
         var notes = objectMapper.readValue(array.toString(), noteTypeRef);
         authority.setNotes(Arrays.asList(notes));
@@ -140,7 +152,7 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
       authority.setUpdatedByUserId(updatedBy != null ? UUID.fromString(updatedBy) : null);
     } catch (Exception e) {
       log.warn(e);
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
 
     return mapper.toDto(authority);

@@ -80,7 +80,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionsService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
-    var bibField = bib.getFields().get(0);
+    var bibField = bib.getFields().getFirst();
     var linkDetails = bibField.getLinkDetails();
     assertEquals(LinkStatus.NEW, linkDetails.getStatus());
     assertEquals(AUTHORITY_ID, linkDetails.getAuthorityId());
@@ -88,8 +88,8 @@ class LinksSuggestionsServiceTest {
     assertEquals(1, linkDetails.getLinkingRuleId());
     assertNull(linkDetails.getErrorCause());
 
-    assertEquals(AUTHORITY_ID.toString(), bibField.getSubfields('9').get(0).value());
-    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').get(0).value());
+    assertEquals(AUTHORITY_ID.toString(), bibField.getSubfields('9').getFirst().value());
+    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').getFirst().value());
     assertFalse(bibField.hasSubfield('a'));
     assertTrue(bibField.hasSubfield('b'));
   }
@@ -110,7 +110,7 @@ class LinksSuggestionsServiceTest {
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority, secondAuthority, thirdAuthority),
         rules, linkingMatchSubfield, false);
 
-    var bibField = bib.getFields().get(0);
+    var bibField = bib.getFields().getFirst();
     var linkDetails = bibField.getLinkDetails();
     assertEquals(LinkStatus.ACTUAL, linkDetails.getStatus());
     assertEquals(authorityId, linkDetails.getAuthorityId());
@@ -118,8 +118,8 @@ class LinksSuggestionsServiceTest {
     assertEquals(1, linkDetails.getLinkingRuleId());
     assertNull(linkDetails.getErrorCause());
 
-    assertEquals(authorityId.toString(), bibField.getSubfields('9').get(0).value());
-    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').get(0).value());
+    assertEquals(authorityId.toString(), bibField.getSubfields('9').getFirst().value());
+    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').getFirst().value());
     assertFalse(bibField.hasSubfield('a'));
     assertTrue(bibField.hasSubfield('b'));
   }
@@ -137,7 +137,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionsService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
-    var bibField = bib.getFields().get(0);
+    var bibField = bib.getFields().getFirst();
     var linkDetails = bibField.getLinkDetails();
     assertEquals(LinkStatus.NEW, linkDetails.getStatus());
     assertEquals(AUTHORITY_ID, linkDetails.getAuthorityId());
@@ -145,8 +145,8 @@ class LinksSuggestionsServiceTest {
     assertEquals(1, linkDetails.getLinkingRuleId());
     assertNull(linkDetails.getErrorCause());
 
-    assertEquals(AUTHORITY_ID.toString(), bibField.getSubfields('9').get(0).value());
-    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').get(0).value());
+    assertEquals(AUTHORITY_ID.toString(), bibField.getSubfields('9').getFirst().value());
+    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').getFirst().value());
     assertFalse(bibField.hasSubfield('c'));
     assertTrue(bibField.hasSubfield('b'));
   }
@@ -165,7 +165,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionsService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
-    var bibField = bib.getFields().get(0);
+    var bibField = bib.getFields().getFirst();
     var linkDetails = bibField.getLinkDetails();
     assertEquals(LinkStatus.NEW, linkDetails.getStatus());
     assertEquals(AUTHORITY_ID, linkDetails.getAuthorityId());
@@ -174,9 +174,9 @@ class LinksSuggestionsServiceTest {
     assertNull(linkDetails.getErrorCause());
 
     assertEquals(1, bibField.getSubfields('b').size());
-    assertEquals("test", bibField.getSubfields('b').get(0).value());
-    assertEquals(AUTHORITY_ID.toString(), bibField.getSubfields('9').get(0).value());
-    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').get(0).value());
+    assertEquals("test", bibField.getSubfields('b').getFirst().value());
+    assertEquals(AUTHORITY_ID.toString(), bibField.getSubfields('9').getFirst().value());
+    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').getFirst().value());
   }
 
   @ParameterizedTest
@@ -190,7 +190,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionsService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
-    var bibField = bib.getFields().get(0);
+    var bibField = bib.getFields().getFirst();
     var linkDetails = bibField.getLinkDetails();
     assertEquals(LinkStatus.ACTUAL, linkDetails.getStatus());
     assertEquals(AUTHORITY_ID, linkDetails.getAuthorityId());
@@ -198,8 +198,8 @@ class LinksSuggestionsServiceTest {
     assertEquals(1, linkDetails.getLinkingRuleId());
     assertNull(linkDetails.getErrorCause());
 
-    assertEquals(AUTHORITY_ID.toString(), bibField.getSubfields('9').get(0).value());
-    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').get(0).value());
+    assertEquals(AUTHORITY_ID.toString(), bibField.getSubfields('9').getFirst().value());
+    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').getFirst().value());
     assertFalse(bibField.hasSubfield('a'));
     assertTrue(bibField.hasSubfield('b'));
   }
@@ -215,7 +215,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionsService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
-    var linkDetails = bib.getFields().get(0).getLinkDetails();
+    var linkDetails = bib.getFields().getFirst().getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(NO_SUGGESTIONS.getCode(), linkDetails.getErrorCause());
   }
@@ -233,7 +233,7 @@ class LinksSuggestionsServiceTest {
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority, secondAuthority), rules,
         linkingMatchSubfield, false);
 
-    var linkDetails = bib.getFields().get(0).getLinkDetails();
+    var linkDetails = bib.getFields().getFirst().getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(MORE_THAN_ONE_SUGGESTIONS.getCode(), linkDetails.getErrorCause());
     assertNull(linkDetails.getAuthorityId());
@@ -252,7 +252,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionsService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
-    var linkDetails = bib.getFields().get(0).getLinkDetails();
+    var linkDetails = bib.getFields().getFirst().getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(NO_SUGGESTIONS.getCode(), linkDetails.getErrorCause());
   }
@@ -270,7 +270,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionsService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
-    var linkDetails = bib.getFields().get(0).getLinkDetails();
+    var linkDetails = bib.getFields().getFirst().getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(DISABLED_AUTO_LINKING.getCode(), linkDetails.getErrorCause());
   }
@@ -288,7 +288,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionsService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, true);
 
-    var bibField = bib.getFields().get(0);
+    var bibField = bib.getFields().getFirst();
     var linkDetails = bibField.getLinkDetails();
     assertEquals(LinkStatus.ACTUAL, linkDetails.getStatus());
     assertEquals(AUTHORITY_ID, linkDetails.getAuthorityId());
@@ -296,8 +296,8 @@ class LinksSuggestionsServiceTest {
     assertEquals(1, linkDetails.getLinkingRuleId());
     assertNull(linkDetails.getErrorCause());
 
-    assertEquals(AUTHORITY_ID.toString(), bibField.getSubfields('9').get(0).value());
-    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').get(0).value());
+    assertEquals(AUTHORITY_ID.toString(), bibField.getSubfields('9').getFirst().value());
+    assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').getFirst().value());
     assertFalse(bibField.hasSubfield('a'));
     assertTrue(bibField.hasSubfield('b'));
 
@@ -310,8 +310,8 @@ class LinksSuggestionsServiceTest {
 
     linksSuggestionsService.fillErrorDetailsWithNoSuggestions(bibs, '0');
 
-    assertEquals("101", bibs.get(0).getFields().get(0).getLinkDetails().getErrorCause());
-    assertEquals("test", bibs.get(1).getFields().get(0).getLinkDetails().getErrorCause());
+    assertEquals("101", bibs.getFirst().getFields().getFirst().getLinkDetails().getErrorCause());
+    assertEquals("test", bibs.get(1).getFields().getFirst().getLinkDetails().getErrorCause());
   }
 
   @Test

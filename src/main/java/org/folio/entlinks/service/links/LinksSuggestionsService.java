@@ -132,7 +132,7 @@ public class LinksSuggestionsService {
     for (var rule : suitableRules) {
       var suitableAuthorities = filterSuitableAuthorities(bibField, marcAuthoritiesContent, rule);
       if (suitableAuthorities.size() == 1) {
-        var authority = suitableAuthorities.get(0);
+        var authority = suitableAuthorities.getFirst();
         var linkDetails = getLinkDetails(bibField, authority, rule);
         actualizeBibSubfields(bibField, authority, rule);
         bibField.setLinkDetails(linkDetails);

@@ -226,7 +226,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   void createAuthoritySourceFile_negative_existedName() throws Exception {
     var createdEntities = createAuthoritySourceTypes();
 
-    var dto = new AuthoritySourceFilePostDto(createdEntities.get(0).getName(), "code")
+    var dto = new AuthoritySourceFilePostDto(createdEntities.getFirst().getName(), "code")
       .baseUrl("http://url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
@@ -244,7 +244,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var createdEntities = createAuthoritySourceTypes();
 
     var dto = new AuthoritySourceFilePostDto("new name", "code")
-      .baseUrl(createdEntities.get(0).getFullBaseUrl()).type("type");
+      .baseUrl(createdEntities.getFirst().getFullBaseUrl()).type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
       .andExpect(status().isUnprocessableEntity())

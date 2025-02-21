@@ -14,6 +14,7 @@ import static org.folio.entlinks.domain.entity.AuthorityConstants.MEETING_NAME_H
 import static org.folio.entlinks.domain.entity.AuthorityConstants.MEETING_NAME_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.MEETING_NAME_TITLE_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.MEETING_NAME_TITLE_HEADING_TRUNC;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.NAMED_EVENT_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.PERSONAL_NAME_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.PERSONAL_NAME_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.PERSONAL_NAME_TITLE_HEADING;
@@ -61,6 +62,7 @@ class AuthorityUtilityMapperTest {
       case MEETING_NAME_HEADING -> source.setMeetingName(propertyValue);
       case MEETING_NAME_TITLE_HEADING -> source.setMeetingNameTitle(propertyValue);
       case UNIFORM_TITLE_HEADING -> source.setUniformTitle(propertyValue);
+      case NAMED_EVENT_HEADING -> source.setNamedEvent(propertyValue);
       case TOPICAL_TERM_HEADING -> source.setTopicalTerm(propertyValue);
       case GEOGRAPHIC_NAME_HEADING -> source.setGeographicName(propertyValue);
       case GENRE_TERM_HEADING -> source.setGenreTerm(propertyValue);
@@ -84,6 +86,7 @@ class AuthorityUtilityMapperTest {
       case MEETING_NAME_HEADING -> source.setSftMeetingName(Collections.singletonList(propertyValue));
       case MEETING_NAME_TITLE_HEADING -> source.setSftMeetingNameTitle(Collections.singletonList(propertyValue));
       case UNIFORM_TITLE_HEADING -> source.setSftUniformTitle(Collections.singletonList(propertyValue));
+      case NAMED_EVENT_HEADING -> source.setSftNamedEvent(Collections.singletonList(propertyValue));
       case TOPICAL_TERM_HEADING -> source.setSftTopicalTerm(Collections.singletonList(propertyValue));
       case GEOGRAPHIC_NAME_HEADING -> source.setSftGeographicName(Collections.singletonList(propertyValue));
       case GENRE_TERM_HEADING -> source.setSftGenreTerm(Collections.singletonList(propertyValue));
@@ -109,6 +112,7 @@ class AuthorityUtilityMapperTest {
       case MEETING_NAME_HEADING -> source.setSaftMeetingName(Collections.singletonList(propertyValue));
       case MEETING_NAME_TITLE_HEADING -> source.setSaftMeetingNameTitle(Collections.singletonList(propertyValue));
       case UNIFORM_TITLE_HEADING -> source.setSaftUniformTitle(Collections.singletonList(propertyValue));
+      case NAMED_EVENT_HEADING -> source.setSaftNamedEvent(Collections.singletonList(propertyValue));
       case TOPICAL_TERM_HEADING -> source.setSaftTopicalTerm(Collections.singletonList(propertyValue));
       case GEOGRAPHIC_NAME_HEADING -> source.setSaftGeographicName(Collections.singletonList(propertyValue));
       case GENRE_TERM_HEADING -> source.setSaftGenreTerm(Collections.singletonList(propertyValue));
@@ -154,6 +158,7 @@ class AuthorityUtilityMapperTest {
       case MEETING_NAME_HEADING -> assertTrue(source.getSftMeetingName().contains(headingValue));
       case MEETING_NAME_TITLE_HEADING -> assertTrue(source.getSftMeetingNameTitle().contains(headingValue));
       case UNIFORM_TITLE_HEADING -> assertTrue(source.getSftUniformTitle().contains(headingValue));
+      case NAMED_EVENT_HEADING -> assertTrue(source.getSftNamedEvent().contains(headingValue));
       case TOPICAL_TERM_HEADING -> assertTrue(source.getSftTopicalTerm().contains(headingValue));
       case GEOGRAPHIC_NAME_HEADING -> assertTrue(source.getSftGeographicName().contains(headingValue));
       case GENRE_TERM_HEADING -> assertTrue(source.getSftGenreTerm().contains(headingValue));
@@ -179,6 +184,7 @@ class AuthorityUtilityMapperTest {
       case MEETING_NAME_HEADING -> assertTrue(source.getSaftMeetingName().contains(headingValue));
       case MEETING_NAME_TITLE_HEADING -> assertTrue(source.getSaftMeetingNameTitle().contains(headingValue));
       case UNIFORM_TITLE_HEADING -> assertTrue(source.getSaftUniformTitle().contains(headingValue));
+      case NAMED_EVENT_HEADING -> assertTrue(source.getSaftNamedEvent().contains(headingValue));
       case TOPICAL_TERM_HEADING -> assertTrue(source.getSaftTopicalTerm().contains(headingValue));
       case GEOGRAPHIC_NAME_HEADING -> assertTrue(source.getSaftGeographicName().contains(headingValue));
       case GENRE_TERM_HEADING -> assertTrue(source.getSaftGenreTerm().contains(headingValue));
@@ -215,6 +221,7 @@ class AuthorityUtilityMapperTest {
       case MEETING_NAME_HEADING -> assertThat(source.getMeetingName()).isEqualTo(headingValue);
       case MEETING_NAME_TITLE_HEADING -> assertThat(source.getMeetingNameTitle()).isEqualTo(headingValue);
       case UNIFORM_TITLE_HEADING -> assertThat(source.getUniformTitle()).isEqualTo(headingValue);
+      case NAMED_EVENT_HEADING -> assertThat(source.getNamedEvent()).isEqualTo(headingValue);
       case TOPICAL_TERM_HEADING -> assertThat(source.getTopicalTerm()).isEqualTo(headingValue);
       case GEOGRAPHIC_NAME_HEADING -> assertThat(source.getGeographicName()).isEqualTo(headingValue);
       case GENRE_TERM_HEADING -> assertThat(source.getGenreTerm()).isEqualTo(headingValue);
@@ -254,6 +261,7 @@ class AuthorityUtilityMapperTest {
         arguments(MEETING_NAME_HEADING, TEST_STRING),
         arguments(MEETING_NAME_TITLE_HEADING, TEST_STRING),
         arguments(UNIFORM_TITLE_HEADING, TEST_STRING),
+        arguments(NAMED_EVENT_HEADING, TEST_STRING),
         arguments(TOPICAL_TERM_HEADING, TEST_STRING),
         arguments(GEOGRAPHIC_NAME_HEADING, TEST_STRING),
         arguments(GENRE_TERM_HEADING, TEST_STRING)
@@ -269,6 +277,7 @@ class AuthorityUtilityMapperTest {
         arguments(MEETING_NAME_HEADING, TEST_STRING),
         arguments(MEETING_NAME_TITLE_HEADING, TEST_STRING),
         arguments(UNIFORM_TITLE_HEADING, TEST_STRING),
+        arguments(NAMED_EVENT_HEADING, TEST_STRING),
         arguments(TOPICAL_TERM_HEADING, TEST_STRING),
         arguments(GEOGRAPHIC_NAME_HEADING, TEST_STRING),
         arguments(GENRE_TERM_HEADING, TEST_STRING),

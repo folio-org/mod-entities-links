@@ -19,6 +19,8 @@ public class AuthorityConstants {
 
   public static final String UNIFORM_TITLE_HEADING = "uniformTitle";
 
+  public static final String NAMED_EVENT_HEADING = "namedEvent";
+
   public static final String TOPICAL_TERM_HEADING = "topicalTerm";
 
   public static final String GEOGRAPHIC_NAME_HEADING = "geographicName";

@@ -69,8 +69,8 @@ class LinkingRulesServiceDelegateTest {
     assertThat(result.getAuthorityField()).isEqualTo(linkingRule.getAuthorityField());
     assertThat(result.getAuthoritySubfields()).isEqualTo(List.of("a", "b"));
     assertThat(result.getSubfieldModifications()).hasSize(1);
-    assertThat(result.getSubfieldModifications().get(0).getSource()).isEqualTo("a");
-    assertThat(result.getSubfieldModifications().get(0).getTarget()).isEqualTo("b");
+    assertThat(result.getSubfieldModifications().getFirst().getSource()).isEqualTo("a");
+    assertThat(result.getSubfieldModifications().getFirst().getTarget()).isEqualTo("b");
     assertThat(result.getValidation().getExistence()).hasSize(1);
   }
 
@@ -96,9 +96,8 @@ class LinkingRulesServiceDelegateTest {
 
     when(mapper.convert(patchRequest)).thenReturn(linkingRule);
 
-    var exception = assertThrows(RequestBodyValidationException.class, () -> {
-      delegate.patchLinkingRuleById(ruleId, patchRequest);
-    });
+    var exception = assertThrows(RequestBodyValidationException.class,
+      () -> delegate.patchLinkingRuleById(ruleId, patchRequest));
 
     assertThat("Request should have id = " + ruleId).isEqualTo(exception.getMessage());
 

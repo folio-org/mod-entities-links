@@ -25,9 +25,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 @EnableRetry
 @IntegrationTest
@@ -38,7 +38,7 @@ import org.springframework.retry.annotation.EnableRetry;
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class AuthorityBulkIT extends IntegrationTestBase {
 
-  private @SpyBean FolioS3Client s3Client;
+  private @MockitoSpyBean FolioS3Client s3Client;
   private @Autowired ResourceLoader loader;
 
   @BeforeAll

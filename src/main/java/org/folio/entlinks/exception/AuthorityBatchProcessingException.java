@@ -3,9 +3,9 @@ package org.folio.entlinks.exception;
 import java.util.UUID;
 import lombok.Getter;
 
+@Getter
 public class AuthorityBatchProcessingException extends Exception {
 
-  @Getter
   private final UUID authorityId;
 
   public AuthorityBatchProcessingException(String message) {

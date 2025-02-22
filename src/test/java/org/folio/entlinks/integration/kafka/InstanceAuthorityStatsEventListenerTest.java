@@ -1,7 +1,7 @@
 package org.folio.entlinks.integration.kafka;
 
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.apache.commons.lang3.RandomStringUtils.insecure;
 import static org.folio.support.MockingTestUtils.mockBatchFailedHandling;
 import static org.folio.support.MockingTestUtils.mockBatchSuccessHandling;
 import static org.folio.support.TestDataUtils.report;
@@ -51,8 +51,8 @@ class InstanceAuthorityStatsEventListenerTest {
   // Test that multiple tenants processed in different batches and jobIds in different sub-batches
   @Test
   void shouldHandleEvent_positive() {
-    var tenant1 = randomAlphabetic(10);
-    var tenant2 = randomAlphabetic(10);
+    var tenant1 = insecure().nextAlphabetic(10);
+    var tenant2 = insecure().nextAlphabetic(10);
     var job1Id = UUID.randomUUID();
     var job2Id = UUID.randomUUID();
     var reports = List.of(
@@ -80,7 +80,7 @@ class InstanceAuthorityStatsEventListenerTest {
 
   @Test
   void shouldNotHandleEvent_negative_whenExceptionOccurred() {
-    var report = report(randomAlphabetic(10), UUID.randomUUID());
+    var report = report(insecure().nextAlphabetic(10), UUID.randomUUID());
     var consumerRecords = KafkaTestUtils.consumerRecords(singletonList(report));
 
     mockBatchFailedHandling(messageBatchProcessor, new RuntimeException("test message"));

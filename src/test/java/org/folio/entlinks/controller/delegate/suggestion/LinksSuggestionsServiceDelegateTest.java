@@ -155,13 +155,13 @@ class LinksSuggestionsServiceDelegateTest {
 
   @Test
   void suggestLinksForMarcRecords_shouldNotFetchAuthorities_ifNoNaturalIdsWasFound() {
-    var record = new ParsedRecordContent(emptyList(), "record without naturalId");
+    var recordContent = new ParsedRecordContent(emptyList(), "record without naturalId");
     var rules = List.of(getRule("110"));
 
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
     when(authorityRepository.findByNaturalIdInAndDeletedFalse(emptySet())).thenReturn(emptyList());
 
-    var parsedContentCollection = new ParsedRecordContentCollection().records(List.of(record));
+    var parsedContentCollection = new ParsedRecordContentCollection().records(List.of(recordContent));
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(authorityRepository).findByNaturalIdInAndDeletedFalse(emptySet());
@@ -184,13 +184,13 @@ class LinksSuggestionsServiceDelegateTest {
 
   @Test
   void suggestLinksForMarcRecords_shouldFillError_ifAutoLinkingDisabled() {
-    var record = getRecord("100", Map.of("0", "test"));
+    var recordContent = getRecord("100", Map.of("0", "test"));
     var rules = List.of(getRule("100", false));
 
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
     when(authorityRepository.findByNaturalIdInAndDeletedFalse(emptySet())).thenReturn(emptyList());
 
-    var parsedContentCollection = new ParsedRecordContentCollection().records(List.of(record));
+    var parsedContentCollection = new ParsedRecordContentCollection().records(List.of(recordContent));
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(authorityRepository).findByNaturalIdInAndDeletedFalse(emptySet());

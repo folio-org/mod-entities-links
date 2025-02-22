@@ -46,7 +46,7 @@ class LinksSuggestionsByAuthorityIdTest {
     var expectedIds = List.of(UUID.randomUUID(), authorityId);
 
     var subfields = List.of(
-      new ParsedSubfield('9', expectedIds.get(0).toString()),
+      new ParsedSubfield('9', expectedIds.getFirst().toString()),
       new ParsedSubfield('9', "test"),
       new ParsedSubfield('9', "")
     );

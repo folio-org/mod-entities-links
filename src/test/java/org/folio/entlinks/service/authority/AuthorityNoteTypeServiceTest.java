@@ -163,8 +163,8 @@ class AuthorityNoteTypeServiceTest {
 
     var thrown = assertThrows(RequestBodyValidationException.class, () -> service.update(differentId, entity));
     assertThat(thrown.getInvalidParameters()).hasSize(1);
-    assertThat(thrown.getInvalidParameters().get(0).getKey()).isEqualTo("id");
-    assertThat(thrown.getInvalidParameters().get(0).getValue()).isEqualTo(id.toString());
+    assertThat(thrown.getInvalidParameters().getFirst().getKey()).isEqualTo("id");
+    assertThat(thrown.getInvalidParameters().getFirst().getValue()).isEqualTo(id.toString());
     verifyNoInteractions(repository);
   }
 

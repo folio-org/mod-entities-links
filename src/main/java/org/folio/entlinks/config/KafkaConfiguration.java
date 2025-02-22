@@ -19,7 +19,6 @@ import org.folio.entlinks.integration.kafka.AuthorityChangeFilterStrategy;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.rspec.domain.dto.SpecificationUpdatedEvent;
 import org.folio.rspec.domain.dto.UpdateRequestEvent;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -40,8 +39,11 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 @Configuration
 public class KafkaConfiguration {
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
+
+  public KafkaConfiguration(ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
 
   /**
    * Creates and configures {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} as

@@ -45,6 +45,7 @@ import org.folio.support.DatabaseHelper;
 import org.folio.support.TestDataUtils;
 import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -104,7 +105,7 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     var resultCollectionDto = objectMapper.readValue(contentAsString, ReindexJobDtoCollection.class);
 
     assertThat(resultCollectionDto.getTotalRecords()).isEqualTo(1);
-    assertThat(resultCollectionDto.getReindexJobs().get(0).getSubmittedDate()).isNotNull();
+    assertThat(resultCollectionDto.getReindexJobs().getFirst().getSubmittedDate()).isNotNull();
     assertThat(resultCollectionDto.getReindexJobs())
         .usingRecursiveFieldByFieldElementComparatorIgnoringFields("submittedDate")
         .isEqualTo(List.of(dto));
@@ -160,7 +161,7 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     var content = doGet(authorityReindexEndpoint())
         .andReturn().getResponse().getContentAsString();
     var dto = objectMapper.readValue(content, ReindexJobDtoCollection.class);
-    var id = dto.getReindexJobs().iterator().next().getId();
+    var id = dto.getReindexJobs().getFirst().getId();
 
     doDelete(authorityReindexEndpoint(id));
 
@@ -190,7 +191,7 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     var content = doGet(authorityReindexEndpoint())
         .andReturn().getResponse().getContentAsString();
     var dto = objectMapper.readValue(content, ReindexJobDtoCollection.class);
-    var id = dto.getReindexJobs().iterator().next().getId();
+    var id = dto.getReindexJobs().getFirst().getId();
 
     tryDelete(authorityReindexEndpoint(id))
         .andExpect(status().isInternalServerError())
@@ -201,10 +202,13 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
   private void verifyReceivedEvents(List<ConsumerRecord<String, AuthorityDomainEvent>> receivedEvents,
                                     List<AuthorityDto> dtos) {
     for (var receivedEvent : receivedEvents) {
-      var expectedDto = dtos.stream()
-          .filter(dto -> dto.getId().toString().equals(receivedEvent.key()))
-          .findFirst().get();
-      verifyConsumedAuthorityEvent(receivedEvent, DomainEventType.REINDEX, expectedDto);
+      dtos.stream()
+        .filter(dto -> dto.getId().toString().equals(receivedEvent.key()))
+        .findFirst()
+        .ifPresentOrElse(
+          dto -> verifyConsumedAuthorityEvent(receivedEvent, DomainEventType.REINDEX, dto),
+          Assertions::fail
+        );
     }
   }
 

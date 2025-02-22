@@ -32,6 +32,7 @@ import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.json.JsonCompareMode;
 
 @IntegrationTest
 @DatabaseCleanup(tables = {
@@ -54,7 +55,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
   }
 
   @BeforeEach
-  public void setup() {
+  void setup() {
     var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     sourceFile.setBaseUrlProtocol("http");
     sourceFile.setBaseUrl(BASE_URL);
@@ -86,10 +87,10 @@ class LinksSuggestionsIT extends IntegrationTestBase {
   @SneakyThrows
   void suggestLinksForMarcRecord_shouldActualizeLinkAndSubfields() {
     var givenSubfields = mapOf("a", "old $a value", "0", FULL_BASE_URL + NATURAL_ID, "z", "old $z value");
-    var givenLinkDetails = getLinkDetails(ACTUAL, NATURAL_ID);
+    var givenLinkDetails = getLinkDetails(ACTUAL);
     var givenRecord = getRecord("100", givenLinkDetails, givenSubfields);
 
-    var expectedLinkDetails = getLinkDetails(ACTUAL, NATURAL_ID);
+    var expectedLinkDetails = getLinkDetails(ACTUAL);
     var expectedSubfields = mapOf("a", "new $a value", "q", "new $q value", "b", "new $b value",
       "0", FULL_BASE_URL + NATURAL_ID, "9", LINKABLE_AUTHORITY_ID, "z", "old $z value");
     var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
@@ -98,7 +99,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     doPost(linksSuggestionsEndpoint(), requestBody)
       .andExpect(status().isOk())
       .andExpect(content().json(asJson(new ParsedRecordContentCollection()
-        .records(List.of(expectedRecord)), objectMapper), true));
+        .records(List.of(expectedRecord)), objectMapper), JsonCompareMode.STRICT));
   }
 
   @Test
@@ -107,7 +108,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenSubfields = Map.of("0", NATURAL_ID);
     var givenRecord = getRecord("100", null, givenSubfields);
 
-    var expectedLinkDetails = getLinkDetails(NEW, NATURAL_ID);
+    var expectedLinkDetails = getLinkDetails(NEW);
     var expectedSubfields = Map.of("a", "new $a value", "q", "new $q value", "b", "new $b value",
       "0", FULL_BASE_URL + NATURAL_ID, "9", LINKABLE_AUTHORITY_ID);
     var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
@@ -125,7 +126,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenSubfields = Map.of("9", LINKABLE_AUTHORITY_ID);
     var givenRecord = getRecord("100", null, givenSubfields);
 
-    var expectedLinkDetails = getLinkDetails(NEW, NATURAL_ID);
+    var expectedLinkDetails = getLinkDetails(NEW);
     var expectedSubfields = Map.of("a", "new $a value", "q", "new $q value", "b", "new $b value",
       "0", FULL_BASE_URL + NATURAL_ID, "9", LINKABLE_AUTHORITY_ID);
     var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
@@ -183,7 +184,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var expectedErrorDetails = new LinkDetails().status(ERROR).errorCause(DISABLED_AUTO_LINKING.getCode());
     var expectedErrorRecord = getRecord("600", expectedErrorDetails, givenSubfields);
 
-    var expectedLinkDetails = getLinkDetails(NEW, NATURAL_ID);
+    var expectedLinkDetails = getLinkDetails(NEW);
     var expectedSubfields = Map.of("a", "new $a value", "q", "new $q value", "b", "new $b value",
       "0", FULL_BASE_URL + NATURAL_ID, "9", LINKABLE_AUTHORITY_ID);
     var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
@@ -229,7 +230,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenSubfields = Map.of("0", NATURAL_ID);
     var givenRecord = getRecord("600", null, givenSubfields);
 
-    var expectedLinkDetails = getLinkDetails(NEW, NATURAL_ID, 8);
+    var expectedLinkDetails = getLinkDetails(NEW, 8);
     var expectedSubfields = Map.of("a", "new $a value", "q", "new $q value", "b", "new $b value",
       "0", FULL_BASE_URL + NATURAL_ID, "9", LINKABLE_AUTHORITY_ID);
     var expectedRecord = getRecord("600", expectedLinkDetails, expectedSubfields);
@@ -247,7 +248,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenSubfields = Map.of("0", NATURAL_ID);
     var givenRecord = getRecord("600", null, givenSubfields);
 
-    var expectedLinkDetails = getLinkDetails(NEW, NATURAL_ID, 8);
+    var expectedLinkDetails = getLinkDetails(NEW, 8);
     var expectedSubfields = Map.of("a", "new $a value", "q", "new $q value", "b", "new $b value",
       "0", FULL_BASE_URL + NATURAL_ID, "9", LINKABLE_AUTHORITY_ID);
     var expectedRecord = getRecord("600", expectedLinkDetails, expectedSubfields);
@@ -289,19 +290,15 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     return new ParsedRecordContent(List.of(fields), "default leader");
   }
 
-  private LinkDetails getLinkDetails(LinkStatus linkStatus, String naturalId) {
-    return getLinkDetails(linkStatus, naturalId, 1);
+  private LinkDetails getLinkDetails(LinkStatus linkStatus) {
+    return getLinkDetails(linkStatus, 1);
   }
 
-  private LinkDetails getLinkDetails(LinkStatus linkStatus, String naturalId, Integer linkingRuleId) {
-    return getLinkDetails(LINKABLE_AUTHORITY_ID, linkStatus, naturalId, linkingRuleId);
-  }
-
-  private LinkDetails getLinkDetails(String authorityId, LinkStatus linkStatus, String naturalId,
-                                     Integer linkingRuleId) {
+  private LinkDetails getLinkDetails(LinkStatus linkStatus, Integer linkingRuleId) {
     return new LinkDetails().linkingRuleId(linkingRuleId)
-        .authorityId(UUID.fromString(authorityId))
-        .authorityNaturalId(naturalId)
+        .authorityId(UUID.fromString(LINKABLE_AUTHORITY_ID))
+        .authorityNaturalId(NATURAL_ID)
         .status(linkStatus);
   }
+
 }

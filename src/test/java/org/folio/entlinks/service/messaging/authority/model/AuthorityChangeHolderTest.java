@@ -289,17 +289,4 @@ class AuthorityChangeHolderTest {
 
     assertNull(actual);
   }
-
-  @Test
-  void getFieldChange_noFieldChange() {
-    var holder =
-      new AuthorityChangeHolder(
-        new AuthorityDomainEvent(null, new AuthorityDto(), new AuthorityDto(), UPDATE, TENANT_ID),
-        Map.of(),
-        Map.of(), 1);
-
-    var actual = holder.getFieldChange();
-
-    assertNull(actual);
-  }
 }

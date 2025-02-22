@@ -2,6 +2,7 @@ package org.folio.entlinks.config.constants;
 
 import lombok.Getter;
 
+@Getter
 public enum ErrorCode {
   UNKNOWN_CONSTRAINT("-1", "Unknown constraint."),
   NO_SUGGESTIONS("101", ""),
@@ -24,9 +25,7 @@ public enum ErrorCode {
   VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_ARCHIVE_AND_SOURCE_FILE("113",
     "Cannot complete operation on the entity due to it's relation with Authority Archive/Authority.");
 
-  @Getter
   private final String code;
-  @Getter
   private final String message;
 
   ErrorCode(String code, String message) {

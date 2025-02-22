@@ -80,29 +80,25 @@ class InstanceAuthorityLinkingServiceIT extends IntegrationTestBase {
     var instanceId = randomUUID();
     var existedLinks = createLinkDtoCollection(instanceId).getLinks();
 
-    createAuthority(existedLinks.get(0));
+    createAuthority(existedLinks.getFirst());
     awaitUntilAsserted(() -> assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID)));
 
     var incomingLinks = mapper.convertDto(existedLinks);
 
     context.execute(() -> {
-      ExecutorService executorService = Executors.newFixedThreadPool(2);
-      var future1 = executorService.submit(() -> linkingService.updateLinks(instanceId, incomingLinks));
-      var future2 = executorService.submit(() -> linkingService.updateLinks(instanceId, incomingLinks));
-
-      try {
+      try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+        var future1 = executorService.submit(() -> linkingService.updateLinks(instanceId, incomingLinks));
+        var future2 = executorService.submit(() -> linkingService.updateLinks(instanceId, incomingLinks));
         future1.get();
         future2.get();
       } catch (ExecutionException e) {
-        assertEquals(0, databaseHelper.queryAuthorityVersion(TENANT_ID, existedLinks.get(0).getAuthorityId()));
-      } finally {
-        executorService.shutdown();
+        assertEquals(0, databaseHelper.queryAuthorityVersion(TENANT_ID, existedLinks.getFirst().getAuthorityId()));
       }
       return null;
     });
 
     awaitUntilAsserted(() ->
-        assertEquals(0, databaseHelper.queryAuthorityVersion(TENANT_ID, existedLinks.get(0).getAuthorityId())));
+        assertEquals(0, databaseHelper.queryAuthorityVersion(TENANT_ID, existedLinks.getFirst().getAuthorityId())));
   }
 
   private FolioExecutionContext getFolioExecutionContext() {

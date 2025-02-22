@@ -99,7 +99,7 @@ class UpdateAuthorityChangeHandlerTest {
     handler.handle(List.of(changeHolder));
 
     verify(linksUpdateKafkaTemplate).sendMessages(producerRecord.capture());
-    assertThat(producerRecord.getValue().get(0))
+    assertThat(producerRecord.getValue().getFirst())
       .extracting("tenant", "failCause", "status")
       .contains(expected.getTenant(), expected.getFailCause(), expected.getStatus());
   }
@@ -124,17 +124,17 @@ class UpdateAuthorityChangeHandlerTest {
     changeHolder.setSourceRecord(new AuthoritySourceRecord(authorityId, UUID.randomUUID(), new RecordImpl()));
     var actual = handler.handle(List.of(changeHolder));
     assertThat(actual).isNotEmpty().hasSize(1);
-    assertThat(actual.get(0))
+    assertThat(actual.getFirst())
       .extracting(LinksChangeEvent::getAuthorityId, LinksChangeEvent::getType)
       .containsExactly(authorityId, TypeEnum.UPDATE);
-    assertThat(actual.get(0).getUpdateTargets()).hasSize(1);
-    assertThat(actual.get(0).getUpdateTargets().get(0))
+    assertThat(actual.getFirst().getUpdateTargets()).hasSize(1);
+    assertThat(actual.getFirst().getUpdateTargets().getFirst())
       .hasFieldOrPropertyWithValue("field", "100")
       .hasFieldOrPropertyWithValue("links", List.of(new ChangeTargetLink().linkId(1L).instanceId(instanceId)));
 
-    assertThat(actual.get(0).getSubfieldsChanges()).hasSize(1);
-    assertThat(actual.get(0).getSubfieldsChanges().get(0).getSubfields()).hasSize(1);
-    assertThat(actual.get(0).getSubfieldsChanges().get(0).getSubfields().get(0))
+    assertThat(actual.getFirst().getSubfieldsChanges()).hasSize(1);
+    assertThat(actual.getFirst().getSubfieldsChanges().getFirst().getSubfields()).hasSize(1);
+    assertThat(actual.getFirst().getSubfieldsChanges().getFirst().getSubfields().getFirst())
       .extracting("code", "value")
       .containsExactly("0", "1010101");
   }

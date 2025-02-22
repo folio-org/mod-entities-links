@@ -48,11 +48,11 @@ class AuthorityMapperTest {
     assertThat(dto.getSource()).isEqualTo(authority.getSource());
     assertThat(dto.getVersion()).isEqualTo(authority.getVersion());
     assertThat(mappedSubjectHeadingCode).isEqualTo(authority.getSubjectHeadingCode());
-    assertThat(dto.getIdentifiers().get(0).getValue()).isEqualTo(authority.getIdentifiers().get(0).getValue());
-    assertThat(dto.getNotes().get(0).getNote()).isEqualTo(authority.getNotes().get(0).getNote());
+    assertThat(dto.getIdentifiers().getFirst().getValue()).isEqualTo(authority.getIdentifiers().getFirst().getValue());
+    assertThat(dto.getNotes().getFirst().getNote()).isEqualTo(authority.getNotes().getFirst().getNote());
     assertThat(dto.getSourceFileId()).isEqualTo(authority.getAuthoritySourceFile().getId());
-    assertThat(dto.getIdentifiers().get(0).getIdentifierTypeId())
-        .isEqualTo(authority.getIdentifiers().get(0).getIdentifierTypeId());
+    assertThat(dto.getIdentifiers().getFirst().getIdentifierTypeId())
+        .isEqualTo(authority.getIdentifiers().getFirst().getIdentifierTypeId());
 
   }
 
@@ -75,11 +75,13 @@ class AuthorityMapperTest {
     assertThat(authority.getSource()).isEqualTo(authorityDto.getSource());
     assertThat(authority.getNaturalId()).isEqualTo(authorityDto.getNaturalId());
     assertThat(authority.getAuthoritySourceFile().getId()).isEqualTo(authorityDto.getSourceFileId());
-    AuthorityIdentifier identifier = authority.getIdentifiers().get(0);
-    assertThat(identifier.getIdentifierTypeId()).isEqualTo(authorityDto.getIdentifiers().get(0).getIdentifierTypeId());
-    assertThat(identifier.getValue()).isEqualTo(authorityDto.getIdentifiers().get(0).getValue());
-    assertThat(authority.getNotes().get(0).getNote()).isEqualTo(authorityDto.getNotes().get(0).getNote());
-    assertThat(authority.getNotes().get(0).getStaffOnly()).isEqualTo(authorityDto.getNotes().get(0).getStaffOnly());
+    AuthorityIdentifier identifier = authority.getIdentifiers().getFirst();
+    assertThat(identifier.getIdentifierTypeId())
+      .isEqualTo(authorityDto.getIdentifiers().getFirst().getIdentifierTypeId());
+    assertThat(identifier.getValue()).isEqualTo(authorityDto.getIdentifiers().getFirst().getValue());
+    assertThat(authority.getNotes().getFirst().getNote()).isEqualTo(authorityDto.getNotes().getFirst().getNote());
+    assertThat(authority.getNotes().getFirst().getStaffOnly())
+      .isEqualTo(authorityDto.getNotes().getFirst().getStaffOnly());
     assertThat(String.valueOf(authority.getSubjectHeadingCode())).isEqualTo(authorityDto.getSubjectHeadings());
     assertThat(fromTimestamp(authority.getUpdatedDate())).isEqualTo(authorityDto.getMetadata().getUpdatedDate());
   }
@@ -104,20 +106,13 @@ class AuthorityMapperTest {
     assertThat(archive.getSource()).isEqualTo(dto.getSource());
     assertThat(archive.getNaturalId()).isEqualTo(dto.getNaturalId());
     assertThat(archive.getAuthoritySourceFile().getId()).isEqualTo(dto.getSourceFileId());
-    AuthorityIdentifier identifier = archive.getIdentifiers().get(0);
-    assertThat(identifier.getIdentifierTypeId()).isEqualTo(dto.getIdentifiers().get(0).getIdentifierTypeId());
-    assertThat(identifier.getValue()).isEqualTo(dto.getIdentifiers().get(0).getValue());
-    assertThat(archive.getNotes().get(0).getNote()).isEqualTo(dto.getNotes().get(0).getNote());
-    assertThat(archive.getNotes().get(0).getStaffOnly()).isEqualTo(dto.getNotes().get(0).getStaffOnly());
+    AuthorityIdentifier identifier = archive.getIdentifiers().getFirst();
+    assertThat(identifier.getIdentifierTypeId()).isEqualTo(dto.getIdentifiers().getFirst().getIdentifierTypeId());
+    assertThat(identifier.getValue()).isEqualTo(dto.getIdentifiers().getFirst().getValue());
+    assertThat(archive.getNotes().getFirst().getNote()).isEqualTo(dto.getNotes().getFirst().getNote());
+    assertThat(archive.getNotes().getFirst().getStaffOnly()).isEqualTo(dto.getNotes().getFirst().getStaffOnly());
     assertThat(String.valueOf(archive.getSubjectHeadingCode())).isEqualTo(dto.getSubjectHeadings());
     assertThat(fromTimestamp(archive.getUpdatedDate())).isEqualTo(dto.getMetadata().getUpdatedDate());
-  }
-
-  @Test
-  void testToAuthorityArchiveWithNullInput() {
-    AuthorityDto authorityDto = authorityMapper.toDto(null);
-
-    assertThat(authorityDto).isNull();
   }
 
   @Test
@@ -193,17 +188,17 @@ class AuthorityMapperTest {
     List<AuthorityDto> dtoList = authorityMapper.toDtoList(authorityList);
 
     assertThat(dtoList).hasSize(1);
-    AuthorityDto dto1 = dtoList.get(0);
+    AuthorityDto dto1 = dtoList.getFirst();
     assertThat(authority.getId()).isEqualTo(dto1.getId());
     assertThat(authority.getVersion()).isEqualTo(dto1.getVersion());
     assertThat(authority.getSource()).isEqualTo(dto1.getSource());
     assertThat(authority.getNaturalId()).isEqualTo(dto1.getNaturalId());
     assertThat(authority.getAuthoritySourceFile().getId()).isEqualTo(dto1.getSourceFileId());
-    AuthorityIdentifier identifier = authority.getIdentifiers().get(0);
-    assertThat(identifier.getIdentifierTypeId()).isEqualTo(dto1.getIdentifiers().get(0).getIdentifierTypeId());
-    assertThat(identifier.getValue()).isEqualTo(dto1.getIdentifiers().get(0).getValue());
-    assertThat(authority.getNotes().get(0).getNote()).isEqualTo(dto1.getNotes().get(0).getNote());
-    assertThat(authority.getNotes().get(0).getStaffOnly()).isEqualTo(dto1.getNotes().get(0).getStaffOnly());
+    AuthorityIdentifier identifier = authority.getIdentifiers().getFirst();
+    assertThat(identifier.getIdentifierTypeId()).isEqualTo(dto1.getIdentifiers().getFirst().getIdentifierTypeId());
+    assertThat(identifier.getValue()).isEqualTo(dto1.getIdentifiers().getFirst().getValue());
+    assertThat(authority.getNotes().getFirst().getNote()).isEqualTo(dto1.getNotes().getFirst().getNote());
+    assertThat(authority.getNotes().getFirst().getStaffOnly()).isEqualTo(dto1.getNotes().getFirst().getStaffOnly());
 
   }
 
@@ -245,7 +240,7 @@ class AuthorityMapperTest {
 
     assertThat(dtoCollection).isNotNull();
     assertThat(dtoCollection.getAuthorities()).hasSize(1);
-    AuthorityDto dto = dtoCollection.getAuthorities().get(0);
+    AuthorityDto dto = dtoCollection.getAuthorities().getFirst();
     assertThat(authority.getId()).isEqualTo(dto.getId());
   }
 

@@ -103,7 +103,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     var messages = eventCaptor.getValue();
     assertThat(messages).hasSize(1);
-    assertThat(messages.get(0).getType()).isEqualTo(LinksChangeEvent.TypeEnum.UPDATE);
+    assertThat(messages.getFirst().getType()).isEqualTo(LinksChangeEvent.TypeEnum.UPDATE);
   }
 
   @Test
@@ -133,7 +133,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     var messages = eventCaptor.getValue();
     assertThat(messages).hasSize(1);
-    assertThat(messages.get(0).getType()).isEqualTo(LinksChangeEvent.TypeEnum.UPDATE);
+    assertThat(messages.getFirst().getType()).isEqualTo(LinksChangeEvent.TypeEnum.UPDATE);
   }
 
   @Test
@@ -172,7 +172,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     var messages = eventCaptor.getValue();
     assertThat(messages).hasSize(1);
-    assertThat(messages.get(0).getType()).isEqualTo(LinksChangeEvent.TypeEnum.DELETE);
+    assertThat(messages.getFirst().getType()).isEqualTo(LinksChangeEvent.TypeEnum.DELETE);
   }
 
   @Test
@@ -204,7 +204,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
         .containsExactlyInAnyOrder(1);
     var messages = eventCaptor.getAllValues().stream().flatMap(Collection::stream).toList();
     assertThat(messages).hasSize(1);
-    assertThat(messages.get(0).getType()).isEqualTo(LinksChangeEvent.TypeEnum.DELETE);
+    assertThat(messages.getFirst().getType()).isEqualTo(LinksChangeEvent.TypeEnum.DELETE);
   }
 
   @Test
@@ -235,7 +235,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     var messages = eventCaptor.getAllValues().stream().flatMap(Collection::stream).toList();
     assertThat(messages).hasSize(3);
-    assertThat(messages.get(0).getType()).isEqualTo(LinksChangeEvent.TypeEnum.UPDATE);
+    assertThat(messages.getFirst().getType()).isEqualTo(LinksChangeEvent.TypeEnum.UPDATE);
 
     var changeHolders = changeHolderCaptor.getAllValues().stream().flatMap(Collection::stream).toList();
     assertThat(changeHolders)

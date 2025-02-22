@@ -12,13 +12,11 @@ import org.springframework.stereotype.Service;
 public class ConsortiumAuthorityService extends AuthorityService {
 
   private final AuthorityRepository repository;
-  private final AuthoritySourceFileRepository sourceFileRepository;
 
   public ConsortiumAuthorityService(AuthorityRepository repository,
                                     AuthoritySourceFileRepository sourceFileRepository) {
     super(repository, sourceFileRepository);
     this.repository = repository;
-    this.sourceFileRepository = sourceFileRepository;
   }
 
   @Override

@@ -24,9 +24,7 @@ class DateUtilsTest {
   @Test
   @SneakyThrows
   void createDateFromNull() {
-    var dateFromTimestamp = DateUtils.fromTimestamp(null);
-    var timestamp = DateUtils.toTimestamp(null);
-    assertNull(dateFromTimestamp);
-    assertNull(timestamp);
+    assertNull(DateUtils.fromTimestamp(null));
+    assertNull(DateUtils.toTimestamp(null));
   }
 }

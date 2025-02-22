@@ -61,19 +61,19 @@ public class AuthorityRuleValidationService {
   }
 
   public boolean validateAuthorityFields(AuthorityParsedContent authorityContent, InstanceAuthorityLinkingRule rule) {
-    log.info("Starting validation for authority {}", authorityContent.getId());
+    log.info("validateAuthorityFields::Starting validation for AuthorityParsedContent {}", authorityContent.getId());
     var authorityFields = authorityContent.getFields().stream().filter(fieldParsedContent ->
       fieldParsedContent.getTag().equals(rule.getAuthorityField())).toList();
 
     if (validateAuthorityFields(authorityFields)) {
-      var authorityField = authorityFields.get(0);
+      var authorityField = authorityFields.getFirst();
       return validateAuthoritySubfieldsExistence(authorityField, rule);
     }
     return false;
   }
 
   public boolean validateAuthorityFields(StrippedParsedRecord authority, InstanceAuthorityLinkingRule rule) {
-    log.info("Starting validation for authority {}", authority.getId());
+    log.info("validateAuthorityFields::Starting validation for StrippedParsedRecord {}", authority.getId());
     var authorityFields = authority.getParsedRecord().getContent().getFields().stream()
       .flatMap(fields -> fields.entrySet().stream())
       .filter(field -> rule.getAuthorityField().equals(field.getKey()))
@@ -81,7 +81,7 @@ public class AuthorityRuleValidationService {
       .toList();
 
     if (validateAuthorityFields(authorityFields)) {
-      var authorityField = authorityFields.get(0);
+      var authorityField = authorityFields.getFirst();
       return validateAuthoritySubfieldsExistence(authorityField, rule);
     }
     return false;

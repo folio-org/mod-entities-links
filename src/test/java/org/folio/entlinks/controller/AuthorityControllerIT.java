@@ -492,7 +492,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     getConsumedEvent();
     var existingAsString = doGet(authorityEndpoint()).andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
-    var expected = collection.getAuthorities().get(0);
+    var expected = collection.getAuthorities().getFirst();
     expected.setSource("updated source");
     expected.setPersonalName(null);
     expected.setCorporateName("headingCorporateName");
@@ -535,7 +535,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     verifyConsumedAuthorityEvent(event, UPDATE, resultDto);
     collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
-    var oldDto = collection.getAuthorities().get(0);
+    var oldDto = collection.getAuthorities().getFirst();
+    assertThat(event).isNotNull();
     assertThat(event.value().getOldEntity())
         .usingRecursiveComparison()
         .ignoringFields(IGNORED_FIELDS_FOR_VERIFICATION)
@@ -555,7 +556,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("authorities[0]._version", is(0)))
       .andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
-    var putDto = collection.getAuthorities().get(0);
+    var putDto = collection.getAuthorities().getFirst();
 
     tryPut(authorityEndpoint(putDto.getId()), putDto).andExpect(status().isNoContent());
 
@@ -579,7 +580,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     getConsumedEvent();
     var existingAsString = doGet(authorityEndpoint()).andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
-    var expected = collection.getAuthorities().get(0);
+    var expected = collection.getAuthorities().getFirst();
     var sourceFileId = randomUUID();
     expected.setSourceFileId(sourceFileId);
 
@@ -602,7 +603,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("authorities[0]._version", is(0)))
       .andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
-    var putDto = collection.getAuthorities().get(0);
+    var putDto = collection.getAuthorities().getFirst();
     var expectedError = String.format("Cannot update record %s because it has been changed (optimistic locking): "
                                       + "Stored _version is %d, _version of request is %d", putDto.getId().toString(),
       1, 0);
@@ -634,10 +635,10 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var authority = createAuthority(0, 0);
 
     var contentAsString = doGet(authorityEndpoint(authority.getId())).andReturn().getResponse().getContentAsString();
-    var expectedDto = objectMapper.readValue(contentAsString, AuthorityDto.class);
-
+    final var expectedDto = objectMapper.readValue(contentAsString, AuthorityDto.class);
     doDelete(authorityEndpoint(authority.getId()));
     var event = getConsumedEvent();
+    assertThat(event).isNotNull();
     assertEquals(AuthorityDeleteEventSubType.SOFT_DELETE, event.value().getDeleteEventSubType());
     verifyConsumedAuthorityEvent(event, DELETE, expectedDto.version(1));
 
@@ -745,7 +746,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var existingAsString = doGet(authorityEndpoint())
       .andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
-    var expected = collection.getAuthorities().get(0);
+    var expected = collection.getAuthorities().getFirst();
 
     assertEquals(dto.getSourceFileId(), expected.getSourceFileId());
 

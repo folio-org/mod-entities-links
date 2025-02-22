@@ -27,7 +27,7 @@ public class MockingTestUtils {
     doAnswer(invocation -> {
       var argument = invocation.getArgument(3, BiConsumer.class);
       var batch = invocation.getArgument(0, List.class);
-      argument.accept(batch.get(0), e);
+      argument.accept(batch.getFirst(), e);
       return null;
     }).when(messageBatchProcessor).consumeBatchWithFallback(any(), any(), any(), any());
   }

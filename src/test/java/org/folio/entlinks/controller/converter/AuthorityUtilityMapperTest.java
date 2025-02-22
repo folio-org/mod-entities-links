@@ -94,8 +94,8 @@ class AuthorityUtilityMapperTest {
 
     List<HeadingRef> sftHeadings = target.getSftHeadings();
     assertThat(sftHeadings).hasSize(1);
-    assertThat(propertyValue).isEqualTo(sftHeadings.get(0).getHeading());
-    assertThat(propertyType).isEqualTo(sftHeadings.get(0).getHeadingType());
+    assertThat(propertyValue).isEqualTo(sftHeadings.getFirst().getHeading());
+    assertThat(propertyType).isEqualTo(sftHeadings.getFirst().getHeadingType());
   }
 
   @ParameterizedTest
@@ -132,8 +132,8 @@ class AuthorityUtilityMapperTest {
 
     List<HeadingRef> saftHeadings = target.getSaftHeadings();
     assertThat(saftHeadings).hasSize(1);
-    assertThat(propertyValue).isEqualTo(saftHeadings.get(0).getHeading());
-    assertThat(propertyType).isEqualTo(saftHeadings.get(0).getHeadingType());
+    assertThat(propertyValue).isEqualTo(saftHeadings.getFirst().getHeading());
+    assertThat(propertyType).isEqualTo(saftHeadings.getFirst().getHeadingType());
   }
 
   @ParameterizedTest

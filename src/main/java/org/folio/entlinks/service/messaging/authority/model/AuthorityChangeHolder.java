@@ -87,7 +87,7 @@ public class AuthorityChangeHolder {
     } else {
       var authorityChanges = new ArrayList<>(changes.keySet());
       authorityChanges.remove(AuthorityChangeField.NATURAL_ID);
-      return authorityChanges.get(0);
+      return authorityChanges.getFirst();
     }
   }
 

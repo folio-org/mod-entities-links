@@ -70,12 +70,12 @@ public class TestDataUtils {
   public static final UUID[] AUTHORITY_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID(), randomUUID()};
   public static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3", "naturalId4"};
 
-  public static AuthorityDomainEvent domainEvent(String resource, String type, AuthorityDto n, AuthorityDto o) {
+  public static AuthorityDomainEvent domainEvent(String type, AuthorityDto n, AuthorityDto o) {
     return new AuthorityDomainEvent(randomUUID(), o, n, DomainEventType.valueOf(type), TENANT_ID);
   }
 
   public static AuthorityDomainEvent authorityEvent(String type, AuthorityDto n, AuthorityDto o) {
-    return domainEvent("authority", type, n, o);
+    return domainEvent(type, n, o);
   }
 
   public static AuthorityDomainEvent authoritySoftDeleteEvent(AuthorityDto n, AuthorityDto o) {
@@ -109,7 +109,7 @@ public class TestDataUtils {
     return Stream.generate(() -> 0)
       .map(i -> {
         var link = InstanceAuthorityLink.builder()
-          .id((long) RandomUtils.nextInt())
+          .id((long) RandomUtils.insecure().randomInt())
           .instanceId(UUID.randomUUID())
           .linkingRule(InstanceAuthorityLinkingRule.builder()
             .bibField("100")
@@ -133,7 +133,7 @@ public class TestDataUtils {
   }
 
   public static List<LinkUpdateReport> reports(UUID jobId, LinkUpdateReport.StatusEnum status, String failCause) {
-    var tenant = RandomStringUtils.randomAlphabetic(10);
+    var tenant = RandomStringUtils.insecure().nextAlphabetic(10);
     return List.of(
       report(tenant, jobId, status, failCause),
       report(tenant, jobId, status, failCause));
@@ -150,7 +150,7 @@ public class TestDataUtils {
       .jobId(jobId)
       .instanceId(UUID.randomUUID())
       .status(status)
-      .linkIds(List.of(RandomUtils.nextInt(), RandomUtils.nextInt()))
+      .linkIds(List.of(RandomUtils.insecure().randomInt(), RandomUtils.insecure().randomInt()))
       .failCause(failCause);
   }
 
@@ -460,7 +460,7 @@ public class TestDataUtils {
     }
 
     public Link(UUID authorityId, String tag, String naturalId, char[] subfields) {
-      this(authorityId, tag, naturalId, subfields, RandomUtils.nextInt(1, 10), ACTUAL, null);
+      this(authorityId, tag, naturalId, subfields, RandomUtils.insecure().randomInt(1, 10), ACTUAL, null);
     }
 
     public static Link of(int authIdNum, int tagNum) {

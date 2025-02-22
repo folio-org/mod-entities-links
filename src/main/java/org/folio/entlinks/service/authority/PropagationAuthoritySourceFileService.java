@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service("propagationAuthoritySourceFileService")
 @Log4j2
 public class PropagationAuthoritySourceFileService extends AuthoritySourceFileService {
@@ -42,7 +41,6 @@ public class PropagationAuthoritySourceFileService extends AuthoritySourceFileSe
    *
    * @param entity Authority Source File created in the consortium central tenant
    * @return Authority Source File created in the member tenant.
-   *
    *   Note: As this method creates a shadow copy of already created authority source file, it assumes no
    *   validation/initialization is required and the entity passed to the method had this validation/initialization.
    */
@@ -59,20 +57,19 @@ public class PropagationAuthoritySourceFileService extends AuthoritySourceFileSe
   /**
    * Updates shadow copy of Authority Source File in the member tenant's database schema.
    *
-   * @param id the ID of the Authority Source File to update
-   * @param modified Authority Source File updated by central tenant
+   * @param id              the ID of the Authority Source File to update
+   * @param modified        Authority Source File updated by central tenant
    * @param publishConsumer the consumer to publish changes
    * @return updated Authority Source File
-   *
    *   Note: As this method updates existing shadow copy of already updated authority source file, it assumes no
    *   validation is required and updated entity passed to the method is passed this validation.
    */
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Retryable(
-      retryFor = OptimisticLockingException.class,
-      maxAttempts = 2,
-      backoff = @Backoff(delay = 500))
+    retryFor = OptimisticLockingException.class,
+    maxAttempts = 2,
+    backoff = @Backoff(delay = 500))
   public AuthoritySourceFile update(UUID id, AuthoritySourceFile modified,
                                     BiConsumer<AuthoritySourceFile, AuthoritySourceFile> publishConsumer) {
     log.debug("update:: Attempting to update AuthoritySourceFile [id: {}, modified: {}]", id, modified);
@@ -80,7 +77,7 @@ public class PropagationAuthoritySourceFileService extends AuthoritySourceFileSe
     var existingEntity = repository.findById(id).orElseThrow(() -> new AuthoritySourceFileNotFoundException(id));
     if (modified.getVersion() < existingEntity.getVersion()) {
       throw OptimisticLockingException.optimisticLockingOnUpdate(
-          id, existingEntity.getVersion(), modified.getVersion());
+        id, existingEntity.getVersion(), modified.getVersion());
     }
 
     jdbcRepository.update(modified, existingEntity.getVersion());

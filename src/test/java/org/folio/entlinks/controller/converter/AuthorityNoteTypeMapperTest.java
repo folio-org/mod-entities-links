@@ -107,7 +107,7 @@ class AuthorityNoteTypeMapperTest {
         .isNotNull()
         .hasSize(1);
 
-    AuthorityNoteTypeDto dto = dtoList.get(0);
+    AuthorityNoteTypeDto dto = dtoList.getFirst();
     assertThat(dto.getId()).isEqualTo(entity.getId());
     assertThat(dto.getName()).isEqualTo(entity.getName());
     assertThat(dto.getSource()).isEqualTo(entity.getSource());
@@ -132,8 +132,8 @@ class AuthorityNoteTypeMapperTest {
 
     AuthorityNoteTypeDtoCollection dtoCollection = mapper.toAuthorityNoteTypeCollection(noteTypesPage);
 
-    AuthorityNoteTypeDto noteTypeDto = dtoCollection.getAuthorityNoteTypes().get(0);
-    AuthorityNoteType noteType = noteTypesList.get(0);
+    AuthorityNoteTypeDto noteTypeDto = dtoCollection.getAuthorityNoteTypes().getFirst();
+    AuthorityNoteType noteType = noteTypesList.getFirst();
     assertThat(dtoCollection).isNotNull();
     assertThat(noteTypesList).hasSize(dtoCollection.getTotalRecords());
     assertThat(noteType.getId()).isEqualTo(noteTypeDto.getId());

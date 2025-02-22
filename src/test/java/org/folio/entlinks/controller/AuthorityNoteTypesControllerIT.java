@@ -219,7 +219,7 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     doPost(authorityNoteTypesEndpoint(), dto);
     var existingAsString = doGet(authorityNoteTypesEndpoint()).andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityNoteTypeDtoCollection.class);
-    var modified = collection.getAuthorityNoteTypes().get(0);
+    var modified = collection.getAuthorityNoteTypes().getFirst();
     modified.setName("updated name");
     modified.setSource("updated source");
 

@@ -35,6 +35,7 @@ public class EventProducer<T> {
       throw new IllegalArgumentException(
         String.format("Wrong number of %s header key and value pairs are provided", headers.length));
     }
+    log.info("sendMessage: headers {}", headers);
     var headersMap = new HashMap<String, Collection<String>>();
     for (int i = 0; i < headers.length; i += 2) {
       headersMap.put(headers[i].toString(), List.of(headers[i + 1].toString()));
@@ -71,13 +72,13 @@ public class EventProducer<T> {
     } else {
       producerRecord = new ProducerRecord<>(topicName(), key, msgBody);
     }
-
+    log.info("context.getOkapiHeaders(): {}", context.getOkapiHeaders());
     toKafkaHeaders(context.getOkapiHeaders())
       .forEach(header -> producerRecord.headers().add(header));
-
+    log.info("headersMap: {}", headersMap);
     toKafkaHeaders(headersMap)
       .forEach(header -> producerRecord.headers().add(header));
-
+    log.info("producerRecord.headers: {}", producerRecord.headers());
     return producerRecord;
   }
 

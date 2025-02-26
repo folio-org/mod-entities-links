@@ -57,6 +57,7 @@ spring:
       - authority-linking-rules-cache
       - consortium-tenants-cache
       - consortium-central-tenant-cache
+      - system-user-cache
     caffeine:
       spec: maximumSize=500,expireAfterWrite=3600s
   sql:

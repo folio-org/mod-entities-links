@@ -37,12 +37,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-
 
 class ApiErrorHandlerTest {
   private static final String TEST_ERROR_MESSAGE = "Test error message";
@@ -67,7 +67,7 @@ class ApiErrorHandlerTest {
 
     // Assert
     assertErrorResponse(exception, ErrorType.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, responseEntity,
-        TEST_ERROR_MESSAGE);
+      TEST_ERROR_MESSAGE);
   }
 
   @ParameterizedTest
@@ -78,7 +78,7 @@ class ApiErrorHandlerTest {
 
     // Assert
     assertErrorResponse(exception, ErrorType.NOT_FOUND_ERROR, HttpStatus.NOT_FOUND, responseEntity,
-        exception.getMessage());
+      exception.getMessage());
   }
 
   @Test
@@ -95,12 +95,13 @@ class ApiErrorHandlerTest {
 
     // Verify the specific message content based on the static factory method
     String expectedErrorMessage = String.format("Cannot update record %s because it has been changed "
-            + "(optimistic locking): Stored _version is %d, _version of request is %d",
-        recordId, existingVersion, requestVersion);
+                                                + "(optimistic locking): Stored _version is %d, "
+                                                + "_version of request is %d",
+      recordId, existingVersion, requestVersion);
 
     // Assert
     assertErrorResponse(exception, ErrorType.OPTIMISTIC_LOCKING_ERROR, HttpStatus.CONFLICT, responseEntity,
-        expectedErrorMessage);
+      expectedErrorMessage);
   }
 
   @Test
@@ -115,7 +116,7 @@ class ApiErrorHandlerTest {
 
     // Assert
     assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.UNPROCESSABLE_ENTITY, responseEntity,
-        TEST_ERROR_MESSAGE);
+      TEST_ERROR_MESSAGE);
   }
 
   @Test
@@ -127,15 +128,15 @@ class ApiErrorHandlerTest {
 
     // Assert
     assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.UNPROCESSABLE_ENTITY, responseEntity,
-        TEST_ERROR_MESSAGE);
+      TEST_ERROR_MESSAGE);
 
-    var error = Objects.requireNonNull(responseEntity.getBody()).getErrors().get(0);
+    var error = Objects.requireNonNull(responseEntity.getBody()).getErrors().getFirst();
 
     // Verify invalid parameters in the response
     assertNotNull(error.getParameters());
     assertEquals(1, error.getParameters().size());
 
-    Parameter expectedParameter = error.getParameters().get(0);
+    Parameter expectedParameter = error.getParameters().getFirst();
     assertEquals(FIELD_NAME, expectedParameter.getKey());
     assertEquals(INVALID_VALUE, expectedParameter.getValue());
   }
@@ -146,7 +147,7 @@ class ApiErrorHandlerTest {
 
     // Act
     ResponseEntity<String> responseEntity =
-        apiErrorHandler.handleAuthoritiesMediaTypeValidationException(exception);
+      apiErrorHandler.handleAuthoritiesMediaTypeValidationException(exception);
 
     // Assert
     assertNotNull(responseEntity);
@@ -160,9 +161,9 @@ class ApiErrorHandlerTest {
     assertNotNull(responseBody);
 
     String expectedErrorResponse = "message: " + TEST_ERROR_MESSAGE + System.lineSeparator()
-        + "type: AuthoritiesRequestNotSupportedMediaTypeException" + System.lineSeparator()
-        + "code: validation" + System.lineSeparator()
-        + "parameters: [(key: " + FIELD_NAME + ", value: " + INVALID_VALUE + ")]";
+                                   + "type: AuthoritiesRequestNotSupportedMediaTypeException" + System.lineSeparator()
+                                   + "code: validation" + System.lineSeparator()
+                                   + "parameters: [(key: " + FIELD_NAME + ", value: " + INVALID_VALUE + ")]";
 
     assertEquals(expectedErrorResponse, responseBody);
   }
@@ -178,19 +179,19 @@ class ApiErrorHandlerTest {
 
     // Act
     ResponseEntity<Errors> responseEntity =
-        apiErrorHandler.handleMethodArgumentNotValidException(exception);
+      apiErrorHandler.handleMethodArgumentNotValidException(exception);
 
     // Assert
     assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.UNPROCESSABLE_ENTITY, responseEntity,
-        TEST_ERROR_MESSAGE);
+      TEST_ERROR_MESSAGE);
 
-    var error = Objects.requireNonNull(responseEntity.getBody()).getErrors().get(0);
+    var error = Objects.requireNonNull(responseEntity.getBody()).getErrors().getFirst();
 
     List<Parameter> parameters = error.getParameters();
     assertNotNull(parameters);
     assertEquals(1, parameters.size());
 
-    Parameter parameter = parameters.get(0);
+    Parameter parameter = parameters.getFirst();
     assertEquals(FIELD_NAME, parameter.getKey());
     assertEquals("null", parameter.getValue());
   }
@@ -209,15 +210,16 @@ class ApiErrorHandlerTest {
   void handleHttpMessageNotReadableException_WithValidationCause_ReturnsValidationErrorResponse() {
     // Arrange
     var validationException = new IllegalArgumentException(TEST_ERROR_MESSAGE);
-    var httpMessageNotReadableException = new HttpMessageNotReadableException(TEST_ERROR_MESSAGE, validationException);
+    var httpMessageNotReadableException = new HttpMessageNotReadableException(TEST_ERROR_MESSAGE, validationException,
+      new MockHttpInputMessage(TEST_ERROR_MESSAGE.getBytes()));
 
     // Act
     ResponseEntity<Errors> responseEntity =
-        apiErrorHandler.handlerHttpMessageNotReadableException(httpMessageNotReadableException);
+      apiErrorHandler.handlerHttpMessageNotReadableException(httpMessageNotReadableException);
 
     // Assert
     assertErrorResponse(httpMessageNotReadableException, VALIDATION_ERROR, HttpStatus.BAD_REQUEST, responseEntity,
-        TEST_ERROR_MESSAGE);
+      TEST_ERROR_MESSAGE);
   }
 
   @ParameterizedTest
@@ -238,27 +240,27 @@ class ApiErrorHandlerTest {
 
   private static Stream<Exception> resourceNotFoundExceptionsProvider() {
     return Stream.of(
-        mock(AuthorityNotFoundException.class),
-        mock(AuthorityNoteTypeNotFoundException.class),
-        mock(AuthoritySourceFileNotFoundException.class),
-        mock(LinkingRuleNotFoundException.class),
-        mock(MarcAuthorityNotFoundException.class),
-        mock(ReindexJobNotFoundException.class)
+      mock(AuthorityNotFoundException.class),
+      mock(AuthorityNoteTypeNotFoundException.class),
+      mock(AuthoritySourceFileNotFoundException.class),
+      mock(LinkingRuleNotFoundException.class),
+      mock(MarcAuthorityNotFoundException.class),
+      mock(ReindexJobNotFoundException.class)
     );
   }
 
   private static Stream<Exception> validationExceptionsProvider() {
     return Stream.of(
-        mock(MethodArgumentTypeMismatchException.class),
-        mock(MissingServletRequestParameterException.class),
-        mock(IllegalArgumentException.class)
+      mock(MethodArgumentTypeMismatchException.class),
+      mock(MissingServletRequestParameterException.class),
+      mock(IllegalArgumentException.class)
     );
   }
 
   private static Stream<Exception> violationExceptionsProvider() {
     return Stream.of(
-        mock(DataIntegrityViolationException.class),
-        mock(InvalidDataAccessApiUsageException.class)
+      mock(DataIntegrityViolationException.class),
+      mock(InvalidDataAccessApiUsageException.class)
     );
   }
 
@@ -272,7 +274,7 @@ class ApiErrorHandlerTest {
     assertEquals(1, errors.getTotalRecords());
     assertEquals(1, errors.getErrors().size());
 
-    var error = errors.getErrors().get(0);
+    var error = errors.getErrors().getFirst();
     assertEquals(errorMessage, error.getMessage());
     assertEquals(exception.getClass().getSimpleName(), error.getType());
     assertEquals(errorType.getValue(), error.getCode());

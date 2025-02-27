@@ -67,8 +67,8 @@ class DataStatsMapperTest {
     List<BibStatsDto> dtoList = mapper.convertToDto(sourceList);
     assertThat(sourceList).hasSize(dtoList.size());
 
-    InstanceAuthorityLink source = sourceList.get(0);
-    BibStatsDto dto = dtoList.get(0);
+    InstanceAuthorityLink source = sourceList.getFirst();
+    BibStatsDto dto = dtoList.getFirst();
     assertThat(source.getAuthority().getNaturalId()).isEqualTo(dto.getAuthorityNaturalId());
     assertThat(source.getLinkingRule().getBibField()).isEqualTo(dto.getBibRecordTag());
     assertThat(source.getInstanceId()).isEqualTo(dto.getInstanceId());

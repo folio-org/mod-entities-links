@@ -25,13 +25,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @UnitTest
@@ -41,7 +41,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ImportAutoConfiguration(CacheAutoConfiguration.class)
 class InstanceAuthorityLinkingRulesServiceTest {
 
-  private @MockBean LinkingRulesRepository repository;
+  private @MockitoBean LinkingRulesRepository repository;
 
   private @Autowired InstanceAuthorityLinkingRulesService service;
   private @Autowired CacheManager cacheManager;

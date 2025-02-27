@@ -40,12 +40,12 @@ class SourceContentMapperTest {
     ParsedRecordContentCollection contentCollection = mapper.convertToParsedContentCollection(listOfContent);
 
     assertThat(contentCollection.getRecords()).hasSize(1);
-    assertThat(contentCollection.getRecords().get(0).getLeader()).isEqualTo(content.getLeader());
-    FieldContentValue tag = contentCollection.getRecords().get(0).getFields().get(0).get("tag");
-    assertThat(tag.getInd1()).isEqualTo(content.getFields().get(0).getInd1());
-    assertThat(tag.getInd2()).isEqualTo(content.getFields().get(0).getInd2());
-    var subFieldValue = content.getFields().get(0).getSubfields('a').get(0).value();
-    assertThat(tag.getSubfields().get(0)).containsEntry("a", subFieldValue);
+    assertThat(contentCollection.getRecords().getFirst().getLeader()).isEqualTo(content.getLeader());
+    FieldContentValue tag = contentCollection.getRecords().getFirst().getFields().getFirst().get("tag");
+    assertThat(tag.getInd1()).isEqualTo(content.getFields().getFirst().getInd1());
+    assertThat(tag.getInd2()).isEqualTo(content.getFields().getFirst().getInd2());
+    var subFieldValue = content.getFields().getFirst().getSubfields('a').getFirst().value();
+    assertThat(tag.getSubfields().getFirst()).containsEntry("a", subFieldValue);
 
   }
 
@@ -56,10 +56,10 @@ class SourceContentMapperTest {
     SourceParsedContent result = mapper.convertToParsedContent(content);
 
     assertThat(result.getLeader()).isEqualTo(content.getLeader());
-    FieldParsedContent parsedContent = result.getFields().get(0);
-    assertThat(parsedContent.getInd1()).isEqualTo(content.getFields().get(0).get("tag").getInd1());
-    assertThat(parsedContent.getInd2()).isEqualTo(content.getFields().get(0).get("tag").getInd2());
-    assertThat(parsedContent.getLinkDetails()).isEqualTo(content.getFields().get(0).get("tag").getLinkDetails());
+    FieldParsedContent parsedContent = result.getFields().getFirst();
+    assertThat(parsedContent.getInd1()).isEqualTo(content.getFields().getFirst().get("tag").getInd1());
+    assertThat(parsedContent.getInd2()).isEqualTo(content.getFields().getFirst().get("tag").getInd2());
+    assertThat(parsedContent.getLinkDetails()).isEqualTo(content.getFields().getFirst().get("tag").getLinkDetails());
   }
 
   @Test
@@ -79,38 +79,38 @@ class SourceContentMapperTest {
 
     List<AuthorityParsedContent> resultList = mapper.convertToAuthorityParsedContent(recordCollection, authorities);
 
-    var authorityParsedContent = resultList.get(0);
-    var parsedContent = authorityParsedContent.getFields().get(0);
-    var field = strippedParsedRecord.getParsedRecord().getContent().getFields().get(0);
+    var authorityParsedContent = resultList.getFirst();
+    var parsedContent = authorityParsedContent.getFields().getFirst();
+    var field = strippedParsedRecord.getParsedRecord().getContent().getFields().getFirst();
     assertThat(resultList).hasSize(1);
-    assertThat(authorityParsedContent.getId()).isEqualTo(authorities.get(0).getId());
-    assertThat(authorityParsedContent.getNaturalId()).isEqualTo(authorities.get(0).getNaturalId());
+    assertThat(authorityParsedContent.getId()).isEqualTo(authorities.getFirst().getId());
+    assertThat(authorityParsedContent.getNaturalId()).isEqualTo(authorities.getFirst().getNaturalId());
     assertThat(parsedContent.getInd1()).isEqualTo(field.get("tag").getInd1());
     assertThat(parsedContent.getInd2()).isEqualTo(field.get("tag").getInd2());
     assertThat(parsedContent.getLinkDetails()).isEqualTo(field.get("tag").getLinkDetails());
     assertThat(authorityParsedContent.getLeader())
       .isEqualTo(strippedParsedRecord.getParsedRecord().getContent().getLeader());
-    assertThat(parsedContent.getSubfields('a').get(0).value())
-      .isEqualTo(field.get("tag").getSubfields().get(0).get("a"));
+    assertThat(parsedContent.getSubfields('a').getFirst().value())
+      .isEqualTo(field.get("tag").getSubfields().getFirst().get("a"));
   }
 
   @Test
   void testConvertToParsedContent_ContentCollection() {
-    ParsedRecordContent record = createParsedRecordContent();
+    ParsedRecordContent recordContent = createParsedRecordContent();
     var contentCollection = new ParsedRecordContentCollection();
-    contentCollection.setRecords(List.of(record));
+    contentCollection.setRecords(List.of(recordContent));
 
     List<SourceParsedContent> resultList = mapper.convertToParsedContent(contentCollection);
 
-    FieldParsedContent parsedContent = resultList.get(0).getFields().get(0);
-    Map<String, FieldContentValue> contentMap = record.getFields().get(0);
+    FieldParsedContent parsedContent = resultList.getFirst().getFields().getFirst();
+    Map<String, FieldContentValue> contentMap = recordContent.getFields().getFirst();
     assertThat(resultList).hasSize(1);
-    assertThat(resultList.get(0).getLeader()).isEqualTo(record.getLeader());
+    assertThat(resultList.getFirst().getLeader()).isEqualTo(recordContent.getLeader());
     assertThat(parsedContent.getInd1()).isEqualTo(contentMap.get("tag").getInd1());
     assertThat(parsedContent.getInd2()).isEqualTo(contentMap.get("tag").getInd2());
     assertThat(parsedContent.getLinkDetails()).isEqualTo(contentMap.get("tag").getLinkDetails());
-    assertThat(parsedContent.getSubfields('a').get(0).value())
-      .isEqualTo(contentMap.get("tag").getSubfields().get(0).get("a"));
+    assertThat(parsedContent.getSubfields('a').getFirst().value())
+      .isEqualTo(contentMap.get("tag").getSubfields().getFirst().get("a"));
   }
 
   @NotNull

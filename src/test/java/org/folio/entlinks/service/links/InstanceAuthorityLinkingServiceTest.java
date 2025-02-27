@@ -15,7 +15,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -326,7 +325,7 @@ class InstanceAuthorityLinkingServiceTest {
   void getLinks_positive() {
     var status = LinkStatus.ACTUAL;
     var fromDate = OffsetDateTime.now();
-    var toDate = fromDate.plus(1, ChronoUnit.DAYS);
+    var toDate = fromDate.plusDays(1);
     var limit = 1;
     var pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("updatedAt")));
     var expectedLinks = singletonList(InstanceAuthorityLink.builder()

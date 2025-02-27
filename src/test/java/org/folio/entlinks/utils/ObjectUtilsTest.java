@@ -47,7 +47,6 @@ class ObjectUtilsTest {
 
   @Value
   static class TestClass {
-
     String a1;
     String a2;
   }

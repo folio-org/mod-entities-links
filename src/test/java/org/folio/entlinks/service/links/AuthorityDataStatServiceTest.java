@@ -72,7 +72,7 @@ class AuthorityDataStatServiceTest {
 
     service.updateForReports(jobId, reports);
 
-    verify(linkingService).saveAll(eq(reports.get(0).getInstanceId()), linksCaptor.capture());
+    verify(linkingService).saveAll(eq(reports.getFirst().getInstanceId()), linksCaptor.capture());
     var links = linksCaptor.getValue();
     assertThat(links)
       .anySatisfy(linkAsserter(ACTUAL, null));
@@ -92,7 +92,7 @@ class AuthorityDataStatServiceTest {
 
     service.updateForReports(jobId, reports);
 
-    verify(linkingService).saveAll(eq(reports.get(0).getInstanceId()), linksCaptor.capture());
+    verify(linkingService).saveAll(eq(reports.getFirst().getInstanceId()), linksCaptor.capture());
     var links = linksCaptor.getValue();
     assertThat(links)
       .anySatisfy(linkAsserter(ERROR, REPORT_ERROR));

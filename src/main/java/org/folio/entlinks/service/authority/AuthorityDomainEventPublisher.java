@@ -27,11 +27,11 @@ public class AuthorityDomainEventPublisher {
   public void publishCreateEvent(AuthorityDto created) {
     var id = created.getId();
     if (id == null) {
-      log.warn("Created Authority cannot have null id: {}", created);
+      log.warn("publishCreateEvent::created Authority cannot have null id: {}", created);
       return;
     }
 
-    log.debug("publishCreated::process authority id={}", id);
+    log.debug("publishCreateEvent::process authority id={}", id);
 
     var domainEvent = DomainEvent.createEvent(id, created, folioExecutionContext.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent, DOMAIN_EVENT_TYPE_HEADER, DomainEventType.CREATE);
@@ -40,11 +40,12 @@ public class AuthorityDomainEventPublisher {
   public void publishUpdateEvent(AuthorityDto oldAuthority, AuthorityDto updatedAuthority) {
     var id = updatedAuthority.getId();
     if (id == null || oldAuthority.getId() == null) {
-      log.warn("Old/New Authority cannot have null id: updated.id - {}, old.id: {}", id, oldAuthority.getId());
+      log.warn("publishUpdateEvent::old/new Authority cannot have null id: updated.id - {}, old.id: {}",
+        id, oldAuthority.getId());
       return;
     }
 
-    log.debug("publishUpdated::process authority id={}", id);
+    log.debug("publishUpdateEvent::process authority id={}", id);
 
     var domainEvent = DomainEvent.updateEvent(id, oldAuthority, updatedAuthority,
       folioExecutionContext.getTenantId());
@@ -54,11 +55,11 @@ public class AuthorityDomainEventPublisher {
   public void publishSoftDeleteEvent(AuthorityDto deleted) {
     var id = deleted.getId();
     if (id == null) {
-      log.warn("Deleted Authority cannot have null id: {}", deleted);
+      log.warn("publishSoftDeleteEvent::deleted Authority cannot have null id: {}", deleted);
       return;
     }
 
-    log.debug("publishRemoved::process authority id={}", id);
+    log.debug("publishSoftDeleteEvent::process authority id={}", id);
 
     var domainEvent = AuthorityDomainEvent.softDeleteEvent(id, deleted, folioExecutionContext.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent, DOMAIN_EVENT_TYPE_HEADER, DomainEventType.DELETE);
@@ -67,11 +68,11 @@ public class AuthorityDomainEventPublisher {
   public void publishHardDeleteEvent(AuthorityDto deleted) {
     var id = deleted.getId();
     if (id == null) {
-      log.warn("Deleted Authority cannot have null id: {}", deleted);
+      log.warn("publishHardDeleteEvent::deleted Authority cannot have null id: {}", deleted);
       return;
     }
 
-    log.debug("publishRemoved::process authority id={}", id);
+    log.debug("publishHardDeleteEvent::process authority id={}", id);
 
     var domainEvent = AuthorityDomainEvent.hardDeleteEvent(id, deleted, folioExecutionContext.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent, DOMAIN_EVENT_TYPE_HEADER, DomainEventType.DELETE);
@@ -80,11 +81,11 @@ public class AuthorityDomainEventPublisher {
   public void publishReindexEvent(AuthorityDto authority, ReindexContext context) {
     var id = authority.getId();
     if (id == null) {
-      log.warn("Persisted Authority cannot have null id: {}", authority);
+      log.warn("publishReindexEvent::persisted Authority cannot have null id: {}", authority);
       return;
     }
 
-    log.debug("reindex::process authority id={}", id);
+    log.debug("publishReindexEvent::process authority id={}", id);
     var domainEvent = DomainEvent.reindexEvent(id, authority, context.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent,
       REINDEX_JOB_ID_HEADER, context.getJobId(), DOMAIN_EVENT_TYPE_HEADER, DomainEventType.REINDEX);

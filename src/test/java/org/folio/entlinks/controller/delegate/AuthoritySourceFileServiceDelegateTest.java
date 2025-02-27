@@ -445,7 +445,7 @@ class AuthoritySourceFileServiceDelegateTest {
 
     assertThat(exc.getMessage()).isEqualTo("Action 'UPDATE' is not supported for consortium member tenant");
     assertThat(exc.getInvalidParameters()).hasSize(1);
-    assertThat(exc.getInvalidParameters().get(0))
+    assertThat(exc.getInvalidParameters().getFirst())
       .matches(param -> param.getKey().equals("tenantId") && param.getValue().equals(TENANT_ID));
     verifyNoInteractions(mapper);
     verifyNoMoreInteractions(service);
@@ -466,7 +466,7 @@ class AuthoritySourceFileServiceDelegateTest {
 
     assertThat(exc.getMessage()).isEqualTo("Action 'DELETE' is not supported for consortium member tenant");
     assertThat(exc.getInvalidParameters()).hasSize(1);
-    assertThat(exc.getInvalidParameters().get(0))
+    assertThat(exc.getInvalidParameters().getFirst())
       .matches(param -> param.getKey().equals("tenantId") && param.getValue().equals(TENANT_ID));
     verifyNoMoreInteractions(service);
     verifyNoInteractions(propagationService);

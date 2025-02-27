@@ -45,8 +45,6 @@ class InstanceAuthorityStatServiceDelegateTest {
 
   private static final UUID USER_ID_1 = UUID.randomUUID();
   private static final UUID USER_ID_2 = UUID.randomUUID();
-  private static final UUID SOURCE_FILE_ID = UUID.randomUUID();
-  private static final String BASE_URL = "baseUrl";
   private static final String SOURCE_FILE_NAME = "sourceFileName";
   private static final LocalDateTime NOW = LocalDateTime.now();
   private static final OffsetDateTime FROM_DATE = OffsetDateTime.of(NOW.with(LocalTime.MIN), ZoneOffset.UTC);
@@ -86,9 +84,9 @@ class InstanceAuthorityStatServiceDelegateTest {
     AuthorityDataStat authorityDataStat2 = statData.get(1);
     var userList = users.getResult();
     when(mapper.convertToDto(authorityDataStat1))
-      .thenReturn(TestDataUtils.getStatDataDto(authorityDataStat1, userList.get(0)));
+      .thenReturn(TestDataUtils.getStatDataDto(authorityDataStat1, userList.getFirst()));
     when(mapper.convertToDto(authorityDataStat2))
-      .thenReturn(TestDataUtils.getStatDataDto(authorityDataStat2, userList.get(0)));
+      .thenReturn(TestDataUtils.getStatDataDto(authorityDataStat2, userList.getFirst()));
   }
 
   @Test

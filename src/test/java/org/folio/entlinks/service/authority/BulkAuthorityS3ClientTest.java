@@ -42,7 +42,7 @@ class BulkAuthorityS3ClientTest {
 
     // Assert
     assertEquals(1, resultList.size());
-    var stringAuthority = resultList.get(0);
+    var stringAuthority = resultList.getFirst();
     assertThat(stringAuthority).contains(AUTHORITY_UUID, "Test Authority");
   }
 

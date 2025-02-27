@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -29,10 +30,13 @@ class EventProducerTest {
   private static final String TENANT_ID = "TEST_TENANT";
 
   @Mock
-  KafkaTemplate<String, DomainEvent<?>> template;
+  private KafkaTemplate<String, DomainEvent<?>> template;
 
   @Mock
   private FolioExecutionContext context;
+
+  @Captor
+  private ArgumentCaptor<ProducerRecord<String, DomainEvent<?>>> captor;
 
   private EventProducer<DomainEvent<?>> eventProducer;
 
@@ -45,7 +49,7 @@ class EventProducerTest {
   @Test
   void shouldSendMessageToTenantCollectionTopic() {
     ReflectionTestUtils.setField(KafkaUtils.class, "TENANT_COLLECTION_TOPICS_ENABLED", true);
-    ReflectionTestUtils.setField(KafkaUtils.class, "TENANT_COLLECTION_TOPIC_QUALIFIER", "COLLECTION");
+    ReflectionTestUtils.setField(KafkaUtils.class, "tenantCollectionTopicQualifier", "COLLECTION");
     when(context.getTenantId()).thenReturn(TENANT_ID);
     var messageId = UUID.randomUUID();
     var payload = new AuthorityDto().id(messageId);
@@ -54,9 +58,8 @@ class EventProducerTest {
 
     eventProducer.sendMessage(messageId.toString(), domainEvent, "headerKey", "headerVal");
 
-    var captor = ArgumentCaptor.forClass(ProducerRecord.class);
     verify(template).send(captor.capture());
-    var capturedRecord = (ProducerRecord<String, DomainEvent<AuthorityDto>>) captor.getValue();
+    var capturedRecord = captor.getValue();
     assertNotNull(capturedRecord);
     assertEquals(expectedTopicName, capturedRecord.topic());
     assertEquals(domainEvent, capturedRecord.value());

@@ -43,7 +43,7 @@ class ReindexJobMapperTest {
     List<ReindexJobDto> dtoList = mapper.toDtoList(jobList);
 
     assertThat(dtoList).hasSize(1);
-    ReindexJobDto dto = dtoList.get(0);
+    ReindexJobDto dto = dtoList.getFirst();
     assertThat(dto.getId()).isEqualTo(job.getId());
     assertThat(dto.getPublished()).isEqualTo(job.getPublished());
     assertThat(dto.getJobStatus().name()).isEqualTo(job.getJobStatus().name());
@@ -61,7 +61,7 @@ class ReindexJobMapperTest {
 
     assertThat(dtoCollection.getTotalRecords()).isEqualTo(1);
     assertThat(dtoCollection.getReindexJobs()).hasSize(1);
-    ReindexJobDto dto = dtoCollection.getReindexJobs().get(0);
+    ReindexJobDto dto = dtoCollection.getReindexJobs().getFirst();
     assertThat(dto.getId()).isEqualTo(job.getId());
     assertThat(dto.getPublished()).isEqualTo(job.getPublished());
     assertThat(dto.getJobStatus().name()).isEqualTo(job.getJobStatus().name());

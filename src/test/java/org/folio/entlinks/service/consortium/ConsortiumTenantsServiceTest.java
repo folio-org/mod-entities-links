@@ -42,7 +42,7 @@ public class ConsortiumTenantsServiceTest {
 
     List<String> result = consortiumTenantsService.getConsortiumTenants(tenantId);
 
-    assertThat(result.get(0)).isEqualTo(TENANT);
+    assertThat(result.getFirst()).isEqualTo(TENANT);
   }
 
 

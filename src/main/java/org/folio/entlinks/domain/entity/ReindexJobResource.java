@@ -3,11 +3,12 @@ package org.folio.entlinks.domain.entity;
 import java.util.Arrays;
 import lombok.Getter;
 
+@Getter
 public enum ReindexJobResource {
 
   AUTHORITY("Authority");
 
-  private final @Getter String authority;
+  private final String authority;
 
   ReindexJobResource(String authority) {
     this.authority = authority;

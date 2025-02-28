@@ -82,6 +82,17 @@ public class EventProducer<T> {
     return producerRecord;
   }
 
+  public void sendMessagesWithSystemUserId(List<T> msgBodies, Map<String, Collection<String>> headersMap) {
+    if (log.isTraceEnabled()) {
+      log.trace("Sending events to Kafka [topic: {}, bodies: {}]", topicName, msgBodies);
+    } else {
+      log.info("Sending events to Kafka [topic: {}, number: {}]", topicName, msgBodies.size());
+    }
+    msgBodies.stream()
+        .map(record -> toProducerRecord(null, record, headersMap))
+        .forEach(template::send);
+  }
+
   private String topicName() {
     return getTenantTopicName(topicName, context.getTenantId());
   }

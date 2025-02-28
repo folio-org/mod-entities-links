@@ -1,7 +1,6 @@
 package org.folio.entlinks.service.authority;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -10,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.UUID;
 import org.folio.entlinks.domain.dto.AuthorityDto;
-import org.folio.entlinks.integration.UsersService;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEvent;
@@ -33,17 +31,12 @@ class AuthorityDomainEventPublisherTest {
 
   private static final String TENANT_ID = "test";
   private static final String DOMAIN_EVENT_TYPE_HEADER = "domain-event-type";
-  private static final String OKAPI_USER_ID = "x-okapi-user-id";
-  private static final String SYSTEM_USER_QUERY = "(username='mod-entities-links' and type=system and active=true)";
 
   @Mock
   private EventProducer<DomainEvent<?>> eventProducer;
 
   @Mock
   private FolioExecutionContext folioExecutionContext;
-
-  @Mock
-  private UsersService userService;
 
   @InjectMocks
   private AuthorityDomainEventPublisher eventPublisher;
@@ -92,28 +85,6 @@ class AuthorityDomainEventPublisherTest {
     var oldDto = new AuthorityDto().id(id).source("sourceOld");
     var newDto = new AuthorityDto().id(id).source("sourceNew");
     when(folioExecutionContext.getTenantId()).thenReturn(TENANT_ID);
-    when(userService.getSystemUserId(SYSTEM_USER_QUERY)).thenReturn("systemUserId");
-
-    // when
-    eventPublisher.publishUpdateEvent(oldDto, newDto);
-
-    // then
-    verify(eventProducer).sendMessage(eq(oldDto.getId().toString()), captor.capture(),
-        eq(DOMAIN_EVENT_TYPE_HEADER), eq(DomainEventType.UPDATE), eq(OKAPI_USER_ID), eq("systemUserId"));
-    assertEquals(newDto, captor.getValue().getNewEntity());
-    assertEquals(oldDto, captor.getValue().getOldEntity());
-    assertEquals(TENANT_ID, captor.getValue().getTenant());
-  }
-
-  @Test
-  void shouldSendUpdatedEventWithoutSystemUserId() {
-    // given
-    var id = UUID.randomUUID();
-    var oldDto = new AuthorityDto().id(id).source("sourceOld");
-    var newDto = new AuthorityDto().id(id).source("sourceNew");
-    when(folioExecutionContext.getTenantId()).thenReturn(TENANT_ID);
-    when(userService.getSystemUserId(any())).thenReturn(null);
-
     // when
     eventPublisher.publishUpdateEvent(oldDto, newDto);
 

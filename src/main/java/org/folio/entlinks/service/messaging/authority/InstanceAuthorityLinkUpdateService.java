@@ -3,6 +3,8 @@ package org.folio.entlinks.service.messaging.authority;
 import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType.UPDATE;
 import static org.folio.entlinks.utils.ObjectUtils.getDifference;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -11,9 +13,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
+import org.folio.entlinks.integration.UsersService;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEventType;
@@ -29,11 +33,15 @@ import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolde
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.service.SystemUserService;
 import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
 public class InstanceAuthorityLinkUpdateService {
+
+  private static final String OKAPI_USER_ID = "x-okapi-user-id";
+  private static final String SYSTEM_USER_QUERY = "(username='mod-entities-links' and type=system and active=true)";
 
   private final AuthorityDataStatService authorityDataStatService;
   private final Map<AuthorityChangeType, AuthorityChangeHandler> changeHandlers;
@@ -44,6 +52,8 @@ public class InstanceAuthorityLinkUpdateService {
   private final ConsortiumTenantsService consortiumTenantsService;
   private final FolioExecutionContext folioExecutionContext;
   private final SystemUserScopedExecutionService executionService;
+  private final SystemUserService systemUserService;
+  private final UsersService usersService;
 
   public InstanceAuthorityLinkUpdateService(AuthorityDataStatService authorityDataStatService,
                                             AuthorityMappingRulesProcessingService mappingRulesProcessingService,
@@ -53,7 +63,9 @@ public class InstanceAuthorityLinkUpdateService {
                                             AuthoritySourceRecordService sourceRecordService,
                                             ConsortiumTenantsService consortiumTenantsService,
                                             FolioExecutionContext folioExecutionContext,
-                                            SystemUserScopedExecutionService executionService) {
+                                            SystemUserScopedExecutionService executionService,
+                                            SystemUserService systemUserService,
+                                            UsersService usersService) {
     this.authorityDataStatService = authorityDataStatService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.linkingService = linkingService;
@@ -64,6 +76,8 @@ public class InstanceAuthorityLinkUpdateService {
     this.consortiumTenantsService = consortiumTenantsService;
     this.folioExecutionContext = folioExecutionContext;
     this.executionService = executionService;
+    this.systemUserService = systemUserService;
+    this.usersService = usersService;
   }
 
   public void handleAuthoritiesChanges(List<AuthorityDomainEvent> events) {
@@ -194,7 +208,19 @@ public class InstanceAuthorityLinkUpdateService {
   private void sendEvents(List<LinksChangeEvent> events, AuthorityChangeType type) {
     log.info("Sending {} {} events to Kafka for tenant {}", events.size(), type,
         folioExecutionContext.getTenantId());
-    eventProducer.sendMessages(events);
+    var userId = usersService.getSystemUserId(SYSTEM_USER_QUERY);
+    var systemUser = systemUserService.getAuthedSystemUser(folioExecutionContext.getTenantId());
+    if (systemUser != null) {
+      log.info("toProducerRecord::systemUser.userId() {}", systemUser.userId());
+    }
+    log.info("toProducerRecord:: systemUsers {}", userId);
+    if (StringUtils.isNotEmpty(userId)) {
+      var headersMap = new HashMap<String, Collection<String>>();
+      headersMap.put(OKAPI_USER_ID, List.of(userId));
+      eventProducer.sendMessagesWithSystemUserId(events, headersMap);
+    } else {
+      eventProducer.sendMessages(events);
+    }
   }
 
 }

@@ -2,9 +2,7 @@ package org.folio.entlinks.service.authority;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.dto.AuthorityDto;
-import org.folio.entlinks.integration.UsersService;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEventType;
@@ -21,13 +19,10 @@ public class AuthorityDomainEventPublisher {
 
   private static final String DOMAIN_EVENT_TYPE_HEADER = "domain-event-type";
   private static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";
-  private static final String OKAPI_USER_ID = "x-okapi-user-id";
-  private static final String SYSTEM_USER_QUERY = "(username='mod-entities-links' and type=system and active=true)";
 
   @Qualifier("authorityDomainMessageProducer")
   private final EventProducer<DomainEvent<?>> eventProducer;
   private final FolioExecutionContext folioExecutionContext;
-  private final UsersService usersService;
 
   public void publishCreateEvent(AuthorityDto created) {
     var id = created.getId();
@@ -55,14 +50,7 @@ public class AuthorityDomainEventPublisher {
 
     var domainEvent = DomainEvent.updateEvent(id, oldAuthority, updatedAuthority, folioExecutionContext.getTenantId());
 
-    var userId = usersService.getSystemUserId(SYSTEM_USER_QUERY);
-    log.info("toProducerRecord:: systemUsers {}", userId);
-    if (StringUtils.isNotEmpty(userId)) {
-      eventProducer.sendMessage(id.toString(), domainEvent, DOMAIN_EVENT_TYPE_HEADER, DomainEventType.UPDATE,
-          OKAPI_USER_ID, userId);
-    } else {
-      eventProducer.sendMessage(id.toString(), domainEvent, DOMAIN_EVENT_TYPE_HEADER, DomainEventType.UPDATE);
-    }
+    eventProducer.sendMessage(id.toString(), domainEvent, DOMAIN_EVENT_TYPE_HEADER, DomainEventType.UPDATE);
   }
 
   public void publishSoftDeleteEvent(AuthorityDto deleted) {

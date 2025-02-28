@@ -22,6 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
+import org.folio.entlinks.integration.UsersService;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
@@ -36,6 +37,7 @@ import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolde
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.service.SystemUserService;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +65,8 @@ class InstanceAuthorityLinkUpdateServiceTest {
   private @Mock ConsortiumTenantsService consortiumTenantsService;
   private @Mock FolioExecutionContext folioExecutionContext;
   private @Mock SystemUserScopedExecutionService executionService;
+  private @Mock SystemUserService systemUserService;
+  private @Mock UsersService usersService;
 
   private InstanceAuthorityLinkUpdateService service;
 
@@ -72,8 +76,9 @@ class InstanceAuthorityLinkUpdateServiceTest {
     when(deleteHandler.supportedAuthorityChangeType()).thenReturn(AuthorityChangeType.DELETE);
 
     service = new InstanceAuthorityLinkUpdateService(authorityDataStatService,
-      mappingRulesProcessingService, linkingService, eventProducer, List.of(updateHandler, deleteHandler),
-      sourceRecordService, consortiumTenantsService, folioExecutionContext, executionService);
+        mappingRulesProcessingService, linkingService, eventProducer, List.of(updateHandler, deleteHandler),
+        sourceRecordService, consortiumTenantsService, folioExecutionContext, executionService,
+        systemUserService, usersService);
   }
 
   @Test

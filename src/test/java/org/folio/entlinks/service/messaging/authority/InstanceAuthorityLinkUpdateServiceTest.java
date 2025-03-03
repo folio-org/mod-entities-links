@@ -37,7 +37,6 @@ import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolde
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
-import org.folio.spring.service.SystemUserService;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +64,6 @@ class InstanceAuthorityLinkUpdateServiceTest {
   private @Mock ConsortiumTenantsService consortiumTenantsService;
   private @Mock FolioExecutionContext folioExecutionContext;
   private @Mock SystemUserScopedExecutionService executionService;
-  private @Mock SystemUserService systemUserService;
   private @Mock UsersService usersService;
 
   private InstanceAuthorityLinkUpdateService service;
@@ -77,8 +75,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     service = new InstanceAuthorityLinkUpdateService(authorityDataStatService,
         mappingRulesProcessingService, linkingService, eventProducer, List.of(updateHandler, deleteHandler),
-        sourceRecordService, consortiumTenantsService, folioExecutionContext, executionService,
-        systemUserService, usersService);
+        sourceRecordService, consortiumTenantsService, folioExecutionContext, executionService, usersService);
   }
 
   @Test

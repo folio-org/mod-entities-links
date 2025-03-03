@@ -33,7 +33,6 @@ import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolde
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
-import org.folio.spring.service.SystemUserService;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -52,7 +51,6 @@ public class InstanceAuthorityLinkUpdateService {
   private final ConsortiumTenantsService consortiumTenantsService;
   private final FolioExecutionContext folioExecutionContext;
   private final SystemUserScopedExecutionService executionService;
-  private final SystemUserService systemUserService;
   private final UsersService usersService;
 
   public InstanceAuthorityLinkUpdateService(AuthorityDataStatService authorityDataStatService,
@@ -64,7 +62,6 @@ public class InstanceAuthorityLinkUpdateService {
                                             ConsortiumTenantsService consortiumTenantsService,
                                             FolioExecutionContext folioExecutionContext,
                                             SystemUserScopedExecutionService executionService,
-                                            SystemUserService systemUserService,
                                             UsersService usersService) {
     this.authorityDataStatService = authorityDataStatService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
@@ -76,7 +73,6 @@ public class InstanceAuthorityLinkUpdateService {
     this.consortiumTenantsService = consortiumTenantsService;
     this.folioExecutionContext = folioExecutionContext;
     this.executionService = executionService;
-    this.systemUserService = systemUserService;
     this.usersService = usersService;
   }
 
@@ -211,10 +207,6 @@ public class InstanceAuthorityLinkUpdateService {
     var id = folioExecutionContext.getUserId();
     log.info("toProducerRecord:: folioExecutionContext.getUserId() {}", id);
     var userId = usersService.getSystemUserId(SYSTEM_USER_QUERY);
-    var systemUser = systemUserService.getAuthedSystemUser(folioExecutionContext.getTenantId());
-    if (systemUser != null) {
-      log.info("toProducerRecord::systemUser.userId() {}", systemUser.userId());
-    }
     log.info("toProducerRecord:: systemUsers {}", userId);
     if (StringUtils.isNotEmpty(userId)) {
       var headersMap = new HashMap<String, Collection<String>>();

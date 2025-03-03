@@ -50,8 +50,6 @@ public class EventProducer<T> {
     } else {
       log.info("Sending events to Kafka [topic: {}, number: {}]", topicName, msgBodies.size());
     }
-    var userId = context.getUserId();
-    log.info("context.getUserId: {}", userId);
     msgBodies.stream()
       .map(this::toProducerRecord)
       .forEach(template::send);
@@ -90,6 +88,8 @@ public class EventProducer<T> {
     } else {
       log.info("Sending events to Kafka [topic: {}, number: {}]", topicName, msgBodies.size());
     }
+    var userId = context.getUserId();
+    log.info("context.getUserId: {}", userId);
     msgBodies.stream()
         .map(record -> toProducerRecord(null, record, headersMap))
         .forEach(template::send);

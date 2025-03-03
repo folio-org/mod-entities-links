@@ -26,7 +26,7 @@
     </sonar.exclusions>
 
     <folio-spring-support.version>9.1.0-SNAPSHOT</folio-spring-support.version>
-    <folio-service-tools.version>5.0.0-SNAPSHOT</folio-service-tools.version>
+    <folio-service-tools.version>5.1.0-SNAPSHOT</folio-service-tools.version>
     <folio-s3-client.version>2.3.0-SNAPSHOT</folio-s3-client.version>
     <mod-record-specifications-dto.version>2.0.0-SNAPSHOT</mod-record-specifications-dto.version>
     <aws-sdk-java.version>2.29.40</aws-sdk-java.version>

@@ -13,7 +13,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
-import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.ConsortiumIllegalActionException;
 import org.folio.spring.testing.extension.Random;
 import org.folio.spring.testing.extension.impl.RandomParametersExtension;
@@ -29,7 +28,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ConsortiumAuthorityServiceTest {
 
   private @Mock AuthorityRepository repository;
-  private @Mock AuthoritySourceFileRepository sourceFileRepository;
   private @InjectMocks ConsortiumAuthorityService consortiumAuthorityService;
 
   private @Mock BiConsumer<Authority, Authority> authorityConsumer;
@@ -40,14 +38,13 @@ class ConsortiumAuthorityServiceTest {
     // Arrange
     boolean forced = true;
     when(repository.findByIdAndDeletedFalse(any())).thenReturn(Optional.of(authority));
-    when(sourceFileRepository.existsById(any())).thenReturn(true);
 
     // Act
-    consortiumAuthorityService.updateInner(authority, forced);
+    consortiumAuthorityService.updateInner(authority, forced, authorityConsumer);
 
     // Assert
+    verify(authorityConsumer).accept(any(), any());
     verify(repository).findByIdAndDeletedFalse(any());
-    verify(sourceFileRepository).existsById(any());
   }
 
   @Test
@@ -59,7 +56,7 @@ class ConsortiumAuthorityServiceTest {
 
     // Act
     assertThrows(ConsortiumIllegalActionException.class,
-      () -> consortiumAuthorityService.updateInner(authority, forced));
+      () -> consortiumAuthorityService.updateInner(authority, forced, authorityConsumer));
 
     // Assert
     verifyNoInteractions(authorityConsumer); // Should not call updateInner
@@ -73,9 +70,10 @@ class ConsortiumAuthorityServiceTest {
     when(repository.findByIdAndDeletedFalse(any())).thenReturn(Optional.of(authority));
 
     // Act
-    consortiumAuthorityService.deleteByIdInner(id, forced);
+    consortiumAuthorityService.deleteByIdInner(id, forced, authorityCallback);
 
     // Assert
+    verify(authorityCallback).accept(any());
     verify(repository).findByIdAndDeletedFalse(any());
   }
 
@@ -88,7 +86,7 @@ class ConsortiumAuthorityServiceTest {
 
     // Act
     assertThrows(ConsortiumIllegalActionException.class,
-      () -> consortiumAuthorityService.deleteByIdInner(id, forced));
+      () -> consortiumAuthorityService.deleteByIdInner(id, forced, authorityCallback));
 
     // Assert
     verifyNoInteractions(authorityCallback);

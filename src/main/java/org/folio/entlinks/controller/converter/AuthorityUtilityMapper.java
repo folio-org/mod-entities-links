@@ -2,19 +2,32 @@ package org.folio.entlinks.controller.converter;
 
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.CHRON_SUBDIVISION_HEADING;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.CHRON_SUBDIVISION_HEADING_TRUNC;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.CHRON_TERM_HEADING;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.CHRON_TERM_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.CORPORATE_NAME_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.CORPORATE_NAME_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.CORPORATE_NAME_TITLE_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.CORPORATE_NAME_TITLE_HEADING_TRUNC;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.FORM_SUBDIVISION_HEADING;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.FORM_SUBDIVISION_HEADING_TRUNC;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.GENERAL_SUBDIVISION_HEADING;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.GENERAL_SUBDIVISION_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.GENRE_TERM_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.GENRE_TERM_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.GEOGRAPHIC_NAME_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.GEOGRAPHIC_NAME_HEADING_TRUNC;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.GEOGRAPHIC_SUBDIVISION_HEADING;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.GEOGRAPHIC_SUBDIVISION_HEADING_TRUNC;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.MEDIUM_PERF_TERM_HEADING;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.MEDIUM_PERF_TERM_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.MEETING_NAME_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.MEETING_NAME_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.MEETING_NAME_TITLE_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.MEETING_NAME_TITLE_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.NAMED_EVENT_HEADING;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.NAMED_EVENT_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.PERSONAL_NAME_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.PERSONAL_NAME_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.PERSONAL_NAME_TITLE_HEADING;
@@ -95,6 +108,36 @@ public class AuthorityUtilityMapper {
     if (Objects.nonNull(source.getGenreTerm())) {
       target.setHeading(source.getGenreTerm());
       target.setHeadingType(GENRE_TERM_HEADING);
+      return;
+    }
+    if (Objects.nonNull(source.getChronTerm())) {
+      target.setHeading(source.getChronTerm());
+      target.setHeadingType(CHRON_TERM_HEADING);
+      return;
+    }
+    if (Objects.nonNull(source.getMediumPerfTerm())) {
+      target.setHeading(source.getMediumPerfTerm());
+      target.setHeadingType(MEDIUM_PERF_TERM_HEADING);
+      return;
+    }
+    if (Objects.nonNull(source.getGeneralSubdivision())) {
+      target.setHeading(source.getGeneralSubdivision());
+      target.setHeadingType(GENERAL_SUBDIVISION_HEADING);
+      return;
+    }
+    if (Objects.nonNull(source.getGeographicSubdivision())) {
+      target.setHeading(source.getGeographicSubdivision());
+      target.setHeadingType(GEOGRAPHIC_SUBDIVISION_HEADING);
+      return;
+    }
+    if (Objects.nonNull(source.getChronSubdivision())) {
+      target.setHeading(source.getChronSubdivision());
+      target.setHeadingType(CHRON_SUBDIVISION_HEADING);
+      return;
+    }
+    if (Objects.nonNull(source.getFormSubdivision())) {
+      target.setHeading(source.getFormSubdivision());
+      target.setHeadingType(FORM_SUBDIVISION_HEADING);
     }
   }
 
@@ -132,6 +175,24 @@ public class AuthorityUtilityMapper {
     }
     if (isNotEmpty(source.getSftGenreTerm())) {
       sftHeadings.addAll(asSftHeadings(source.getSftGenreTerm(), GENRE_TERM_HEADING));
+    }
+    if (isNotEmpty(source.getSftChronTerm())) {
+      sftHeadings.addAll(asSftHeadings(source.getSftChronTerm(), CHRON_TERM_HEADING));
+    }
+    if (isNotEmpty(source.getSftMediumPerfTerm())) {
+      sftHeadings.addAll(asSftHeadings(source.getSftMediumPerfTerm(), MEDIUM_PERF_TERM_HEADING));
+    }
+    if (isNotEmpty(source.getSftGeneralSubdivision())) {
+      sftHeadings.addAll(asSftHeadings(source.getSftGeneralSubdivision(), GENERAL_SUBDIVISION_HEADING));
+    }
+    if (isNotEmpty(source.getSftGeographicSubdivision())) {
+      sftHeadings.addAll(asSftHeadings(source.getSftGeographicSubdivision(), GEOGRAPHIC_SUBDIVISION_HEADING));
+    }
+    if (isNotEmpty(source.getSftChronSubdivision())) {
+      sftHeadings.addAll(asSftHeadings(source.getSftChronSubdivision(), CHRON_SUBDIVISION_HEADING));
+    }
+    if (isNotEmpty(source.getSftFormSubdivision())) {
+      sftHeadings.addAll(asSftHeadings(source.getSftFormSubdivision(), FORM_SUBDIVISION_HEADING));
     }
     target.setSftHeadings(sftHeadings);
   }
@@ -171,6 +232,24 @@ public class AuthorityUtilityMapper {
     if (isNotEmpty(source.getSaftGenreTerm())) {
       saftHeadings.addAll(asSftHeadings(source.getSaftGenreTerm(), GENRE_TERM_HEADING));
     }
+    if (isNotEmpty(source.getSaftChronTerm())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftChronTerm(), CHRON_TERM_HEADING));
+    }
+    if (isNotEmpty(source.getSaftMediumPerfTerm())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftMediumPerfTerm(), MEDIUM_PERF_TERM_HEADING));
+    }
+    if (isNotEmpty(source.getSaftGeneralSubdivision())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftGeneralSubdivision(), GENERAL_SUBDIVISION_HEADING));
+    }
+    if (isNotEmpty(source.getSaftGeographicSubdivision())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftGeographicSubdivision(), GEOGRAPHIC_SUBDIVISION_HEADING));
+    }
+    if (isNotEmpty(source.getSaftChronSubdivision())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftChronSubdivision(), CHRON_SUBDIVISION_HEADING));
+    }
+    if (isNotEmpty(source.getSaftFormSubdivision())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftFormSubdivision(), FORM_SUBDIVISION_HEADING));
+    }
     extractAuthoritySaftHeadingsTruncated(source, saftHeadings);
     addRelationshipsToSaftHeadings(source, saftHeadings);
     target.setSaftHeadings(saftHeadings);
@@ -206,6 +285,28 @@ public class AuthorityUtilityMapper {
     }
     if (isNotEmpty(source.getSaftGenreTermTrunc())) {
       saftHeadings.addAll(asSftHeadings(source.getSaftGenreTermTrunc(), GENRE_TERM_HEADING_TRUNC));
+    }
+    if (isNotEmpty(source.getSaftNamedEventTrunc())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftNamedEventTrunc(), NAMED_EVENT_HEADING_TRUNC));
+    }
+    if (isNotEmpty(source.getSaftChronTermTrunc())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftChronTermTrunc(), CHRON_TERM_HEADING_TRUNC));
+    }
+    if (isNotEmpty(source.getSaftMediumPerfTermTrunc())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftMediumPerfTermTrunc(), MEDIUM_PERF_TERM_HEADING_TRUNC));
+    }
+    if (isNotEmpty(source.getSaftGeneralSubdivisionTrunc())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftGeneralSubdivisionTrunc(), GENERAL_SUBDIVISION_HEADING_TRUNC));
+    }
+    if (isNotEmpty(source.getSaftGeographicSubdivisionTrunc())) {
+      saftHeadings.addAll(
+        asSftHeadings(source.getSaftGeographicSubdivisionTrunc(), GEOGRAPHIC_SUBDIVISION_HEADING_TRUNC));
+    }
+    if (isNotEmpty(source.getSaftChronSubdivisionTrunc())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftChronSubdivisionTrunc(), CHRON_SUBDIVISION_HEADING_TRUNC));
+    }
+    if (isNotEmpty(source.getSaftFormSubdivisionTrunc())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftFormSubdivisionTrunc(), FORM_SUBDIVISION_HEADING_TRUNC));
     }
   }
 
@@ -247,6 +348,12 @@ public class AuthorityUtilityMapper {
       case TOPICAL_TERM_HEADING -> target.setTopicalTerm(source.getHeading());
       case GEOGRAPHIC_NAME_HEADING -> target.setGeographicName(source.getHeading());
       case GENRE_TERM_HEADING -> target.setGenreTerm(source.getHeading());
+      case CHRON_TERM_HEADING -> target.setChronTerm(source.getHeading());
+      case MEDIUM_PERF_TERM_HEADING -> target.setMediumPerfTerm(source.getHeading());
+      case GENERAL_SUBDIVISION_HEADING -> target.setGeneralSubdivision(source.getHeading());
+      case GEOGRAPHIC_SUBDIVISION_HEADING -> target.setGeographicSubdivision(source.getHeading());
+      case CHRON_SUBDIVISION_HEADING -> target.setChronSubdivision(source.getHeading());
+      case FORM_SUBDIVISION_HEADING -> target.setFormSubdivision(source.getHeading());
       default -> log.warn("Invalid heading type - {} cannot be mapped", source.getHeadingType());
     }
   }
@@ -281,6 +388,12 @@ public class AuthorityUtilityMapper {
       case TOPICAL_TERM_HEADING -> target.addSftTopicalTermItem(headingRef.getHeading());
       case GEOGRAPHIC_NAME_HEADING -> target.addSftGeographicNameItem(headingRef.getHeading());
       case GENRE_TERM_HEADING -> target.addSftGenreTermItem(headingRef.getHeading());
+      case CHRON_TERM_HEADING -> target.addSftChronTermItem(headingRef.getHeading());
+      case MEDIUM_PERF_TERM_HEADING -> target.addSftMediumPerfTermItem(headingRef.getHeading());
+      case GENERAL_SUBDIVISION_HEADING -> target.addSftGeneralSubdivisionItem(headingRef.getHeading());
+      case GEOGRAPHIC_SUBDIVISION_HEADING -> target.addSftGeographicSubdivisionItem(headingRef.getHeading());
+      case CHRON_SUBDIVISION_HEADING -> target.addSftChronSubdivisionItem(headingRef.getHeading());
+      case FORM_SUBDIVISION_HEADING -> target.addSftFormSubdivisionItem(headingRef.getHeading());
       default -> log.warn("Invalid sft heading type - {} cannot be mapped", headingRef.getHeadingType());
     }
   }
@@ -301,6 +414,12 @@ public class AuthorityUtilityMapper {
       case TOPICAL_TERM_HEADING -> target.addSaftTopicalTermItem(headingRef.getHeading());
       case GEOGRAPHIC_NAME_HEADING -> target.addSaftGeographicNameItem(headingRef.getHeading());
       case GENRE_TERM_HEADING -> target.addSaftGenreTermItem(headingRef.getHeading());
+      case CHRON_TERM_HEADING -> target.addSaftChronTermItem(headingRef.getHeading());
+      case MEDIUM_PERF_TERM_HEADING -> target.addSaftMediumPerfTermItem(headingRef.getHeading());
+      case GENERAL_SUBDIVISION_HEADING -> target.addSaftGeneralSubdivisionItem(headingRef.getHeading());
+      case GEOGRAPHIC_SUBDIVISION_HEADING -> target.addSaftGeographicSubdivisionItem(headingRef.getHeading());
+      case CHRON_SUBDIVISION_HEADING -> target.addSaftChronSubdivisionItem(headingRef.getHeading());
+      case FORM_SUBDIVISION_HEADING -> target.addSaftFormSubdivisionItem(headingRef.getHeading());
       case PERSONAL_NAME_HEADING_TRUNC -> target.addSaftPersonalNameTruncItem(headingRef.getHeading());
       case PERSONAL_NAME_TITLE_HEADING_TRUNC -> target.addSaftPersonalNameTitleTruncItem(headingRef.getHeading());
       case CORPORATE_NAME_HEADING_TRUNC -> target.addSaftCorporateNameTruncItem(headingRef.getHeading());
@@ -311,6 +430,14 @@ public class AuthorityUtilityMapper {
       case TOPICAL_TERM_HEADING_TRUNC -> target.addSaftTopicalTermTruncItem(headingRef.getHeading());
       case GEOGRAPHIC_NAME_HEADING_TRUNC -> target.addSaftGeographicNameTruncItem(headingRef.getHeading());
       case GENRE_TERM_HEADING_TRUNC -> target.addSaftGenreTermTruncItem(headingRef.getHeading());
+      case NAMED_EVENT_HEADING_TRUNC -> target.addSaftNamedEventTruncItem(headingRef.getHeading());
+      case CHRON_TERM_HEADING_TRUNC -> target.addSaftChronTermTruncItem(headingRef.getHeading());
+      case MEDIUM_PERF_TERM_HEADING_TRUNC -> target.addSaftMediumPerfTermTruncItem(headingRef.getHeading());
+      case GENERAL_SUBDIVISION_HEADING_TRUNC -> target.addSaftGeneralSubdivisionTruncItem(headingRef.getHeading());
+      case GEOGRAPHIC_SUBDIVISION_HEADING_TRUNC ->
+        target.addSaftGeographicSubdivisionTruncItem(headingRef.getHeading());
+      case CHRON_SUBDIVISION_HEADING_TRUNC -> target.addSaftChronSubdivisionTruncItem(headingRef.getHeading());
+      case FORM_SUBDIVISION_HEADING_TRUNC -> target.addSaftFormSubdivisionTruncItem(headingRef.getHeading());
       default -> log.warn("Invalid saft heading type - {} cannot be mapped", headingRef.getHeadingType());
     }
     extractSaftHeadingsRelationships(headingRef, target);

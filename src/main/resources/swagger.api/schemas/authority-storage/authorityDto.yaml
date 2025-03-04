@@ -157,6 +157,84 @@ properties:
     description: See also from tracing genre/form term
     items:
       type: string
+  chronTerm:
+    type: string
+    description: Heading chronological term
+  sftChronTerm:
+    type: array
+    description: See from tracing chronological term
+    items:
+      type: string
+  saftChronTerm:
+    type: array
+    description: See also from tracing chronological term
+    items:
+      type: string
+  mediumPerfTerm:
+    type: string
+    description: Heading medium of performance term
+  sftMediumPerfTerm:
+    type: array
+    description: See from tracing medium of performance term
+    items:
+      type: string
+  saftMediumPerfTerm:
+    type: array
+    description: See also from tracing medium of performance term
+    items:
+      type: string
+  generalSubdivision:
+    type: string
+    description: Heading general subdivision term
+  sftGeneralSubdivision:
+    type: array
+    description: See from tracing general subdivision term
+    items:
+      type: string
+  saftGeneralSubdivision:
+    type: array
+    description: See also from tracing general subdivision term
+    items:
+      type: string
+  geographicSubdivision:
+    type: string
+    description: Heading geographic subdivision term
+  sftGeographicSubdivision:
+    type: array
+    description: See from tracing geographic subdivision term
+    items:
+      type: string
+  saftGeographicSubdivision:
+    type: array
+    description: See also from tracing geographic subdivision term
+    items:
+      type: string
+  chronSubdivision:
+    type: string
+    description: Heading chronological subdivision term
+  sftChronSubdivision:
+    type: array
+    description: See from tracing chronological subdivision term
+    items:
+      type: string
+  saftChronSubdivision:
+    type: array
+    description: See also from tracing chronological subdivision term
+    items:
+      type: string
+  formSubdivision:
+    type: string
+    description: Heading form subdivision term
+  sftFormSubdivision:
+    type: array
+    description: See from tracing form subdivision term
+    items:
+      type: string
+  saftFormSubdivision:
+    type: array
+    description: See also from tracing form subdivision term
+    items:
+      type: string
   saftBroaderTerm:
     type: array
     description: See also from tracing term that represents broader, more general concepts related to the authority record
@@ -238,6 +316,48 @@ properties:
   saftGeographicNameTrunc:
     type: array
     description: See also from tracing geographic name
+    items:
+      type: string
+    x-field-extra-annotation: "@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)"
+  saftNamedEventTrunc:
+    type: array
+    description: See also from tracing named event
+    items:
+      type: string
+    x-field-extra-annotation: "@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)"
+  saftChronTermTrunc:
+    type: array
+    description: See also from tracing chronological term
+    items:
+      type: string
+    x-field-extra-annotation: "@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)"
+  saftMediumPerfTermTrunc:
+    type: array
+    description: See also from tracing medium of performance term
+    items:
+      type: string
+    x-field-extra-annotation: "@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)"
+  saftGeneralSubdivisionTrunc:
+    type: array
+    description: See also from tracing general subdivision term
+    items:
+      type: string
+    x-field-extra-annotation: "@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)"
+  saftGeographicSubdivisionTrunc:
+    type: array
+    description: See also from tracing geographic subdivision term
+    items:
+      type: string
+    x-field-extra-annotation: "@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)"
+  saftChronSubdivisionTrunc:
+    type: array
+    description: See also from tracing chronological subdivision term
+    items:
+      type: string
+    x-field-extra-annotation: "@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)"
+  saftFormSubdivisionTrunc:
+    type: array
+    description: See also from tracing form subdivision term
     items:
       type: string
     x-field-extra-annotation: "@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)"

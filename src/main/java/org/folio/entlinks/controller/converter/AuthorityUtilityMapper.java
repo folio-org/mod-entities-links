@@ -6,6 +6,7 @@ import static org.folio.entlinks.domain.entity.AuthorityConstants.CORPORATE_NAME
 import static org.folio.entlinks.domain.entity.AuthorityConstants.CORPORATE_NAME_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.CORPORATE_NAME_TITLE_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.CORPORATE_NAME_TITLE_HEADING_TRUNC;
+import static org.folio.entlinks.domain.entity.AuthorityConstants.GENERAL_SUBDIVISION_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.GENRE_TERM_HEADING;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.GENRE_TERM_HEADING_TRUNC;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.GEOGRAPHIC_NAME_HEADING;
@@ -82,6 +83,11 @@ public class AuthorityUtilityMapper {
       target.setHeadingType(NAMED_EVENT_HEADING);
       return;
     }
+    if (Objects.nonNull(source.getGeneralSubdivision())) {
+      target.setHeading(source.getGeneralSubdivision());
+      target.setHeadingType(GENERAL_SUBDIVISION_HEADING);
+      return;
+    }
     if (Objects.nonNull(source.getTopicalTerm())) {
       target.setHeading(source.getTopicalTerm());
       target.setHeadingType(TOPICAL_TERM_HEADING);
@@ -124,6 +130,9 @@ public class AuthorityUtilityMapper {
     if (isNotEmpty(source.getSftNamedEvent())) {
       sftHeadings.addAll(asSftHeadings(source.getSftNamedEvent(), NAMED_EVENT_HEADING));
     }
+    if (isNotEmpty(source.getSftGeneralSubdivision())) {
+      sftHeadings.addAll(asSftHeadings(source.getSftGeneralSubdivision(), GENERAL_SUBDIVISION_HEADING));
+    }
     if (isNotEmpty(source.getSftTopicalTerm())) {
       sftHeadings.addAll(asSftHeadings(source.getSftTopicalTerm(), TOPICAL_TERM_HEADING));
     }
@@ -161,6 +170,9 @@ public class AuthorityUtilityMapper {
     }
     if (isNotEmpty(source.getSaftNamedEvent())) {
       saftHeadings.addAll(asSftHeadings(source.getSaftNamedEvent(), NAMED_EVENT_HEADING));
+    }
+    if (isNotEmpty(source.getSaftGeneralSubdivision())) {
+      saftHeadings.addAll(asSftHeadings(source.getSaftGeneralSubdivision(), GENERAL_SUBDIVISION_HEADING));
     }
     if (isNotEmpty(source.getSaftTopicalTerm())) {
       saftHeadings.addAll(asSftHeadings(source.getSaftTopicalTerm(), TOPICAL_TERM_HEADING));
@@ -244,6 +256,7 @@ public class AuthorityUtilityMapper {
       case MEETING_NAME_TITLE_HEADING -> target.setMeetingNameTitle(source.getHeading());
       case UNIFORM_TITLE_HEADING -> target.setUniformTitle(source.getHeading());
       case NAMED_EVENT_HEADING -> target.setNamedEvent(source.getHeading());
+      case GENERAL_SUBDIVISION_HEADING -> target.setGeneralSubdivision(source.getHeading());
       case TOPICAL_TERM_HEADING -> target.setTopicalTerm(source.getHeading());
       case GEOGRAPHIC_NAME_HEADING -> target.setGeographicName(source.getHeading());
       case GENRE_TERM_HEADING -> target.setGenreTerm(source.getHeading());
@@ -278,6 +291,7 @@ public class AuthorityUtilityMapper {
       case MEETING_NAME_TITLE_HEADING -> target.addSftMeetingNameTitleItem(headingRef.getHeading());
       case UNIFORM_TITLE_HEADING -> target.addSftUniformTitleItem(headingRef.getHeading());
       case NAMED_EVENT_HEADING -> target.addSftNamedEventItem(headingRef.getHeading());
+      case GENERAL_SUBDIVISION_HEADING -> target.addSftGeneralSubdivisionItem(headingRef.getHeading());
       case TOPICAL_TERM_HEADING -> target.addSftTopicalTermItem(headingRef.getHeading());
       case GEOGRAPHIC_NAME_HEADING -> target.addSftGeographicNameItem(headingRef.getHeading());
       case GENRE_TERM_HEADING -> target.addSftGenreTermItem(headingRef.getHeading());
@@ -298,6 +312,7 @@ public class AuthorityUtilityMapper {
       case MEETING_NAME_TITLE_HEADING -> target.addSaftMeetingNameTitleItem(headingRef.getHeading());
       case UNIFORM_TITLE_HEADING -> target.addSaftUniformTitleItem(headingRef.getHeading());
       case NAMED_EVENT_HEADING -> target.addSaftNamedEventItem(headingRef.getHeading());
+      case GENERAL_SUBDIVISION_HEADING -> target.addSaftGeneralSubdivisionItem(headingRef.getHeading());
       case TOPICAL_TERM_HEADING -> target.addSaftTopicalTermItem(headingRef.getHeading());
       case GEOGRAPHIC_NAME_HEADING -> target.addSaftGeographicNameItem(headingRef.getHeading());
       case GENRE_TERM_HEADING -> target.addSaftGenreTermItem(headingRef.getHeading());

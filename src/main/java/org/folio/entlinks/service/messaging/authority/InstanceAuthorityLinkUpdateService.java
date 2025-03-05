@@ -204,8 +204,7 @@ public class InstanceAuthorityLinkUpdateService {
   private void sendEvents(List<LinksChangeEvent> events, AuthorityChangeType type) {
     log.info("Sending {} {} events to Kafka for tenant {}", events.size(), type,
         folioExecutionContext.getTenantId());
-    var id = folioExecutionContext.getUserId();
-    log.info("toProducerRecord:: folioExecutionContext.getUserId() {}", id);
+    log.info("toProducerRecord:: folioExecutionContext {}", folioExecutionContext);
     var userId = usersService.getSystemUserId(SYSTEM_USER_QUERY);
     log.info("toProducerRecord:: systemUsers {}", userId);
     if (StringUtils.isNotEmpty(userId)) {

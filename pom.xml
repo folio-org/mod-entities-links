@@ -395,6 +395,9 @@
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
           <groups>unit</groups>
+          <systemPropertyVariables>
+            <spring.jpa.show-sql>false</spring.jpa.show-sql>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
 
@@ -446,6 +449,9 @@
         </executions>
         <configuration>
           <groups>integration</groups>
+          <systemPropertyVariables>
+            <spring.jpa.show-sql>false</spring.jpa.show-sql>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
 

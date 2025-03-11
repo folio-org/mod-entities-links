@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="MODELINKS-299@@create:index:authority:source_file_id" author="pavlo_smahin">
+    <preConditions>
+      <and>
+        <tableExists tableName="authority"/>
+        <not>
+          <indexExists tableName="authority" indexName="idx_authority_source_file_id"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Create index for source_file_id in authority table</comment>
+
+    <sql>
+      CREATE
+      INDEX IF NOT EXISTS idx_authority_source_file_id
+      ON authority
+      USING btree (source_file_id) WITH (deduplicate_items= TRUE);
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODELINKS-299@@alter:index:authority_archive:source_file_id:deduplicate_items=true"
+             author="pavlo_smahin">
+    <preConditions>
+      <and>
+        <tableExists tableName="authority_archive"/>
+        <indexExists tableName="authority_archive" indexName="idx_authority_archive_source_file_id"/>
+      </and>
+    </preConditions>
+
+    <comment>Alter index for source_file_id in authority_archive table: set deduplicate_items=true</comment>
+
+    <sql>
+      ALTER
+      INDEX IF EXISTS idx_authority_archive_source_file_id
+      SET (deduplicate_items=True);
+    </sql>
+  </changeSet>
+
+
+</databaseChangeLog>

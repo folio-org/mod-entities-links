@@ -1,7 +1,7 @@
 package org.folio.entlinks.service.messaging.authority;
 
 import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType.UPDATE;
-import static org.folio.entlinks.utils.ObjectUtils.getDifference;
+import static org.folio.entlinks.utils.AuthorityChangeUtils.getAuthorityChanges;
 
 import java.util.List;
 import java.util.Map;
@@ -9,9 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
-import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
@@ -23,7 +21,6 @@ import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHandler;
-import org.folio.entlinks.service.messaging.authority.model.AuthorityChange;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeField;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
@@ -173,22 +170,6 @@ public class InstanceAuthorityLinkUpdateService {
     var difference = getAuthorityChanges(event.getNewEntity(), event.getOldEntity());
     return new AuthorityChangeHolder(event, difference, fieldTagRelation,
       linksNumberByAuthorityId.getOrDefault(event.getId(), 0));
-  }
-
-  @SneakyThrows
-  private Map<AuthorityChangeField, AuthorityChange> getAuthorityChanges(AuthorityDto s1, AuthorityDto s2) {
-    return getDifference(s1, s2).stream()
-      .map(difference -> {
-        try {
-          var authorityChangeField = AuthorityChangeField.fromValue(difference.fieldName());
-          return new AuthorityChange(authorityChangeField, difference.val1(), difference.val2());
-        } catch (IllegalArgumentException e) {
-          log.debug("Not supported authority change [fieldName: {}]", difference);
-          return null;
-        }
-      })
-      .filter(Objects::nonNull)
-      .collect(Collectors.toMap(AuthorityChange::changeField, ac -> ac));
   }
 
   private void sendEvents(List<LinksChangeEvent> events, AuthorityChangeType type) {

@@ -27,7 +27,10 @@
     "authoritySubfields": [
       "a",
       "b",
-      "c"
+      "c",
+      "d",
+      "g",
+      "n"
     ],
     "validation": {
       "existence": [
@@ -46,7 +49,10 @@
       "a",
       "c",
       "e",
-      "q"
+      "q",
+      "d",
+      "g",
+      "n"
     ],
     "validation": {
       "existence": [

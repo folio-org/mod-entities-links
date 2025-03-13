@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="MODELINKS-311@@default-data:linking-rules:add-additional-subfields" author="pavlo_smahin">
+    <preConditions>
+      <tableExists tableName="instance_authority_linking_rule"/>
+    </preConditions>
+
+    <comment>Add d,g,n subfields to 110/111 linking rules</comment>
+
+    <sql>
+      UPDATE instance_authority_linking_rule
+      SET authority_subfields = authority_subfields || 'dgn'
+      WHERE bib_field = '110' OR bib_field = '111';
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

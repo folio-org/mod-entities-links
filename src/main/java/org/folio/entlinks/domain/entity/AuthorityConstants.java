@@ -40,4 +40,6 @@ public class AuthorityConstants {
   public static final String GEOGRAPHIC_SUBDIVISION_HEADING_TRUNC = "geographicSubdivisionTrunc";
   public static final String CHRON_SUBDIVISION_HEADING_TRUNC = "chronSubdivisionTrunc";
   public static final String FORM_SUBDIVISION_HEADING_TRUNC = "formSubdivisionTrunc";
+
+  public static final String NATURAL_ID_FIELD = "naturalId";
 }

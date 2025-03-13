@@ -13,6 +13,7 @@
 * Add aatfg to the list of prefixes for Art & Architecture authority file ([MODELINKS-272](https://folio-org.atlassian.net/browse/MODELINKS-272))
 * Extend Authority with namedEvent, sftNamedEvent, and saftNamedEvent fields ([MODELINKS-294](https://folio-org.atlassian.net/browse/MODELINKS-294))
 * Extend Authority with additional fields ([MODELINKS-117](https://folio-org.atlassian.net/browse/MODELINKS-117))
+* Extend Authority linking rules for 110/111 fields ([MODELINKS-311](https://folio-org.atlassian.net/browse/MODELINKS-311))
 
 ### Bug fixes
 * Fix context mix-up on data propagation ([MODELINKS-273](https://folio-org.atlassian.net/browse/MODELINKS-273))

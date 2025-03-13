@@ -27,4 +27,5 @@
   <include file="/changes/v3.1/migrate-deleted-authorities.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v3.1/update-authority-source-file-prefixes.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v4.0/add-authority-source-file-index.xml" relativeToChangelogFile="true"/>
+  <include file="/changes/v4.0/update-linking-rules-subfields.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

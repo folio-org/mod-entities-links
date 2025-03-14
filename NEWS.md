@@ -1,10 +1,6 @@
-## v4.0.0 YYYY-mm-DD
+## v4.0.0 2025-03-14
 ### Breaking changes
 * Upgrade to Java 21 ([MODELINKS-300](https://folio-org.atlassian.net/browse/MODELINKS-300))
-
-### New APIs versions
-* Provides `API_NAME vX.Y`
-* Requires `API_NAME vX.Y`
 
 ### Features
 * Refactor subfield handling and improve link suggestion logic ([MODELINKS-268](https://folio-org.atlassian.net/browse/MODELINKS-268))
@@ -33,9 +29,13 @@
 * Add users.item.put to tenant endpoint module permissions ([MODELINKS-292](https://folio-org.atlassian.net/browse/MODELINKS-292))
 
 ### Dependencies
-* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
-* Add `LIB_NAME VERSION`
-* Remove `LIB_NAME`
+* Bump `spring-boot` from `3.3.5` to `3.4.3`
+* Bump `folio-spring-support` from `8.2.1` to `9.0.0`
+* Bump `folio-service-tools` from `4.1.1` to `5.0.0`
+* Bump `folio-s3-client` from `2.2.0` to `2.3.0`
+* Bump `mod-record-specifications-dto` from `1.0.2` to `2.0.0`
+* Bump `aws-sdk-java` from `2.29.5` to `2.31.0`
+* Bump `mapstruct` from `1.6.2` to `1.6.3`
 
 ---
 

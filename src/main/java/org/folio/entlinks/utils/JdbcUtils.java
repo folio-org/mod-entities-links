@@ -2,6 +2,8 @@ package org.folio.entlinks.utils;
 
 import static java.util.Collections.nCopies;
 
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.experimental.UtilityClass;
 import org.folio.spring.FolioExecutionContext;
 
@@ -18,6 +20,16 @@ public class JdbcUtils {
 
   public static String getParamPlaceholder(int size) {
     return String.join(",", nCopies(size, "?"));
+  }
+
+  public static String getParamPlaceholder(int size, int paramsNum) {
+    if (size < 1 || paramsNum < 1) {
+      throw new IllegalArgumentException("Size and paramsNum must be greater than 0");
+    }
+    var paramGroups = IntStream.range(0, paramsNum)
+      .mapToObj(i -> "?")
+      .collect(Collectors.joining(","));
+    return String.join(",", nCopies(size, '(' + paramGroups + ')'));
   }
 
 }

@@ -1,3 +1,9 @@
+## v4.0.1 2025-04-02
+### Bug fixes
+* Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))
+
+---
+
 ## v4.0.0 2025-03-14
 ### Breaking changes
 * Upgrade to Java 21 ([MODELINKS-300](https://folio-org.atlassian.net/browse/MODELINKS-300))

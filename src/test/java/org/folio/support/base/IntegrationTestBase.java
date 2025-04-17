@@ -16,6 +16,7 @@ import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,8 +34,10 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -45,6 +49,8 @@ import org.awaitility.core.ThrowingRunnable;
 import org.folio.entlinks.client.ConsortiumTenantsClient;
 import org.folio.entlinks.client.UserTenantsClient;
 import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.domain.dto.InstanceLinkDto;
+import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.spring.FolioModuleMetadata;
@@ -57,6 +63,9 @@ import org.folio.spring.testing.extension.impl.OkapiExtension;
 import org.folio.support.DatabaseHelper;
 import org.folio.tenant.domain.dto.Parameter;
 import org.folio.tenant.domain.dto.TenantAttributes;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
@@ -348,6 +357,14 @@ public class IntegrationTestBase {
     return event.getOldEntity();
   }
 
+  @SuppressWarnings("unchecked")
+  protected ResultMatcher linksMatch(InstanceLinkDtoCollection links) {
+    var linkMatchers = links.getLinks().stream()
+        .map(LinkMatcher::linkMatch)
+        .toArray(Matcher[]::new);
+    return jsonPath("$.links", containsInAnyOrder(linkMatchers));
+  }
+
   protected <T> ResultMatcher exceptionMatch(Class<T> type) {
     return result -> MatcherAssert.assertThat(result.getResolvedException(), instanceOf(type));
   }
@@ -410,5 +427,39 @@ public class IntegrationTestBase {
     public DatabaseHelper databaseHelper(JdbcTemplate jdbcTemplate, FolioModuleMetadata moduleMetadata) {
       return new DatabaseHelper(moduleMetadata, jdbcTemplate);
     }
+  }
+
+  private static final class LinkMatcher extends BaseMatcher<InstanceLinkDto> {
+
+    private final InstanceLinkDto expectedLink;
+
+    private LinkMatcher(InstanceLinkDto expectedLink) {
+      this.expectedLink = expectedLink;
+    }
+
+    @Override
+    @SuppressWarnings("rawtypes")
+    public boolean matches(Object actual) {
+      if (actual instanceof LinkedHashMap actualLink) {
+        return Objects.equals(expectedLink.getAuthorityId().toString(), actualLink.get("authorityId"))
+            && Objects.equals(expectedLink.getAuthorityNaturalId(), actualLink.get("authorityNaturalId"))
+            && Objects.equals(expectedLink.getInstanceId().toString(), actualLink.get("instanceId"))
+            && Objects.equals(expectedLink.getLinkingRuleId(), actualLink.get("linkingRuleId"))
+            && Objects.equals(expectedLink.getStatus(), actualLink.get("status"))
+            && Objects.equals(expectedLink.getErrorCause(), actualLink.get("errorCause"));
+      }
+
+      return false;
+    }
+
+    @Override
+    public void describeTo(Description description) {
+      description.appendValue(expectedLink);
+    }
+
+    static LinkMatcher linkMatch(InstanceLinkDto expectedLink) {
+      return new LinkMatcher(expectedLink);
+    }
+
   }
 }

@@ -7,7 +7,7 @@
 * Requires `API_NAME vX.Y`
 
 ### Features
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Pass userId from authority kafka event to link update events ([UIIN-3305](https://folio-org.atlassian.net/browse/UIIN-3305))
 
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))

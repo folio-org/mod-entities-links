@@ -1,5 +1,6 @@
 package org.folio.entlinks.service.consortium.propagation;
 
+import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
 import org.folio.entlinks.service.consortium.propagation.model.LinksPropagationData;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
@@ -23,9 +24,13 @@ public class ConsortiumLinksPropagationService extends ConsortiumPropagationServ
   @Override
   protected void doPropagation(LinksPropagationData propagationData,
                                PropagationType propagationType) {
+    var instanceId = propagationData.instanceId();
+    var links = propagationData.links().stream()
+        .map(InstanceAuthorityLink::new)
+        .toList();
     switch (propagationType) {
       case CREATE, DELETE -> throw new IllegalArgumentException(ILLEGAL_PROPAGATION_MSG.formatted(propagationType));
-      case UPDATE -> instanceAuthorityLinkingService.updateLinks(propagationData.instanceId(), propagationData.links());
+      case UPDATE -> instanceAuthorityLinkingService.updateLinks(instanceId, links);
       default -> throw new IllegalStateException("Unexpected value: " + propagationType);
     }
   }

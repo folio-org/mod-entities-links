@@ -67,6 +67,14 @@ public class InstanceAuthorityLink extends AuditableEntity {
   @Column(name = "error_cause")
   private String errorCause;
 
+  public InstanceAuthorityLink(InstanceAuthorityLink other) {
+    this.authority = other.authority;
+    this.instanceId = other.instanceId;
+    this.linkingRule = other.linkingRule;
+    this.status = other.status;
+    this.errorCause = other.errorCause;
+  }
+
   @Override
   public int hashCode() {
     return getClass().hashCode();

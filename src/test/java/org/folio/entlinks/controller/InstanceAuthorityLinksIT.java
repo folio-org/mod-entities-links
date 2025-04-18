@@ -17,7 +17,6 @@ import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.authoritiesLinksCountEndpoint;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
@@ -28,9 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -48,8 +45,6 @@ import org.folio.support.DatabaseHelper;
 import org.folio.support.TestDataUtils;
 import org.folio.support.TestDataUtils.Link;
 import org.folio.support.base.IntegrationTestBase;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -406,47 +401,5 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
 
   private ResultMatcher linksMatch(Matcher<Collection<? extends InstanceLinkDto>> matcher) {
     return jsonPath("$.links", matcher);
-  }
-
-  @SuppressWarnings("unchecked")
-  private ResultMatcher linksMatch(InstanceLinkDtoCollection links) {
-    var linkMatchers = links.getLinks().stream()
-      .map(LinkMatcher::linkMatch)
-      .toArray(Matcher[]::new);
-    return jsonPath("$.links", containsInAnyOrder(linkMatchers));
-  }
-
-  private static final class LinkMatcher extends BaseMatcher<InstanceLinkDto> {
-
-    private final InstanceLinkDto expectedLink;
-
-    private LinkMatcher(InstanceLinkDto expectedLink) {
-      this.expectedLink = expectedLink;
-    }
-
-    @Override
-    @SuppressWarnings("rawtypes")
-    public boolean matches(Object actual) {
-      if (actual instanceof LinkedHashMap actualLink) {
-        return Objects.equals(expectedLink.getAuthorityId().toString(), actualLink.get("authorityId"))
-          && Objects.equals(expectedLink.getAuthorityNaturalId(), actualLink.get("authorityNaturalId"))
-          && Objects.equals(expectedLink.getInstanceId().toString(), actualLink.get("instanceId"))
-          && Objects.equals(expectedLink.getLinkingRuleId(), actualLink.get("linkingRuleId"))
-          && Objects.equals(expectedLink.getStatus(), actualLink.get("status"))
-          && Objects.equals(expectedLink.getErrorCause(), actualLink.get("errorCause"));
-      }
-
-      return false;
-    }
-
-    @Override
-    public void describeTo(Description description) {
-      description.appendValue(expectedLink);
-    }
-
-    static LinkMatcher linkMatch(InstanceLinkDto expectedLink) {
-      return new LinkMatcher(expectedLink);
-    }
-
   }
 }

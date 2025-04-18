@@ -182,7 +182,7 @@ class LinkingServiceDelegateTest {
 
     verify(linkingService).updateLinks(INSTANCE_ID, links);
     verify(propagationService).propagate(propagationData, ConsortiumAuthorityPropagationService.PropagationType.UPDATE,
-      TENANT_ID);
+        TENANT_ID);
   }
 
   @Test

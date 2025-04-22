@@ -1,7 +1,6 @@
 package org.folio.entlinks.integration.kafka;
 
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.entlinks.utils.HeaderUtils.extractHeaderValue;
 import static org.folio.spring.tools.config.RetryTemplateConfiguration.DEFAULT_KAFKA_RETRY_TEMPLATE_NAME;
 
@@ -9,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -41,29 +41,35 @@ public class AuthorityEventListener {
     log.info("Processing authorities from Kafka events [number of records: {}]", consumerRecords.size());
 
     consumerRecords.stream()
+      .collect(Collectors.groupingBy(consumerRecord -> consumerRecord.value().getTenant()))
+      .forEach(this::handleAuthorityEventsForTenant);
+  }
+
+  private void handleAuthorityEventsForTenant(String tenant,
+                                              List<ConsumerRecord<String, AuthorityDomainEvent>> records) {
+    records.stream()
       .collect(Collectors.groupingBy(consumerRecord ->
         extractHeaderValue(XOkapiHeaders.USER_ID, consumerRecord.headers())))
-      .forEach(this::handleAuthorityEventsForUser);
+      .forEach((userId, consumerRecords) -> {
+        var events = consumerRecords.stream()
+          .map(consumerRecord -> {
+            var value = consumerRecord.value();
+            value.setId(UUID.fromString(consumerRecord.key()));
+            return value;
+          })
+          .toList();
+        handleAuthorityEventsForUser(tenant, userId, events);
+      });
   }
 
-  private void handleAuthorityEventsForUser(String userId, List<ConsumerRecord<String, AuthorityDomainEvent>> records) {
-    var headers = isBlank(userId)
-      ? Collections.<String, Collection<String>>emptyMap()
-      : Map.<String, Collection<String>>of(XOkapiHeaders.USER_ID, singletonList(userId));
-    records.stream()
-      .map(consumerRecord -> {
-        var value = consumerRecord.value();
-        value.setId(UUID.fromString(consumerRecord.key()));
-        return value;
-      })
-      .collect(Collectors.groupingBy(AuthorityDomainEvent::getTenant))
-      .forEach((tenant, events) -> handleAuthorityEventsForTenant(tenant, headers, events));
-  }
-
-  private void handleAuthorityEventsForTenant(String tenant, Map<String, Collection<String>> headers,
-                                              List<AuthorityDomainEvent> events) {
+  private void handleAuthorityEventsForUser(String tenant, Optional<String> userIdOptional,
+                                            List<AuthorityDomainEvent> events) {
+    var headers = userIdOptional
+      .map(userId -> Map.<String, Collection<String>>of(XOkapiHeaders.USER_ID, singletonList(userId)))
+      .orElseGet(Collections::emptyMap);
     executionService.executeSystemUserScoped(tenant, headers, () -> {
-      log.info("Triggering updates for authority records [number of records: {}, tenant: {}]", events.size(), tenant);
+      log.info("Triggering updates for authority records [number of records: {}, tenant: {}, userId: {}]",
+        events.size(), tenant, userIdOptional.orElse(null));
       messageBatchProcessor.consumeBatchWithFallback(events, DEFAULT_KAFKA_RETRY_TEMPLATE_NAME,
         instanceAuthorityLinkUpdateService::handleAuthoritiesChanges, this::logFailedEvent);
       return null;

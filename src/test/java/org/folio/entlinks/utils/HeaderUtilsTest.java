@@ -1,6 +1,8 @@
 package org.folio.entlinks.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 import org.apache.kafka.common.header.Headers;
@@ -19,7 +21,8 @@ class HeaderUtilsTest {
 
     var actual = HeaderUtils.extractHeaderValue("test-key", headers);
 
-    assertEquals("test-value", actual);
+    assertFalse(actual.isEmpty());
+    assertEquals("test-value", actual.get());
   }
 
   @ParameterizedTest
@@ -27,7 +30,7 @@ class HeaderUtilsTest {
   void shouldReturnEmptyStringForInvalidHeaders(String headerKey, Headers headers) {
     var actual = HeaderUtils.extractHeaderValue(headerKey, headers);
 
-    assertEquals("", actual);
+    assertTrue(actual.isEmpty());
   }
 
   private static Stream<Arguments> provideInvalidHeaders() {

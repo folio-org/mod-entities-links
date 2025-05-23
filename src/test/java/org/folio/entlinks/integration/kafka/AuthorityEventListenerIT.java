@@ -329,11 +329,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
         subfieldChangeEmpty("o"),
         subfieldChangeEmpty("p"),
         subfieldChangeEmpty("r"),
-        subfieldChangeEmpty("s"),
-        subfieldChangeEmpty("v"),
-        subfieldChangeEmpty("x"),
-        subfieldChangeEmpty("y"),
-        subfieldChangeEmpty("z")
+        subfieldChangeEmpty("s")
       )),
       new FieldChange().field("700").subfields(List.of(
         subfieldChange("a", "Lansing, John"),

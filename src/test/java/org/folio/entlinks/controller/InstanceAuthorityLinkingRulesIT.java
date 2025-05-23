@@ -47,12 +47,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
 
   @BeforeEach
   void setUp() {
-    log.info("Restoring default rules: started");
     defaultRules = toObject(readFile(AUTHORITY_RULES_PATH), RULES_TYPE_REFERENCE, objectMapper);
-    for (LinkingRuleDto defaultRule : defaultRules) {
-      doPatch(linkingRulesEndpoint(defaultRule.getId()), defaultRule);
-    }
-    log.info("Restoring default rules: finished");
   }
 
   @Test
@@ -82,12 +77,33 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
 
   @Test
   @SneakyThrows
-  void patchLinkingRulesById_positive_shouldUpdateExpectedFields() {
+  void patchLinkingRulesById_positive_shouldUpdateautoLinkingEnabled() {
     var request = new LinkingRulePatchRequest().id(1).autoLinkingEnabled(false);
-    doPatch(linkingRulesEndpoint(1), request);
+    try {
+      doPatch(linkingRulesEndpoint(1), request);
 
-    doGet(linkingRulesEndpoint(1))
-      .andExpect(content().json(asJson(defaultRules.getFirst().autoLinkingEnabled(false), objectMapper)));
+      doGet(linkingRulesEndpoint(1))
+        .andExpect(content().json(asJson(defaultRules.getFirst().autoLinkingEnabled(false), objectMapper)));
+    } finally {
+      request.autoLinkingEnabled(true);
+      doPatch(linkingRulesEndpoint(1), request);
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void patchLinkingRulesById_positive_shouldUpdateAuthoritySubfields() {
+    var defaultAuthoritySubfields = defaultRules.get(9).getAuthoritySubfields();
+    var request = new LinkingRulePatchRequest().id(10).authoritySubfields(List.of("a", "b"));
+    try {
+      doPatch(linkingRulesEndpoint(10), request);
+
+      doGet(linkingRulesEndpoint(10))
+        .andExpect(content().json(asJson(defaultRules.get(9).authoritySubfields(List.of("a", "b")), objectMapper)));
+    } finally {
+      request.authoritySubfields(defaultAuthoritySubfields);
+      doPatch(linkingRulesEndpoint(10), request);
+    }
   }
 
   @Test
@@ -95,7 +111,6 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
   void patchLinkingRulesById_positive_shouldNotUpdateUnexpectedFields() {
     var request = new LinkingRuleDto().id(1)
       .authorityField("abc")
-      .authoritySubfields(List.of("a"))
       .addSubfieldModificationsItem(new SubfieldModification().source("1").target("2"))
       .validation(new SubfieldValidation().addExistenceItem(Map.of("s", true)))
       .autoLinkingEnabled(true);
@@ -128,5 +143,53 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
       .andExpect(errorParameterMatch(is("id")))
       .andExpect(errorMessageMatch(is(String.format("Request should have id = %s", MAX_VALUE))));
+  }
+
+  @Test
+  @SneakyThrows
+  void patchLinkingRulesById_negative_invalidBibField() {
+    var request = new LinkingRulePatchRequest()
+      .id(1)
+      .authoritySubfields(List.of("a", "b"));
+
+    tryPatch(linkingRulesEndpoint(1), request)
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(errorTotalMatch(1))
+      .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
+      .andExpect(errorParameterMatch(is("bibField")))
+      .andExpect(errorMessageMatch(is("Subfields could be updated only for 6XX fields.")));
+  }
+
+  @Test
+  @SneakyThrows
+  void patchLinkingRulesById_negative_missingRequiredSubfieldA() {
+    var request = new LinkingRulePatchRequest()
+      .id(10)
+      .authoritySubfields(List.of("b", "c"));
+
+    tryPatch(linkingRulesEndpoint(10), request)
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(errorTotalMatch(1))
+      .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
+      .andExpect(errorParameterMatch(is("authoritySubfields")))
+      .andExpect(errorMessageMatch(is("Subfield 'a' is required.")));
+  }
+
+  @Test
+  @SneakyThrows
+  void patchLinkingRulesById_negative_invalidSubfieldCharacters() {
+    var request = new LinkingRulePatchRequest()
+      .id(10)
+      .authoritySubfields(List.of("a", "9", "x")); // '9' is invalid as per SubfieldValidation
+
+    tryPatch(linkingRulesEndpoint(10), request)
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(errorTotalMatch(1))
+      .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
+      .andExpect(errorParameterMatch(is("authoritySubfields")))
+      .andExpect(errorMessageMatch(is("Invalid subfield value.")));
   }
 }

@@ -2,6 +2,10 @@ package org.folio.entlinks.service.links.validator;
 
 import lombok.experimental.UtilityClass;
 
+/**
+ * Utility class that provides validation methods for verifying subfield characteristics
+ * such as whether a subfield is valid or required.
+ */
 @UtilityClass
 public class SubfieldValidation {
 

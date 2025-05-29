@@ -467,6 +467,10 @@ components:
           type: integer
         autoLinkingEnabled:
           type: boolean
+        authoritySubfields:
+          type: array
+          items:
+            $ref: '#/components/schemas/charString'
 
     uuid:
       type: string

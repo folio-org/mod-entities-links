@@ -75,8 +75,6 @@ class LinksSuggestionsServiceDelegateTest {
     when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID)))
         .thenReturn(List.of(authority1, authority2));
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
-    when(linkingRulesService.getMinAuthorityField()).thenReturn(MIN_AUTHORITY_FIELD);
-    when(linkingRulesService.getMaxAuthorityField()).thenReturn(MAX_AUTHORITY_FIELD);
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
       .thenReturn(fetchRequest);
@@ -103,9 +101,6 @@ class LinksSuggestionsServiceDelegateTest {
     var rules = List.of(getRule("100"));
 
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
-    when(linkingRulesService.getMinAuthorityField()).thenReturn(MIN_AUTHORITY_FIELD);
-    when(linkingRulesService.getMaxAuthorityField()).thenReturn(MAX_AUTHORITY_FIELD);
-
     when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(authorities);
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
@@ -134,9 +129,6 @@ class LinksSuggestionsServiceDelegateTest {
     var rules = List.of(getRule("100"));
 
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
-    when(linkingRulesService.getMinAuthorityField()).thenReturn(MIN_AUTHORITY_FIELD);
-    when(linkingRulesService.getMaxAuthorityField()).thenReturn(MAX_AUTHORITY_FIELD);
-
     when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(authorities);
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))

@@ -8,6 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.LinkingRulesRepository;
 import org.folio.entlinks.exception.LinkingRuleNotFoundException;
+import org.folio.entlinks.service.links.validator.LinkingRuleValidator;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Sort;
@@ -19,20 +20,20 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class InstanceAuthorityLinkingRulesService {
 
-  private static final String MIN_AVAILABLE_AUTHORITY_FIELD = "100";
-  private static final String MAX_AVAILABLE_AUTHORITY_FIELD = "155";
   private final LinkingRulesRepository repository;
+  private final LinkingRuleValidator validator;
 
   @Cacheable(cacheNames = AUTHORITY_LINKING_RULES_CACHE,
-    key = "@folioExecutionContext.tenantId",
-    unless = "#result.isEmpty()")
+             key = "@folioExecutionContext.tenantId",
+             unless = "#result.isEmpty()")
   public List<InstanceAuthorityLinkingRule> getLinkingRules() {
     log.info("Loading linking rules");
     return repository.findAll(Sort.by("id").ascending());
   }
 
   @Cacheable(cacheNames = AUTHORITY_LINKING_RULES_CACHE,
-    key = "@folioExecutionContext.tenantId + ':' + #authorityField", unless = "#result.isEmpty()")
+             key = "@folioExecutionContext.tenantId + ':' + #authorityField",
+             unless = "#result.isEmpty()")
   public List<InstanceAuthorityLinkingRule> getLinkingRulesByAuthorityField(String authorityField) {
     log.info("Loading linking rules for [authorityField: {}]", authorityField);
     return repository.findByAuthorityField(authorityField);
@@ -46,22 +47,30 @@ public class InstanceAuthorityLinkingRulesService {
 
   @Transactional
   @CacheEvict(cacheNames = AUTHORITY_LINKING_RULES_CACHE, allEntries = true)
-  public void patchLinkingRule(Integer ruleId, InstanceAuthorityLinkingRule linkingRulePatch) {
-    log.info("Patch linking rule [ruleId: {}, change: {}]", ruleId, linkingRulePatch);
-    var existedLinkingRule = repository.findById(ruleId)
-      .orElseThrow(() -> new LinkingRuleNotFoundException(ruleId));
-    // only autoLinkingEnabled flag is allowed to be updated right now
-    if (linkingRulePatch.getAutoLinkingEnabled() != null) {
-      existedLinkingRule.setAutoLinkingEnabled(linkingRulePatch.getAutoLinkingEnabled());
+  public void updateLinkingRule(Integer ruleId, InstanceAuthorityLinkingRule linkingRulePatch) {
+    log.info("Updating linking rule [ruleId: {}, change: {}]", ruleId, linkingRulePatch);
+    var existingRule = getLinkingRule(ruleId);
+
+    updateAutoLinkingIfPresent(existingRule, linkingRulePatch);
+    updateSubfieldsIfPresent(existingRule, linkingRulePatch);
+
+    repository.save(existingRule);
+  }
+
+  private void updateAutoLinkingIfPresent(InstanceAuthorityLinkingRule existing,
+                                          InstanceAuthorityLinkingRule patch) {
+    if (patch.getAutoLinkingEnabled() != null) {
+      existing.setAutoLinkingEnabled(patch.getAutoLinkingEnabled());
     }
-    repository.save(existedLinkingRule);
   }
 
-  public String getMinAuthorityField() {
-    return MIN_AVAILABLE_AUTHORITY_FIELD;
-  }
-
-  public String getMaxAuthorityField() {
-    return MAX_AVAILABLE_AUTHORITY_FIELD;
+  private void updateSubfieldsIfPresent(InstanceAuthorityLinkingRule existing,
+                                        InstanceAuthorityLinkingRule patch) {
+    char[] newSubfields = patch.getAuthoritySubfields();
+    if (newSubfields != null && newSubfields.length > 0) {
+      validator.validateSubfieldsUpdate(patch, existing);
+      existing.setAuthoritySubfields(newSubfields);
+    }
   }
 }
+

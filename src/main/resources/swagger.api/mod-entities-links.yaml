@@ -467,15 +467,19 @@ components:
           type: integer
         autoLinkingEnabled:
           type: boolean
+        authoritySubfields:
+          type: array
+          items:
+            $ref: '#/components/schemas/charString'
+          uniqueItems: true
 
     uuid:
       type: string
       format: uuid
 
     charString:
+      description: A string that must contain one character
       type: string
-      minLength: 1
-      maxLength: 1
 
     errorResponse:
       type: object

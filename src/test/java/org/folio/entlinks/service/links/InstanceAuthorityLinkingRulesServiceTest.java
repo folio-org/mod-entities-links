@@ -16,6 +16,7 @@ import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.LinkingRulesRepository;
 import org.folio.entlinks.exception.LinkingRuleNotFoundException;
+import org.folio.entlinks.service.links.validator.LinkingRuleValidator;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 class InstanceAuthorityLinkingRulesServiceTest {
 
   private @MockBean LinkingRulesRepository repository;
+  private @MockBean LinkingRuleValidator validator;
 
   private @Autowired InstanceAuthorityLinkingRulesService service;
   private @Autowired CacheManager cacheManager;
@@ -121,7 +123,7 @@ class InstanceAuthorityLinkingRulesServiceTest {
   }
 
   @Test
-  void patchLinkingRule_positive_onlyExpectedFieldAndCacheInvalidated() {
+  void updateLinkingRule_positive_onlyExpectedFieldAndCacheInvalidated() {
     var ruleId = 1;
     var existedRule = InstanceAuthorityLinkingRule.builder()
       .id(ruleId)
@@ -145,7 +147,7 @@ class InstanceAuthorityLinkingRulesServiceTest {
     linkingRulePatch.setSubfieldModifications(Collections.emptyList());
     linkingRulePatch.setSubfieldsExistenceValidations(Collections.emptyMap());
     linkingRulePatch.setAutoLinkingEnabled(true);
-    service.patchLinkingRule(ruleId, linkingRulePatch);
+    service.updateLinkingRule(ruleId, linkingRulePatch);
 
     var ruleUpdateCaptor = ArgumentCaptor.forClass(InstanceAuthorityLinkingRule.class);
 
@@ -170,13 +172,13 @@ class InstanceAuthorityLinkingRulesServiceTest {
   }
 
   @Test
-  void patchLinkingRule_negative_notFound() {
+  void updateLinkingRule_negative_notFound() {
     var ruleId = 1;
 
     when(repository.findById(ruleId)).thenReturn(Optional.empty());
 
     var linkingRulePatch = new InstanceAuthorityLinkingRule();
-    assertThatThrownBy(() -> service.patchLinkingRule(ruleId, linkingRulePatch))
+    assertThatThrownBy(() -> service.updateLinkingRule(ruleId, linkingRulePatch))
       .isInstanceOf(LinkingRuleNotFoundException.class)
       .hasMessage(String.format("Linking rule with ID [%s] was not found", ruleId));
   }

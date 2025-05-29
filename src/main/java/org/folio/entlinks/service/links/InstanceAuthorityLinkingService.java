@@ -36,6 +36,7 @@ import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.exception.DeletedLinkingAuthorityException;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.authority.AuthorityService;
+import org.folio.entlinks.service.links.model.AuthorityFieldConstants;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -89,9 +90,9 @@ public class InstanceAuthorityLinkingService {
     }
 
     var authorityIds = incomingLinks.stream()
-        .map(InstanceAuthorityLink::getAuthority)
-        .map(Authority::getId)
-        .collect(Collectors.toSet());
+      .map(InstanceAuthorityLink::getAuthority)
+      .map(Authority::getId)
+      .collect(Collectors.toSet());
 
     var existingAuthorities = authorityService.getAllByIds(authorityIds);
 
@@ -111,7 +112,7 @@ public class InstanceAuthorityLinkingService {
   /**
    * Update links and renovate bibs with data from actual authority records.
    * Currently, doesn't work as expected (problems described in MODELINKS-113) so not used.
-   * */
+   */
   @Transactional
   public void updateLinksWithRenovation(UUID instanceId, List<InstanceAuthorityLink> incomingLinks) {
     if (log.isDebugEnabled()) {
@@ -131,7 +132,7 @@ public class InstanceAuthorityLinkingService {
       .validateAuthorityData(linksByAuthorityId, authoritiesById, authorityNaturalIds, authoritySources);
 
     var validAuthoritiesById = validationResult.validAuthorities().stream()
-        .collect(Collectors.toMap(Authority::getId, Function.identity()));
+      .collect(Collectors.toMap(Authority::getId, Function.identity()));
     var incomingValidLinks = validationResult.validLinks();
     var existedLinks = instanceLinkRepository.findByInstanceId(instanceId);
     var linksToDelete = subtract(existedLinks, incomingValidLinks);
@@ -204,11 +205,11 @@ public class InstanceAuthorityLinkingService {
 
   private void updateLinksData(List<InstanceAuthorityLink> incomingLinks, List<InstanceAuthorityLink> linksToUpdate) {
     linksToUpdate
-        .forEach(link -> incomingLinks.stream()
-            .filter(l -> l.isSameLink(link)).findFirst()
-            .ifPresent(l ->
-                link.getAuthority().setNaturalId(l.getAuthority().getNaturalId())
-            ));
+      .forEach(link -> incomingLinks.stream()
+        .filter(l -> l.isSameLink(link)).findFirst()
+        .ifPresent(l ->
+          link.getAuthority().setNaturalId(l.getAuthority().getNaturalId())
+        ));
   }
 
   private List<InstanceAuthorityLink> subtract(Collection<InstanceAuthorityLink> source,
@@ -264,7 +265,7 @@ public class InstanceAuthorityLinkingService {
     }
 
     return authorityService.getAllByIds(authorityIds).entrySet().stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, authorityEntry -> authorityEntry.getValue().getNaturalId()));
+      .collect(Collectors.toMap(Map.Entry::getKey, authorityEntry -> authorityEntry.getValue().getNaturalId()));
   }
 
   private List<StrippedParsedRecord> fetchAuthoritySources(Set<UUID> authorityIds) {
@@ -272,8 +273,8 @@ public class InstanceAuthorityLinkingService {
       return emptyList();
     }
     var authorityFetchRequest = sourceStorageClient.buildBatchFetchRequestForAuthority(authorityIds,
-      linkingRulesService.getMinAuthorityField(),
-      linkingRulesService.getMaxAuthorityField());
+      AuthorityFieldConstants.MIN_FIELD,
+      AuthorityFieldConstants.MAX_FIELD);
     return sourceStorageClient.fetchParsedRecordsInBatch(authorityFetchRequest).getRecords();
   }
 
@@ -297,9 +298,9 @@ public class InstanceAuthorityLinkingService {
   private void checkForDeletedAuthorities(Set<UUID> authorityIds) {
     Map<UUID, Authority> authoritiesByIds = authorityService.getAllByIds(authorityIds);
     var deletedAuthorityIds = authorityIds.stream()
-        .filter(id -> !authoritiesByIds.containsKey(id))
-        .map(UUID::toString)
-        .collect(Collectors.toSet());
+      .filter(id -> !authoritiesByIds.containsKey(id))
+      .map(UUID::toString)
+      .collect(Collectors.toSet());
 
     if (isNotEmpty(deletedAuthorityIds)) {
       throw new DeletedLinkingAuthorityException(deletedAuthorityIds);

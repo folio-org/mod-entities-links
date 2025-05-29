@@ -26,6 +26,7 @@ import org.folio.entlinks.integration.dto.SourceParsedContent;
 import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionsService;
+import org.folio.entlinks.service.links.model.AuthorityFieldConstants;
 import org.springframework.stereotype.Service;
 
 /**
@@ -100,8 +101,8 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
 
     var ids = authorities.stream().map(Authority::getId).collect(Collectors.toSet());
     var authorityFetchRequest = sourceStorageClient.buildBatchFetchRequestForAuthority(ids,
-        linkingRulesService.getMinAuthorityField(),
-        linkingRulesService.getMaxAuthorityField());
+      AuthorityFieldConstants.MIN_FIELD,
+      AuthorityFieldConstants.MAX_FIELD);
 
     return sourceStorageClient.fetchParsedRecordsInBatch(authorityFetchRequest);
   }

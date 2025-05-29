@@ -85,7 +85,7 @@ class LinkingRulesServiceDelegateTest {
 
     delegate.patchLinkingRuleById(ruleId, patchRequest);
 
-    verify(linkingRulesService, times(1)).patchLinkingRule(ruleId, linkingRule);
+    verify(linkingRulesService, times(1)).updateLinkingRule(ruleId, linkingRule);
   }
 
   @Test
@@ -101,7 +101,7 @@ class LinkingRulesServiceDelegateTest {
 
     assertThat("Request should have id = " + ruleId).isEqualTo(exception.getMessage());
 
-    verify(linkingRulesService, never()).patchLinkingRule(any(), any());
+    verify(linkingRulesService, never()).updateLinkingRule(any(), any());
   }
 
   @NotNull

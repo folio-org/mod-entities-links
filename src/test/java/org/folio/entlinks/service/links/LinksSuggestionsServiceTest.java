@@ -300,7 +300,6 @@ class LinksSuggestionsServiceTest {
     assertEquals(BASE_URL + NATURAL_ID, bibField.getSubfields('0').getFirst().value());
     assertFalse(bibField.hasSubfield('a'));
     assertTrue(bibField.hasSubfield('b'));
-
   }
 
   @Test

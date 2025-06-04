@@ -41,7 +41,6 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-
 @IntegrationTest
 @DatabaseCleanup(tables = {DatabaseHelper.AUTHORITY_NOTE_TYPE_TABLE})
 @Import(JpaConfig.class)
@@ -206,7 +205,6 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
         .andExpect(jsonPath("$.errors.[0].parameters[0].key", is("name")))
         .andExpect(jsonPath("$.errors.[0].parameters[0].value", is("null")))
         .andExpect(errorMessageMatch(containsString("must not be null")));
-
   }
 
   // Tests for PUT

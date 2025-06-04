@@ -10,5 +10,4 @@ public interface AuthorityBaseCqlRepository<T extends AuthorityBase> {
   Page<T> findByCql(String cql, Pageable pageable);
 
   Page<UUID> findIdsByCql(String cqlQuery, Pageable pageable);
-
 }

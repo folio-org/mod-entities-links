@@ -114,5 +114,4 @@ class AuthorityEventListenerTest {
 
     verify(instanceAuthorityLinkUpdateService, never()).handleAuthoritiesChanges(singletonList(event));
   }
-
 }

@@ -46,7 +46,6 @@ class SourceContentMapperTest {
     assertThat(tag.getInd2()).isEqualTo(content.getFields().getFirst().getInd2());
     var subFieldValue = content.getFields().getFirst().getSubfields('a').getFirst().value();
     assertThat(tag.getSubfields().getFirst()).containsEntry("a", subFieldValue);
-
   }
 
   @Test

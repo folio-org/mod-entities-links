@@ -86,5 +86,4 @@ class AuthorityS3ServiceTest {
     verify(bulkContext).deleteLocalFiles();
     verify(s3Client).uploadErrorFiles(any());
   }
-
 }

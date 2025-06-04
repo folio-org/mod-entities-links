@@ -19,7 +19,6 @@ import org.folio.spring.testing.type.UnitTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
-
 @UnitTest
 class DataStatsMapperTest {
 
@@ -44,7 +43,6 @@ class DataStatsMapperTest {
     assertThat(dto.getLbTotal()).isEqualTo(source.getLbTotal());
     assertThat(dto.getLbUpdated()).isEqualTo(source.getLbUpdated());
     assertThat(dto.getLbFailed()).isEqualTo(source.getLbFailed());
-
   }
 
   @Test

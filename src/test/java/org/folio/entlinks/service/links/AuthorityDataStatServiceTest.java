@@ -207,5 +207,4 @@ class AuthorityDataStatServiceTest {
         .lbTotal(lbTotal)
         .build()));
   }
-
 }

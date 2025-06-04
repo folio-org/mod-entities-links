@@ -23,5 +23,4 @@ public class RequestBodyValidationException extends BaseException {
     super(message, ErrorType.VALIDATION_ERROR);
     this.invalidParameters = invalidParameters;
   }
-
 }

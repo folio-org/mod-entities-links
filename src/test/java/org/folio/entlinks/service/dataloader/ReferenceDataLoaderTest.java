@@ -23,7 +23,6 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class ReferenceDataLoaderTest {

@@ -15,5 +15,4 @@ public class EntityLinksApplication {
   public static void main(String[] args) {
     SpringApplication.run(EntityLinksApplication.class, args);
   }
-
 }

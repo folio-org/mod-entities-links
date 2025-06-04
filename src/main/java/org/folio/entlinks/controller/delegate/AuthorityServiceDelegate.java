@@ -144,5 +144,4 @@ public class AuthorityServiceDelegate {
       propagationService.propagate(newAuthority, UPDATE, context.getTenantId());
     };
   }
-
 }

@@ -38,5 +38,4 @@ public class SpecificationChangedEventListener {
            && FamilyProfile.BIBLIOGRAPHIC == event.profile()
            && SpecificationUpdatedEvent.UpdateExtent.FULL == event.updateExtent();
   }
-
 }

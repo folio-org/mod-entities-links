@@ -1,6 +1,7 @@
 package org.folio.entlinks.controller;
 
 import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.domain.entity.AuthoritySourceFileSource.FOLIO;
 import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
@@ -15,9 +16,7 @@ import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authoritySourceFilesEndpoint;
 import static org.folio.support.base.TestConstants.authoritySourceFilesHridEndpoint;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,7 +33,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import org.assertj.core.api.Assertions;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto.SourceEnum;
@@ -310,7 +308,6 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("$.errors.[0].parameters[0].key", is("name")))
       .andExpect(jsonPath("$.errors.[0].parameters[0].value", is("null")))
       .andExpect(errorMessageMatch(containsString("must not be null")));
-
   }
 
   // Tests for PATCH
@@ -420,7 +417,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .andReturn().getResponse().getContentAsString();
     var resultDto = objectMapper.readValue(content, AuthoritySourceFileDto.class);
 
-    assertThat(new HashSet<>(resultDto.getCodes()), equalTo(new HashSet<>(created.getCodes())));
+    assertThat(new HashSet<>(resultDto.getCodes())).isEqualTo(new HashSet<>(created.getCodes()));
   }
 
   @Test
@@ -595,13 +592,13 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     // create source file
     doPost(authoritySourceFilesEndpoint(), dto, tenantHeaders(TENANT_ID));
     var sourceFileCentral = requestAuthoritySourceFile(id, TENANT_ID);
-    Assertions.assertThat(sourceFileCentral).extracting(AuthoritySourceFileDto::getId, AuthoritySourceFileDto::getName)
+    assertThat(sourceFileCentral).extracting(AuthoritySourceFileDto::getId, AuthoritySourceFileDto::getName)
         .containsExactly(id, dto.getName());
 
     // should be also created in member tenants
     awaitUntilAsserted(() -> {
       var sourceFileMember = requestAuthoritySourceFile(id, COLLEGE_TENANT_ID);
-      Assertions.assertThat(sourceFileMember).extracting(AuthoritySourceFileDto::getId, AuthoritySourceFileDto::getName)
+      assertThat(sourceFileMember).extracting(AuthoritySourceFileDto::getId, AuthoritySourceFileDto::getName)
           .containsExactly(id, dto.getName());
     });
 
@@ -610,7 +607,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
         .id(UUID.randomUUID()).source("MARC").naturalId("ns12345").personalName("Nikola Tesla").sourceFileId(id);
     doPost(authorityEndpoint(), authorityDto, tenantHeaders(COLLEGE_TENANT_ID));
     var memberAuthority = requestAuthority(authorityDto.getId(), COLLEGE_TENANT_ID);
-    Assertions.assertThat(memberAuthority)
+    assertThat(memberAuthority)
         .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
             AuthorityDto::getPersonalName, AuthorityDto::getSourceFileId)
         .containsExactly(authorityDto.getId(), authorityDto.getSource(), authorityDto.getNaturalId(),

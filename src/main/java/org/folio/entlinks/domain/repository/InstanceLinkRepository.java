@@ -36,10 +36,7 @@ public interface InstanceLinkRepository extends JpaRepository<InstanceAuthorityL
                                               @Param("errorCause") String errorCause,
                                               @Param("authorityId") UUID authorityId);
 
-
-
   @Modifying
   @Query("delete from InstanceAuthorityLink i where i.authority.id in :authorityIds")
   void deleteByAuthorityIds(@Param("authorityIds") Collection<UUID> authorityIds);
-
 }

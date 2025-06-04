@@ -14,5 +14,4 @@ public interface MappingRulesClient {
   Map<String, List<MappingRule>> fetchAuthorityMappingRules();
 
   record MappingRule(String target) { }
-
 }

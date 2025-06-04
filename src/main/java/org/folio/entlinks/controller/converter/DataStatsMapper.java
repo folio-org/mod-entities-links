@@ -37,5 +37,4 @@ public interface DataStatsMapper {
   default OffsetDateTime map(Timestamp timestamp) {
     return fromTimestamp(timestamp);
   }
-
 }

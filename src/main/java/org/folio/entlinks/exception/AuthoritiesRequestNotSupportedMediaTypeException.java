@@ -23,5 +23,4 @@ public class AuthoritiesRequestNotSupportedMediaTypeException extends BaseExcept
     super(message, ErrorType.VALIDATION_ERROR);
     this.invalidParameters = invalidParameters;
   }
-
 }

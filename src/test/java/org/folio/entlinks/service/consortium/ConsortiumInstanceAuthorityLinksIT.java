@@ -36,7 +36,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.ResultMatcher;
 
-
 @IntegrationTest
 @DatabaseCleanup(
     tables = {INSTANCE_AUTHORITY_LINK_TABLE, AUTHORITY_TABLE, AUTHORITY_SOURCE_FILE_CODE_TABLE,
@@ -65,7 +64,6 @@ class ConsortiumInstanceAuthorityLinksIT extends IntegrationTestBase {
     httpHeaders.put(XOkapiHeaders.TENANT, singletonList(CENTRAL_TENANT_ID));
 
     doPut(linksInstanceEndpoint(), incomingLinks, httpHeaders, instanceId);
-
 
     doGet(linksInstanceEndpoint(), httpHeaders, instanceId)
       .andExpect(linksMatch(hasSize(2)))

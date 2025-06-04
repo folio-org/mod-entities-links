@@ -367,5 +367,4 @@ class InstanceAuthorityLinkingServiceTest {
 
     when(authorityService.getAllByIds(anyCollection())).thenReturn(authoritiesById);
   }
-
 }

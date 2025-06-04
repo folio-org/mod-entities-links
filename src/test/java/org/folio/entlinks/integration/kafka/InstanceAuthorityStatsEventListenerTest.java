@@ -89,5 +89,4 @@ class InstanceAuthorityStatsEventListenerTest {
 
     verifyNoInteractions(dataStatService);
   }
-
 }

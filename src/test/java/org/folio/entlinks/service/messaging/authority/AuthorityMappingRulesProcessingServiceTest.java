@@ -35,5 +35,4 @@ class AuthorityMappingRulesProcessingServiceTest {
 
     assertEquals("100", actual);
   }
-
 }

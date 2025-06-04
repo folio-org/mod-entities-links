@@ -27,7 +27,6 @@ public class ConsortiumTenantsServiceTest {
   private @Mock UserTenantsService userTenantsService;
   private @InjectMocks ConsortiumTenantsService consortiumTenantsService;
 
-
   @Test
   void testGetConsortiumTenants() {
     String tenantId = TEST_TENANT_ID;
@@ -44,7 +43,6 @@ public class ConsortiumTenantsServiceTest {
 
     assertThat(result.getFirst()).isEqualTo(TENANT);
   }
-
 
   @Test
   void testGetConsortiumTenantsWithException() {

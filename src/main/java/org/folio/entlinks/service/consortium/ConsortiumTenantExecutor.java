@@ -28,5 +28,4 @@ public class ConsortiumTenantExecutor {
     log.info("Changing context from {} to {}", tenantId, centralTenantId);
     return scopedExecutionService.executeSystemUserScoped(centralTenantId.get(), operation::get);
   }
-
 }

@@ -87,7 +87,6 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
         AuthorityDto::getPersonalName)
       .containsExactly(dto.getId(), CONSORTIUM_SOURCE_PREFIX + dto.getSource(), dto.getNaturalId(),
           dto.getPersonalName());
-
   }
 
   @Test
@@ -150,7 +149,6 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
         AuthorityDto::getPersonalName)
       .containsExactly(dto.getId(), CONSORTIUM_SOURCE_PREFIX + dto.getSource(), dto.getNaturalId(),
           dto.getPersonalName());
-
   }
 
   @Test
@@ -229,5 +227,4 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
       .getContentAsString();
     return objectMapper.readValue(response, AuthorityDto.class);
   }
-
 }

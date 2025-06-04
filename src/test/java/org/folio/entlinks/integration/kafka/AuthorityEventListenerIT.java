@@ -421,5 +421,4 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
       .map(uuid -> new ChangeTargetLink().instanceId(uuid))
       .toList());
   }
-
 }

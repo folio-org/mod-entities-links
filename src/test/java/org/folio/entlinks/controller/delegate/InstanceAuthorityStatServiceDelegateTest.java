@@ -191,7 +191,6 @@ class InstanceAuthorityStatServiceDelegateTest {
     assertThat(List.of(USER_ID_1, USER_ID_2)).containsAll(resultUserIds);
   }
 
-
   @Test
   void fetchStats_withoutMetadata() {
     //  WHEN

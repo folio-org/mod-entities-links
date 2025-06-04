@@ -31,5 +31,4 @@ public class ConsortiumAuthorityArchivePropagationService extends ConsortiumProp
       default -> throw new IllegalStateException("Unexpected value: " + propagationType);
     }
   }
-
 }

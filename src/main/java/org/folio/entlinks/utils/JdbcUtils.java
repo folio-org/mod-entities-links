@@ -31,5 +31,4 @@ public class JdbcUtils {
       .collect(Collectors.joining(","));
     return String.join(",", nCopies(size, '(' + paramGroups + ')'));
   }
-
 }

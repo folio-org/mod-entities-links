@@ -41,5 +41,4 @@ public class AuthorityChangeFilterStrategy implements RecordFilterStrategy<Strin
   private boolean authorityHasChanges(AuthorityDomainEvent authorityEvent) {
     return !Objects.equals(authorityEvent.getOldEntity(), authorityEvent.getNewEntity());
   }
-
 }

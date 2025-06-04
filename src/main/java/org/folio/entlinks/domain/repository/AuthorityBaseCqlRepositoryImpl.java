@@ -75,5 +75,4 @@ public abstract class AuthorityBaseCqlRepositoryImpl<T extends AuthorityBase> im
   private Specification<T> deletedIs(Boolean deleted) {
     return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get(AuthorityBase.DELETED_COLUMN), deleted);
   }
-
 }

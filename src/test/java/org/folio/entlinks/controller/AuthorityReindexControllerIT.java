@@ -54,7 +54,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
-
 @IntegrationTest
 @DatabaseCleanup(tables = {
   DatabaseHelper.AUTHORITY_REINDEX_JOB_TABLE,

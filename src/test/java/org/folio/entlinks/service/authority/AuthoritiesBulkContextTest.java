@@ -83,5 +83,4 @@ class AuthoritiesBulkContextTest {
     assertFalse(Files.exists(Paths.get(authoritiesBulkContext.getLocalFailedEntitiesFilePath())));
     assertFalse(Files.exists(Paths.get(authoritiesBulkContext.getLocalErrorsFilePath())));
   }
-
 }

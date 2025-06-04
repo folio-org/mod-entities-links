@@ -49,5 +49,4 @@ public class DomainEvent<T> implements BaseEvent {
   public static <T> DomainEvent<T> reindexEvent(UUID id, T newEntity, String tenant) {
     return new DomainEvent<>(id, null, newEntity, DomainEventType.REINDEX, tenant);
   }
-
 }

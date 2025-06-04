@@ -45,5 +45,4 @@ public class ReindexJob {
 
   @Column(name = "submitted_date")
   private OffsetDateTime submittedDate;
-
 }

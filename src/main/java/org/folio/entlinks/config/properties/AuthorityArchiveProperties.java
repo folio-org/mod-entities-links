@@ -12,5 +12,4 @@ public class AuthorityArchiveProperties {
 
   @Min(1)
   private int retentionPeriodInDays;
-
 }

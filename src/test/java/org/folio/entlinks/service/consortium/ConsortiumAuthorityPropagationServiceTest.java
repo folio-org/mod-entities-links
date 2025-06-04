@@ -98,5 +98,4 @@ class ConsortiumAuthorityPropagationServiceTest {
       return null;
     }).when(executionService).executeAsyncSystemUserScoped(any(), any());
   }
-
 }

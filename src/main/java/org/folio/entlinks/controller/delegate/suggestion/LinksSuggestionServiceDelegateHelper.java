@@ -28,5 +28,4 @@ public class LinksSuggestionServiceDelegateHelper {
 
     return searchParameterToServiceDelegateMap.get(authoritySearchParameter);
   }
-
 }

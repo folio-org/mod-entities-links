@@ -1,6 +1,5 @@
 package org.folio.entlinks.controller.converter;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 import static org.folio.support.base.TestConstants.TEST_DATE;
@@ -60,7 +59,6 @@ class AuthorityNoteTypeMapperTest {
     assertThat(fromTimestamp(entity.getUpdatedDate())).isEqualTo(dto.getMetadata().getUpdatedDate());
     assertThat(entity.getUpdatedByUserId()).isEqualTo(dto.getMetadata().getUpdatedByUserId());
   }
-
 
   @Test
   void testToDtoWithNullEntity() {
@@ -123,7 +121,6 @@ class AuthorityNoteTypeMapperTest {
 
     assertThat(dtoList).isNull();
   }
-
 
   @Test
   void testToAuthorityNoteTypeCollection() {

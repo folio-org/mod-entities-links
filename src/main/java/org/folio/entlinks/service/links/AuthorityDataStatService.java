@@ -153,5 +153,4 @@ public class AuthorityDataStatService {
       case FAIL -> InstanceAuthorityLinkStatus.ERROR;
     };
   }
-
 }

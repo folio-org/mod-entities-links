@@ -32,7 +32,6 @@ class ReindexJobMapperTest {
     assertThat(dto.getPublished()).isEqualTo(reindexJob.getPublished());
     assertThat(dto.getJobStatus().name()).isEqualTo(reindexJob.getJobStatus().name());
     assertThat(dto.getResourceName().name()).isEqualTo(reindexJob.getResourceName().name());
-
   }
 
   @Test
@@ -78,5 +77,4 @@ class ReindexJobMapperTest {
     reindexJob.setSubmittedDate(fromTimestamp(TEST_DATE));
     return reindexJob;
   }
-
 }

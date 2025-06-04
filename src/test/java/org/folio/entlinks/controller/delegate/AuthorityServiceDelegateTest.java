@@ -166,5 +166,4 @@ class AuthorityServiceDelegateTest {
     verify(mapper).toDto(any(Authority.class));
     verify(propagationService).propagate(entity, DELETE, TENANT_ID);
   }
-
 }

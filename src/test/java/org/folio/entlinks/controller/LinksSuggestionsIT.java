@@ -300,5 +300,4 @@ class LinksSuggestionsIT extends IntegrationTestBase {
         .authorityNaturalId(NATURAL_ID)
         .status(linkStatus);
   }
-
 }

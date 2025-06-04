@@ -181,5 +181,4 @@ public class AuthorityChangeHolder {
     copy.setSourceRecord(sourceRecord);
     return copy;
   }
-
 }

@@ -68,5 +68,4 @@ public class DeleteAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   public AuthorityChangeType supportedAuthorityChangeType() {
     return DELETE;
   }
-
 }

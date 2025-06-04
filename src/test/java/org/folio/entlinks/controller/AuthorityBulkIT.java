@@ -80,5 +80,4 @@ class AuthorityBulkIT extends IntegrationTestBase {
     //1'st time with exception triggering spring retry, then - 2 regular calls
     verify(s3Client, times(3)).upload(any(), any());
   }
-
 }

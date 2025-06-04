@@ -86,5 +86,4 @@ class BulkAuthorityS3ClientTest {
     verify(s3Client).upload(bulkContext.getLocalFailedEntitiesFilePath(), bulkContext.getFailedEntitiesFilePath());
     verify(s3Client).upload(bulkContext.getLocalErrorsFilePath(), bulkContext.getErrorsFilePath());
   }
-
 }

@@ -25,7 +25,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class ConsortiumAuthorityArchivePropagationServiceTest {
@@ -41,7 +40,6 @@ class ConsortiumAuthorityArchivePropagationServiceTest {
 
   @InjectMocks
   private ConsortiumAuthorityArchivePropagationService propagationService;
-
 
   @Test
   void testPropagationDelete() {
@@ -74,7 +72,6 @@ class ConsortiumAuthorityArchivePropagationServiceTest {
             TENANT_ID));
     assertEquals("Propagation type 'UPDATE' is not supported for authority archives.", exception.getMessage());
   }
-
 
   private AuthorityArchive authorityArchive() {
     var archive = new AuthorityArchive();

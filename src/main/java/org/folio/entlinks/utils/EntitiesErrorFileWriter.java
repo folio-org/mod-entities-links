@@ -18,7 +18,6 @@ public class EntitiesErrorFileWriter implements AutoCloseable {
     this.errorEntitiesFileWriter = new BufferedWriter(new FileWriter(errorEntitiesFileName));
     this.errorsFileWriter = new BufferedWriter(new FileWriter(errorsFileName));
     this.objectMapper = objectMapper;
-
   }
 
   public <T> void write(T entity, Exception ex, Function<T, String> entityIdentifierGetter) throws IOException {
@@ -34,5 +33,4 @@ public class EntitiesErrorFileWriter implements AutoCloseable {
     errorEntitiesFileWriter.close();
     errorsFileWriter.close();
   }
-
 }

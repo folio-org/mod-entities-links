@@ -33,7 +33,7 @@ class InstanceStorageServiceTest {
   private @InjectMocks InstanceStorageService service;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     when(instanceStorageProperties.getBatchSize()).thenReturn(2);
   }
 
@@ -108,6 +108,5 @@ class InstanceStorageServiceTest {
       .isInstanceOf(FolioIntegrationException.class)
       .hasCauseExactlyInstanceOf(cause.getClass())
       .hasMessage("Failed to fetch instances");
-
   }
 }

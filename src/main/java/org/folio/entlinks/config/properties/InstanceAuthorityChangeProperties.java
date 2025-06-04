@@ -10,5 +10,4 @@ import org.springframework.stereotype.Component;
 public class InstanceAuthorityChangeProperties {
 
   private int numPartitions = 100;
-
 }

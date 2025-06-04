@@ -61,5 +61,4 @@ public class FieldParsedContent {
     return subfieldList.stream()
       .collect(Collectors.groupingBy(ParsedSubfield::code));
   }
-
 }

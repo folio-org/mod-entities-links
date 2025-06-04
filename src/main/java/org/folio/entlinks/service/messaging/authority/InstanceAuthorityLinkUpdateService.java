@@ -124,7 +124,6 @@ public class InstanceAuthorityLinkUpdateService {
     log.info("Skip message for {} event. Authority record [tenantId: {}, id: {}] doesn't have links",
         changeHolder.getEvent().getType(), folioExecutionContext.getTenantId(), changeHolder.getAuthorityId());
     return false;
-
   }
 
   private void prepareAndSaveAuthorityDataStats(List<AuthorityChangeHolder> changeHolders) {
@@ -177,5 +176,4 @@ public class InstanceAuthorityLinkUpdateService {
         folioExecutionContext.getTenantId());
     eventProducer.sendMessages(events);
   }
-
 }

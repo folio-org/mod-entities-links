@@ -176,7 +176,6 @@ class AuthoritySourceFileMapperTest {
     assertThat(sourceFile.getName()).isEqualTo(fileDto.getName());
     assertThat(sourceFile.getType()).isEqualTo(fileDto.getType());
     assertThat(sourceFile.getBaseUrl()).isEqualTo(fileDto.getBaseUrl());
-
   }
 
   @NotNull

@@ -12,5 +12,4 @@ public interface AuthorityChangeHandler {
   LinksChangeEvent.TypeEnum getReplyEventType();
 
   AuthorityChangeType supportedAuthorityChangeType();
-
 }

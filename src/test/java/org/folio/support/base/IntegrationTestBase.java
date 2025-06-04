@@ -242,7 +242,6 @@ public class IntegrationTestBase {
     return tryDoHttpMethod(get(uri, args), null, headers);
   }
 
-
   @SneakyThrows
   protected static ResultActions doGet(String uri, Object... args) {
     return doGet(uri, defaultHeaders(), args);
@@ -460,6 +459,5 @@ public class IntegrationTestBase {
     static LinkMatcher linkMatch(InstanceLinkDto expectedLink) {
       return new LinkMatcher(expectedLink);
     }
-
   }
 }

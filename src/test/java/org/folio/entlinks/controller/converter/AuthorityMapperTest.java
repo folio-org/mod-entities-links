@@ -53,7 +53,6 @@ class AuthorityMapperTest {
     assertThat(dto.getSourceFileId()).isEqualTo(authority.getAuthoritySourceFile().getId());
     assertThat(dto.getIdentifiers().getFirst().getIdentifierTypeId())
         .isEqualTo(authority.getIdentifiers().getFirst().getIdentifierTypeId());
-
   }
 
   @Test
@@ -85,7 +84,6 @@ class AuthorityMapperTest {
     assertThat(String.valueOf(authority.getSubjectHeadingCode())).isEqualTo(authorityDto.getSubjectHeadings());
     assertThat(fromTimestamp(authority.getUpdatedDate())).isEqualTo(authorityDto.getMetadata().getUpdatedDate());
   }
-
 
   @Test
   void testToAuthorityWithNullInput() {
@@ -126,7 +124,6 @@ class AuthorityMapperTest {
     assertThat(authorityIdentifier).isNotNull();
     assertThat(dtoIdentifier.getValue()).isEqualTo(authorityIdentifier.getValue());
     assertThat(dtoIdentifier.getIdentifierTypeId()).isEqualTo(authorityIdentifier.getIdentifierTypeId());
-
   }
 
   @Test
@@ -135,7 +132,6 @@ class AuthorityMapperTest {
 
     assertThat(authorityIdentifier).isNull();
   }
-
 
   @Test
   void testToAuthorityNoteWithValidData() {
@@ -199,7 +195,6 @@ class AuthorityMapperTest {
     assertThat(identifier.getValue()).isEqualTo(dto1.getIdentifiers().getFirst().getValue());
     assertThat(authority.getNotes().getFirst().getNote()).isEqualTo(dto1.getNotes().getFirst().getNote());
     assertThat(authority.getNotes().getFirst().getStaffOnly()).isEqualTo(dto1.getNotes().getFirst().getStaffOnly());
-
   }
 
   @Test

@@ -186,5 +186,4 @@ public class InstanceAuthorityLinkingService {
       return builder.and(predicates.toArray(new Predicate[0]));
     };
   }
-
 }

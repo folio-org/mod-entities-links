@@ -20,5 +20,4 @@ public interface ReindexJobMapper {
     var reindexJobDtos = toDtoList(authorityStorageIterable.getContent());
     return new ReindexJobDtoCollection(reindexJobDtos, (int) authorityStorageIterable.getTotalElements());
   }
-
 }

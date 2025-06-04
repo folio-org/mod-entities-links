@@ -85,5 +85,4 @@ public class LinkingRuleValidator {
     }
     return invalidSubfields;
   }
-
 }

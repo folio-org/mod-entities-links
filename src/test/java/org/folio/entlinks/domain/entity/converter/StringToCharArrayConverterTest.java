@@ -52,5 +52,4 @@ class StringToCharArrayConverterTest {
     var actual = converter.convertToEntityAttribute(dbData);
     assertArrayEquals(null, actual);
   }
-
 }

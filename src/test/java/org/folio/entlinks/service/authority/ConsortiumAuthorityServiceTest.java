@@ -94,5 +94,4 @@ class ConsortiumAuthorityServiceTest {
     verifyNoInteractions(authorityCallback);
     verify(repository).findByIdAndDeletedFalse(any(UUID.class));
   }
-
 }

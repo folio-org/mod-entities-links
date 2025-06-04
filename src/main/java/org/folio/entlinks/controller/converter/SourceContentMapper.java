@@ -116,5 +116,4 @@ public interface SourceContentMapper {
     var authoritySourceFile = authority.getAuthoritySourceFile();
     return (authoritySourceFile != null) ? authoritySourceFile.getId() : null;
   }
-
 }

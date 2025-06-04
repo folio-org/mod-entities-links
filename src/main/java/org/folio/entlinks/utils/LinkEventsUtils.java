@@ -1,6 +1,5 @@
 package org.folio.entlinks.utils;
 
-
 import static org.folio.entlinks.utils.DateUtils.currentTsInString;
 
 import java.util.List;
@@ -29,7 +28,6 @@ public class LinkEventsUtils {
       .subfieldsChanges(fieldChanges)
       .ts(currentTsInString());
   }
-
 
   public static List<ChangeTarget> toChangeTargets(List<InstanceAuthorityLink> partition) {
     return partition.stream()

@@ -2,6 +2,7 @@ package org.folio.entlinks.controller.converter;
 
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.dto.LinkingRuleDto;
 import org.folio.entlinks.domain.dto.LinkingRulePatchRequest;
 import org.folio.entlinks.domain.dto.SubfieldValidation;
@@ -30,29 +31,41 @@ public interface LinkingRulesMapper {
     return new SubfieldValidation().existence(List.of(existence));
   }
 
+  /**
+   * Converts a list of strings to a sorted character array containing the first character of each string.
+   * Letters are sorted before non-letters, and characters are sorted naturally within their groups.
+   *
+   * @param list the input list of strings
+   * @return sorted array of first characters from non-empty strings, or empty array if input is null
+   */
   default char[] stringListToCharArray(List<String> list) {
     if (list == null) {
       return new char[0];
     }
 
-    char[] charTmp = new char[list.size()];
-    list.sort((s1, s2) -> {
-      boolean s1Alpha = Character.isLetter(s1.charAt(0));
-      boolean s2Alpha = Character.isLetter(s2.charAt(0));
-      if (s1Alpha && !s2Alpha) {
-        return -1;
-      }
-      if (!s1Alpha && s2Alpha) {
-        return 1;
-      }
-      return s1.compareToIgnoreCase(s2);
-    });
-    int i = 0;
-    for (String string : list) {
-      charTmp[i] = string.charAt(0);
-      i++;
-    }
+    var firstCharacters = list.stream()
+      .filter(StringUtils::isNotEmpty)
+      .map(s -> s.charAt(0))
+      .sorted(this::compareCharacters)
+      .toList();
 
-    return charTmp;
+    char[] result = new char[firstCharacters.size()];
+    for (int i = 0; i < result.length; i++) {
+      result[i] = firstCharacters.get(i);
+    }
+    return result;
+  }
+
+  private int compareCharacters(char first, char second) {
+    boolean isFirstLetter = Character.isLetter(first);
+    boolean isSecondLetter = Character.isLetter(second);
+
+    if (isFirstLetter && !isSecondLetter) {
+      return -1;
+    }
+    if (!isFirstLetter && isSecondLetter) {
+      return 1;
+    }
+    return Character.compare(first, second);
   }
 }

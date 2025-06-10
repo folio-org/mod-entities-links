@@ -93,4 +93,29 @@ class LinkingRulesMapperTest {
     rule.setSubfieldModifications(List.of(subfieldModification));
     return rule;
   }
+
+  @Test
+  void testStringListToCharArray_withValidInput() {
+    var input = List.of("b", "1", "a", "", "2");
+
+    char[] result = mapper.stringListToCharArray(input);
+
+    assertThat(result).containsExactly('a', 'b', '1', '2');
+  }
+
+  @Test
+  void testStringListToCharArray_withEmptyList() {
+    var input = List.<String>of();
+
+    char[] result = mapper.stringListToCharArray(input);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void testStringListToCharArray_withNullInput() {
+    char[] result = mapper.stringListToCharArray(null);
+
+    assertThat(result).isEmpty();
+  }
 }

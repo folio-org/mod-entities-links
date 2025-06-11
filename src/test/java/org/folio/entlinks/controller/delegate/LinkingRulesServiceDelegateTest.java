@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.folio.entlinks.controller.converter.LinkingRulesMapper;
 import org.folio.entlinks.domain.dto.LinkingRuleDto;
 import org.folio.entlinks.domain.dto.LinkingRulePatchRequest;
@@ -93,9 +94,6 @@ class LinkingRulesServiceDelegateTest {
   void testPatchLinkingRuleById_ExceptionCase() {
     Integer ruleId = 2;
     LinkingRulePatchRequest patchRequest = new LinkingRulePatchRequest();
-    InstanceAuthorityLinkingRule linkingRule = createInstanceAuthorityLinkingRule();
-
-    when(mapper.convert(patchRequest)).thenReturn(linkingRule);
 
     var exception = assertThrows(RequestBodyValidationException.class,
       () -> delegate.patchLinkingRuleById(ruleId, patchRequest));
@@ -110,12 +108,7 @@ class LinkingRulesServiceDelegateTest {
     Integer ruleId = 1;
     LinkingRulePatchRequest patchRequest = new LinkingRulePatchRequest();
     patchRequest.setId(ruleId);
-    patchRequest.setAuthoritySubfields(List.of("invalidSubfield"));
-
-    InstanceAuthorityLinkingRule linkingRule = createInstanceAuthorityLinkingRule();
-    linkingRule.setSubfieldModifications(null);
-
-    when(mapper.convert(patchRequest)).thenReturn(linkingRule);
+    patchRequest.setAuthoritySubfields(Set.of("invalidSubfield"));
 
     var exception = assertThrows(RequestBodyValidationException.class,
       () -> delegate.patchLinkingRuleById(ruleId, patchRequest));

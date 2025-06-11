@@ -2,6 +2,7 @@ package org.folio.entlinks.controller.converter;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.dto.LinkingRuleDto;
 import org.folio.entlinks.domain.dto.LinkingRulePatchRequest;
@@ -32,18 +33,18 @@ public interface LinkingRulesMapper {
   }
 
   /**
-   * Converts a list of strings to a sorted character array containing the first character of each string.
+   * Converts a set of strings to a sorted character array containing the first character of each string.
    * Letters are sorted before non-letters, and characters are sorted naturally within their groups.
    *
-   * @param list the input list of strings
+   * @param set the input list of strings
    * @return sorted array of first characters from non-empty strings, or empty array if input is null
    */
-  default char[] stringListToCharArray(List<String> list) {
-    if (list == null) {
+  default char[] stringListToCharArray(Set<String> set) {
+    if (set == null) {
       return new char[0];
     }
 
-    var firstCharacters = list.stream()
+    var firstCharacters = set.stream()
       .filter(StringUtils::isNotEmpty)
       .map(s -> s.charAt(0))
       .sorted(this::compareCharacters)
@@ -66,6 +67,6 @@ public interface LinkingRulesMapper {
     if (!isFirstLetter && isSecondLetter) {
       return 1;
     }
-    return Character.compare(first, second);
+    return Character.compare(Character.toLowerCase(first), Character.toLowerCase(second));
   }
 }

@@ -8,6 +8,7 @@ import static org.folio.support.base.TestConstants.TEST_PROPERTY_VALUE;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.folio.entlinks.domain.dto.LinkingRuleDto;
 import org.folio.entlinks.domain.dto.LinkingRulePatchRequest;
 import org.folio.entlinks.domain.dto.SubfieldModification;
@@ -96,16 +97,16 @@ class LinkingRulesMapperTest {
 
   @Test
   void testStringListToCharArray_withValidInput() {
-    var input = List.of("b", "1", "a", "", "2");
+    var input = Set.of("B", "1", "a", "", "2");
 
     char[] result = mapper.stringListToCharArray(input);
 
-    assertThat(result).containsExactly('a', 'b', '1', '2');
+    assertThat(result).containsExactly('a', 'B', '1', '2');
   }
 
   @Test
   void testStringListToCharArray_withEmptyList() {
-    var input = List.<String>of();
+    var input = Set.<String>of();
 
     char[] result = mapper.stringListToCharArray(input);
 

@@ -28,14 +28,13 @@ public class LinkingRulesServiceDelegate {
   }
 
   public void patchLinkingRuleById(Integer ruleId, LinkingRulePatchRequest patchRequest) {
-    var linkingRule = mapper.convert(patchRequest);
-    if (!ruleId.equals(linkingRule.getId())) {
+    if (!ruleId.equals(patchRequest.getId())) {
       throw new RequestBodyValidationException("Request should have id = " + ruleId,
-        ErrorUtils.createErrorParameters("id", String.valueOf(linkingRule.getId())));
+        ErrorUtils.createErrorParameters("id", String.valueOf(patchRequest.getId())));
     }
 
     var errorParameters = patchRequest.getAuthoritySubfields().stream()
-      .filter(string -> string.length() != 1)
+      .filter(string -> string.length() != 1 || Character.isUpperCase(string.charAt(0)))
       .map(string -> createErrorParameter("authoritySubfields", string))
       .toList();
 
@@ -43,6 +42,7 @@ public class LinkingRulesServiceDelegate {
       throw new RequestBodyValidationException("Invalid subfield value.", errorParameters);
     }
 
+    var linkingRule = mapper.convert(patchRequest);
     linkingRulesService.updateLinkingRule(ruleId, linkingRule);
   }
 }

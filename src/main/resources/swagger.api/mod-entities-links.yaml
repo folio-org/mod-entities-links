@@ -471,6 +471,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/charString'
+          uniqueItems: true
 
     uuid:
       type: string

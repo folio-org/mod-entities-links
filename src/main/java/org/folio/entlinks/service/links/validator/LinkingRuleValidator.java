@@ -25,8 +25,8 @@ public class LinkingRuleValidator {
   public void validateSubfieldsUpdate(InstanceAuthorityLinkingRule patch,
                                       InstanceAuthorityLinkingRule existing) {
     validateBibField(existing);
-    validateRequiredSubfieldA(patch);
     validateSubfieldCharacters(patch);
+    validateRequiredSubfieldA(patch);
   }
 
   /**

@@ -15,8 +15,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.dto.LinkingRuleDto;
@@ -93,8 +95,8 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void patchLinkingRulesById_positive_shouldUpdateAuthoritySubfields() {
-    var defaultAuthoritySubfields = defaultRules.get(9).getAuthoritySubfields();
-    var request = new LinkingRulePatchRequest().id(10).authoritySubfields(List.of("a", "b"));
+    var defaultAuthoritySubfields = new HashSet<>(defaultRules.get(9).getAuthoritySubfields());
+    var request = new LinkingRulePatchRequest().id(10).authoritySubfields(Set.of("a", "b"));
     try {
       doPatch(linkingRulesEndpoint(10), request);
 
@@ -150,7 +152,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
   void patchLinkingRulesById_negative_invalidBibField() {
     var request = new LinkingRulePatchRequest()
       .id(1)
-      .authoritySubfields(List.of("a", "b"));
+      .authoritySubfields(Set.of("a", "b"));
 
     tryPatch(linkingRulesEndpoint(1), request)
       .andExpect(status().isUnprocessableEntity())
@@ -166,7 +168,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
   void patchLinkingRulesById_negative_missingRequiredSubfieldA() {
     var request = new LinkingRulePatchRequest()
       .id(10)
-      .authoritySubfields(List.of("b", "c"));
+      .authoritySubfields(Set.of("b", "c"));
 
     tryPatch(linkingRulesEndpoint(10), request)
       .andExpect(status().isUnprocessableEntity())
@@ -182,7 +184,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
   void patchLinkingRulesById_negative_invalidSubfieldCharacters() {
     var request = new LinkingRulePatchRequest()
       .id(10)
-      .authoritySubfields(List.of("a", "9", "x")); // '9' is invalid as per SubfieldValidation
+      .authoritySubfields(Set.of("a", "9", "x")); // '9' is invalid as per SubfieldValidation
 
     tryPatch(linkingRulesEndpoint(10), request)
       .andExpect(status().isUnprocessableEntity())

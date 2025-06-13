@@ -1,3 +1,7 @@
+## v4.0.3 2025-06-13
+### Features
+* Allow updating controlled subfields ([MODELINKS-326](https://folio-org.atlassian.net/browse/MODELINKS-326))
+
 ## v4.0.1 2025-04-02
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))

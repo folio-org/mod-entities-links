@@ -1,6 +1,7 @@
 package org.folio.entlinks.controller.delegate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.folio.entlinks.controller.converter.LinkingRulesMapper;
 import org.folio.entlinks.domain.dto.LinkingRuleDto;
 import org.folio.entlinks.domain.dto.LinkingRulePatchRequest;
@@ -85,23 +87,39 @@ class LinkingRulesServiceDelegateTest {
 
     delegate.patchLinkingRuleById(ruleId, patchRequest);
 
-    verify(linkingRulesService, times(1)).patchLinkingRule(ruleId, linkingRule);
+    verify(linkingRulesService, times(1)).updateLinkingRule(ruleId, linkingRule);
   }
 
   @Test
   void testPatchLinkingRuleById_ExceptionCase() {
     Integer ruleId = 2;
     LinkingRulePatchRequest patchRequest = new LinkingRulePatchRequest();
-    InstanceAuthorityLinkingRule linkingRule = createInstanceAuthorityLinkingRule();
-
-    when(mapper.convert(patchRequest)).thenReturn(linkingRule);
 
     var exception = assertThrows(RequestBodyValidationException.class,
       () -> delegate.patchLinkingRuleById(ruleId, patchRequest));
 
     assertThat("Request should have id = " + ruleId).isEqualTo(exception.getMessage());
 
-    verify(linkingRulesService, never()).patchLinkingRule(any(), any());
+    verify(linkingRulesService, never()).updateLinkingRule(any(), any());
+  }
+
+  @Test
+  void testPatchLinkingRuleById_InvalidAuthoritySubfields() {
+    Integer ruleId = 1;
+    LinkingRulePatchRequest patchRequest = new LinkingRulePatchRequest();
+    patchRequest.setId(ruleId);
+    patchRequest.setAuthoritySubfields(Set.of("invalidSubfield"));
+
+    var exception = assertThrows(RequestBodyValidationException.class,
+      () -> delegate.patchLinkingRuleById(ruleId, patchRequest));
+
+    assertThat(exception.getMessage()).isEqualTo("Invalid subfield value.");
+    assertThat(exception.getInvalidParameters())
+      .hasSize(1)
+      .extracting("key", "value")
+      .containsExactly(tuple("authoritySubfields", "invalidSubfield"));
+
+    verify(linkingRulesService, never()).updateLinkingRule(any(), any());
   }
 
   @NotNull
@@ -112,7 +130,7 @@ class LinkingRulesServiceDelegateTest {
     rule.setId(1);
     rule.setBibField("100");
     rule.setAuthorityField("100");
-    rule.setAuthoritySubfields(new char[]{'a', 'b'});
+    rule.setAuthoritySubfields(new char[] {'a', 'b'});
     rule.setSubfieldModifications(List.of(modification));
     rule.setSubfieldsExistenceValidations(existence);
     return rule;
@@ -123,11 +141,11 @@ class LinkingRulesServiceDelegateTest {
     var modification = new SubfieldModification().source("a").target("b");
     var existence = Map.of("a", true);
     return new LinkingRuleDto()
-        .id(1)
-        .bibField("100")
-        .authorityField("100")
-        .authoritySubfields(List.of("a", "b"))
-        .addSubfieldModificationsItem(modification)
-        .validation(new SubfieldValidation().addExistenceItem(existence));
+      .id(1)
+      .bibField("100")
+      .authorityField("100")
+      .authoritySubfields(List.of("a", "b"))
+      .addSubfieldModificationsItem(modification)
+      .validation(new SubfieldValidation().addExistenceItem(existence));
   }
 }

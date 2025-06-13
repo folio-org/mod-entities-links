@@ -18,4 +18,18 @@
     </sql>
   </changeSet>
 
+  <changeSet id="MODELINKS-326@@revert:default-data:linking-rules:add-additional-subfields" author="pavlo_smahin">
+    <preConditions>
+      <tableExists tableName="instance_authority_linking_rule"/>
+    </preConditions>
+
+    <comment>Revert adding v,x,y,z subfields to 6XX linking rules</comment>
+
+    <sql>
+      UPDATE instance_authority_linking_rule
+      SET authority_subfields = REPLACE(authority_subfields, 'vxyz', '')
+      WHERE bib_field like ('6%')
+    </sql>
+  </changeSet>
+
 </databaseChangeLog>

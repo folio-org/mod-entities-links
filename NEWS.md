@@ -13,6 +13,7 @@
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))
 * Fix instance-authority link record propagation to member tenants ([MODELINKS-319](https://folio-org.atlassian.net/browse/MODELINKS-319))
+* Fix outdated linking rules by removing the cache for linking rules ([MODELINKS-333](https://folio-org.atlassian.net/browse/MODELINKS-333))
 
 ### Tech Dept
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))

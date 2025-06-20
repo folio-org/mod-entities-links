@@ -2,7 +2,6 @@ package org.folio.entlinks.service.links;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.folio.entlinks.config.constants.CacheNames.AUTHORITY_LINKING_RULES_CACHE;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -23,12 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Sort;
@@ -36,17 +30,14 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @UnitTest
-@EnableCaching
 @ExtendWith(SpringExtension.class)
 @Import(InstanceAuthorityLinkingRulesService.class)
-@ImportAutoConfiguration(CacheAutoConfiguration.class)
 class InstanceAuthorityLinkingRulesServiceTest {
 
   private @MockitoBean LinkingRulesRepository repository;
   private @MockitoBean LinkingRuleValidator validator;
 
   private @Autowired InstanceAuthorityLinkingRulesService service;
-  private @Autowired CacheManager cacheManager;
 
   @Test
   void getLinkingRules_positive() {
@@ -85,11 +76,6 @@ class InstanceAuthorityLinkingRulesServiceTest {
 
     assertThat(actual)
       .containsExactlyInAnyOrder(rule);
-
-    assertThat(getCache().get(TENANT_ID + ":" + authorityField))
-      .as("Rule cached")
-      .extracting(Cache.ValueWrapper::get)
-      .isEqualTo(actual);
   }
 
   @Test
@@ -123,7 +109,7 @@ class InstanceAuthorityLinkingRulesServiceTest {
   }
 
   @Test
-  void updateLinkingRule_positive_onlyExpectedFieldAndCacheInvalidated() {
+  void updateLinkingRule_positive_onlyExpectedField() {
     var ruleId = 1;
     var existedRule = InstanceAuthorityLinkingRule.builder()
       .id(ruleId)
@@ -134,9 +120,6 @@ class InstanceAuthorityLinkingRulesServiceTest {
       .subfieldModifications(List.of(new SubfieldModification().target("a").source("b")))
       .autoLinkingEnabled(false)
       .build();
-
-    // add some value into cache
-    getCache().put(TENANT_ID, existedRule);
 
     when(repository.findById(ruleId)).thenReturn(Optional.of(existedRule));
 
@@ -153,7 +136,6 @@ class InstanceAuthorityLinkingRulesServiceTest {
 
     verify(repository).save(ruleUpdateCaptor.capture());
 
-    assertThat(getCache().get(TENANT_ID)).as("Cache invalidated").isNull();
     assertThat(ruleUpdateCaptor.getValue())
       .extracting(InstanceAuthorityLinkingRule::getId,
         InstanceAuthorityLinkingRule::getBibField,
@@ -181,10 +163,6 @@ class InstanceAuthorityLinkingRulesServiceTest {
     assertThatThrownBy(() -> service.updateLinkingRule(ruleId, linkingRulePatch))
       .isInstanceOf(LinkingRuleNotFoundException.class)
       .hasMessage(String.format("Linking rule with ID [%s] was not found", ruleId));
-  }
-
-  private Cache getCache() {
-    return cacheManager.getCache(AUTHORITY_LINKING_RULES_CACHE);
   }
 
   @TestConfiguration

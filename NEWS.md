@@ -17,7 +17,7 @@
 * Remove unused search.authorities.collection.get permission ([MODELINKS-336](https://folio-org.atlassian.net/browse/MODELINKS-336))
 
 ### Tech Dept
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Re-work all s3 related envs var and standardization ([MODELINKS-324](https://folio-org.atlassian.net/browse/MODELINKS-324))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

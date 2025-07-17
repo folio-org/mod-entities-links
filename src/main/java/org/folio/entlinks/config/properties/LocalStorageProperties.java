@@ -11,5 +11,5 @@ public class LocalStorageProperties {
   /**
    * Provides the S3 subpath for local files storage.
    */
-  private String s3LocalSubPath = "mod-entities-storage";
+  private String s3LocalSubPath = "mod-entities-links";
 }

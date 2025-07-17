@@ -887,18 +887,23 @@
       },
       {
         "name": "S3_URL",
-        "value": "http://localhost:9000/",
+        "value": "https://s3.amazonaws.com",
         "description": "S3 compatible service url"
       },
       {
         "name": "S3_REGION",
-        "value": "",
+        "value": "us-west-2",
         "description": "S3 compatible service region"
       },
       {
         "name": "S3_BUCKET",
-        "value": "marc-migrations",
+        "value": "",
         "description": "S3 compatible service bucket"
+      },
+      {
+        "name": "S3_LOCAL_SUB_PATH",
+        "value": "mod-entities-links",
+        "description": "S3 subpath for local files storage"
       },
       {
         "name": "S3_ACCESS_KEY_ID",

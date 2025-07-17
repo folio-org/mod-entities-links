@@ -66,7 +66,7 @@ class AuthorityS3ServiceTest {
   @Test
   void processAuthorities_multipleAuthorities_invalidId() throws IOException {
     // Arrange
-    var bulkContext = spy(new AuthoritiesBulkContext("test"));
+    var bulkContext = spy(new AuthoritiesBulkContext("test", "localSubPath"));
     var authoritiesJson = List.of("{\"id\": \"" + AUTHORITY_UUID + "\", \"personalName\": \"Test Authority 1\"}",
       "{\"id\": \"invalidId\", \"personalName\": \"Test Authority 2\"}");
     when(s3Client.readFile(any())).thenReturn(authoritiesJson);
@@ -77,6 +77,8 @@ class AuthorityS3ServiceTest {
 
     // Assert
     assertEquals(1, errorCount);
+    assertEquals("localSubPath/test_failedEntities", bulkContext.getLocalFailedEntitiesFile().getPath());
+    assertEquals("localSubPath/test_errors", bulkContext.getLocalErrorsFile().getPath());
     var testAuthority = new Authority();
     testAuthority.setId(UUID.fromString(AUTHORITY_UUID));
     testAuthority.setHeading("Test Authority 1");

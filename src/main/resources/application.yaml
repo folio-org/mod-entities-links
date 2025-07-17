@@ -111,10 +111,12 @@ folio:
   authority-archive:
     expire:
       retentionPeriodInDays: ${AUTHORITY_ARCHIVES_EXPIRATION_PERIOD:7}
+  local-storage:
+    localSubPath: ${S3_LOCAL_SUB_PATH:mod-entities-links}
   remote-storage:
-    endpoint: ${S3_URL:http://localhost:9000/}
-    region: ${S3_REGION:}
-    bucket: ${S3_BUCKET:marc-migrations}
+    endpoint: ${S3_URL:https://s3.amazonaws.com}
+    region: ${S3_REGION:us-west-2}
+    bucket: ${S3_BUCKET:}
     accessKey: ${S3_ACCESS_KEY_ID:}
     secretKey: ${S3_SECRET_ACCESS_KEY:}
     awsSdk: ${S3_IS_AWS:false}

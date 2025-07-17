@@ -19,7 +19,7 @@ class AuthoritiesBulkContextTest {
   @BeforeEach
   void setUp() throws IOException {
     String initialFilePath = "/path/to/initial/file";
-    authoritiesBulkContext = new AuthoritiesBulkContext(initialFilePath);
+    authoritiesBulkContext = new AuthoritiesBulkContext(initialFilePath, "localSubPath");
   }
 
   @Test
@@ -58,7 +58,7 @@ class AuthoritiesBulkContextTest {
     String result = authoritiesBulkContext.getLocalFailedEntitiesFilePath();
 
     // Assert
-    assertEquals("temp/path/to/initial/file_failedEntities", result);
+    assertEquals("localSubPath/path/to/initial/file_failedEntities", result);
   }
 
   @Test
@@ -67,7 +67,7 @@ class AuthoritiesBulkContextTest {
     String result = authoritiesBulkContext.getLocalErrorsFilePath();
 
     // Assert
-    assertEquals("temp/path/to/initial/file_errors", result);
+    assertEquals("localSubPath/path/to/initial/file_errors", result);
   }
 
   @Test

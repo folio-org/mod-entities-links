@@ -3,6 +3,7 @@ package org.folio.entlinks.service.authority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class BulkAuthorityS3ClientTest {
 
   private static final String AUTHORITY_UUID = "58949d4b-2da2-43ce-b12b-319dd22f5990";
+  private static final String S3_LOCAL_SUB_PATH = "localSubPath";
   @Mock
   private FolioS3Client s3Client;
   @InjectMocks
@@ -77,12 +79,14 @@ class BulkAuthorityS3ClientTest {
   void uploadErrorFiles_uploads() throws IOException {
     // Arrange
     var remoteFileName = "test-file";
-    var bulkContext = new AuthoritiesBulkContext(remoteFileName);
+    var bulkContext = new AuthoritiesBulkContext(remoteFileName, S3_LOCAL_SUB_PATH);
 
     // Act
     client.uploadErrorFiles(bulkContext);
 
     // Assert
+    assertTrue(bulkContext.getLocalFailedEntitiesFile().getPath().startsWith(S3_LOCAL_SUB_PATH));
+    assertTrue(bulkContext.getLocalErrorsFile().getPath().startsWith(S3_LOCAL_SUB_PATH));
     verify(s3Client).upload(bulkContext.getLocalFailedEntitiesFilePath(), bulkContext.getFailedEntitiesFilePath());
     verify(s3Client).upload(bulkContext.getLocalErrorsFilePath(), bulkContext.getErrorsFilePath());
   }

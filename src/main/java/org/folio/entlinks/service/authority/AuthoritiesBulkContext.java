@@ -15,10 +15,11 @@ public class AuthoritiesBulkContext {
   private final String initialFileLocation;
   private final String failedEntitiesFilePath;
   private final String errorsFilePath;
+  private final String s3LocalSubPath;
   private final File localFailedEntitiesFile;
   private final File localErrorsFile;
 
-  public AuthoritiesBulkContext(String initialFilePath) throws IOException {
+  public AuthoritiesBulkContext(String initialFilePath, String s3LocalSubPath) throws IOException {
     this.initialFilePath = StringUtils.removeStart(initialFilePath, "/");
     var inititalPath = Paths.get(initialFilePath);
     if (inititalPath.getParent() != null) {
@@ -26,6 +27,7 @@ public class AuthoritiesBulkContext {
     } else {
       this.initialFileLocation = "";
     }
+    this.s3LocalSubPath = s3LocalSubPath;
     this.failedEntitiesFilePath = this.initialFilePath + "_failedEntities";
     this.errorsFilePath = this.initialFilePath + "_errors";
     this.localFailedEntitiesFile = initLocalFailedEntitiesFile();
@@ -41,11 +43,11 @@ public class AuthoritiesBulkContext {
   }
 
   public String getLocalFailedEntitiesFilePath() {
-    return "temp/" + failedEntitiesFilePath;
+    return "%s/%s".formatted(s3LocalSubPath, failedEntitiesFilePath);
   }
 
   public String getLocalErrorsFilePath() {
-    return "temp/" + errorsFilePath;
+    return "%s/%s".formatted(s3LocalSubPath, errorsFilePath);
   }
 
   public void deleteLocalFiles() throws IOException {

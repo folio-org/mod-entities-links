@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.folio.entlinks.config.properties.LocalStorageProperties;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
 import org.folio.entlinks.domain.dto.AuthorityBulkRequest;
 import org.folio.entlinks.domain.dto.AuthorityBulkResponse;
@@ -45,6 +46,7 @@ public class AuthorityServiceDelegate {
   private final AuthorityDomainEventPublisher eventPublisher;
   private final ConsortiumAuthorityPropagationService propagationService;
   private final AuthorityS3Service authorityS3Service;
+  private final LocalStorageProperties localStorageProperties;
 
   public AuthorityServiceDelegate(@Qualifier("authorityService") AuthorityService service,
                                   @Qualifier("consortiumAuthorityService") AuthorityService consortiumService,
@@ -52,6 +54,7 @@ public class AuthorityServiceDelegate {
                                   AuthorityDomainEventPublisher eventPublisher,
                                   ConsortiumAuthorityPropagationService propagationService,
                                   AuthorityS3Service authorityS3Service,
+                                  LocalStorageProperties localStorageProperties,
                                   UserTenantsService userTenantsService) {
     this.service = userTenantsService.getCentralTenant(context.getTenantId()).isEmpty()
                    ? service
@@ -61,6 +64,7 @@ public class AuthorityServiceDelegate {
     this.eventPublisher = eventPublisher;
     this.propagationService = propagationService;
     this.authorityS3Service = authorityS3Service;
+    this.localStorageProperties = localStorageProperties;
   }
 
   public AuthorityFullDtoCollection retrieveAuthorityCollection(Integer offset, Integer limit, String cqlQuery,
@@ -106,7 +110,8 @@ public class AuthorityServiceDelegate {
 
   @SneakyThrows
   public AuthorityBulkResponse createAuthorities(AuthorityBulkRequest createRequest) {
-    var bulkContext = new AuthoritiesBulkContext(createRequest.getRecordsFileName());
+    var bulkContext = new AuthoritiesBulkContext(
+        createRequest.getRecordsFileName(), localStorageProperties.getS3LocalSubPath());
     var errorsCount = authorityS3Service.processAuthorities(bulkContext, this::upsertAuthorities);
 
     var authorityBulkCreateResponse = new AuthorityBulkResponse()

@@ -1,3 +1,9 @@
+## v3.1.5
+### Bug fixes
+* Upgrade dependencies fixing vulns (Ramsons) CVE-2025-8916, CVE-2025-58056, CVE-2025-58057, CVE-2025-41249 ([MODELINKS-340](https://folio-org.atlassian.net/browse/MODELINKS-340))
+
+---
+
 ## v3.1.4 2025-06-16
 ### Features
 * Allow updating controlled subfields ([MODELINKS-326](https://folio-org.atlassian.net/browse/MODELINKS-326))

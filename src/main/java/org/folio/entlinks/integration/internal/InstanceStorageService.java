@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.entlinks.client.InstanceStorageClient;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDto;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDtoCollection;
@@ -24,14 +25,14 @@ public class InstanceStorageService {
   private final InstanceStorageProperties instanceStorageProperties;
   private final InstanceStorageClient client;
 
-  public Map<String, String> getInstanceTitles(List<String> instanceIds) {
+  public Map<String, Pair<String, String>> getInstanceData(List<String> instanceIds) {
     int batchSize = instanceStorageProperties.getBatchSize();
     log.info("Fetching instance titles [count: {}, with batch size: {}]", instanceIds.size(), batchSize);
     log.trace("Fetching instance titles for [instance ids: {}]", instanceIds);
     return Lists.partition(instanceIds, batchSize).stream()
       .map(ids -> fetchInstances(buildCql(ids), ids.size()).instances())
       .flatMap(Collection::stream)
-      .collect(Collectors.toMap(InventoryInstanceDto::id, InventoryInstanceDto::title));
+      .collect(Collectors.toMap(InventoryInstanceDto::id, dto -> Pair.of(dto.title(), dto.source())));
   }
 
   private String buildCql(List<String> instanceIds) {

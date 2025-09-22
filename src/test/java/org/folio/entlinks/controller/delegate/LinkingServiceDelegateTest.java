@@ -10,6 +10,7 @@ import static org.folio.support.TestDataUtils.links;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
+import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doNothing;
@@ -18,12 +19,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.controller.converter.InstanceAuthorityLinkMapper;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
@@ -34,6 +38,7 @@ import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
+import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagationService;
 import org.folio.entlinks.service.consortium.propagation.model.LinksPropagationData;
@@ -61,6 +66,7 @@ class LinkingServiceDelegateTest {
   private @Mock DataStatsMapper statsMapper;
   private @Mock ConsortiumLinksPropagationService propagationService;
   private @Mock FolioExecutionContext context;
+  private @Mock ConsortiumTenantsService tenantsService;
 
   private @InjectMocks LinkingServiceDelegate delegate;
 
@@ -99,11 +105,28 @@ class LinkingServiceDelegateTest {
       .map(InstanceAuthorityLink::getInstanceId)
       .map(UUID::toString)
       .toList();
-    var instanceTitles = instanceIds.stream()
-      .collect(Collectors.toMap(id -> id, id -> RandomStringUtils.insecure().nextAlphanumeric(5)));
+    var instanceData = new HashMap<String, Pair<String, String>>();
+    instanceData.put(instanceIds.get(0), instanceData(true));
+    instanceData.put(instanceIds.get(1), instanceData(false));
     var nextLinkTime = fromTimestamp(linksMock.getLast().getUpdatedAt());
 
-    testGetLinkedBibUpdateStats_positive(linksMock, linksForStats, instanceIds, instanceTitles, nextLinkTime);
+    testGetLinkedBibUpdateStats_positive(linksMock, linksForStats, instanceIds, instanceData, nextLinkTime);
+  }
+
+  @Test
+  void getLinkedBibUpdateStats_positive_centralTenant() {
+    var linksMock = links(3, "error");
+    var linksForStats = linksMock.subList(0, 2);
+    var instanceIds = linksForStats.stream()
+      .map(InstanceAuthorityLink::getInstanceId)
+      .map(UUID::toString)
+      .toList();
+    var instanceData = instanceIds.stream()
+      .collect(Collectors.toMap(id -> id, id -> instanceData()));
+    var nextLinkTime = fromTimestamp(linksMock.getLast().getUpdatedAt());
+
+    when(tenantsService.isCentralTenantContext()).thenReturn(true);
+    testGetLinkedBibUpdateStats_positive(linksMock, linksForStats, instanceIds, instanceData, nextLinkTime);
   }
 
   @Test
@@ -113,10 +136,10 @@ class LinkingServiceDelegateTest {
       .map(InstanceAuthorityLink::getInstanceId)
       .map(UUID::toString)
       .toList();
-    var instanceTitles = instanceIds.stream()
-      .collect(Collectors.toMap(id -> id, id -> RandomStringUtils.insecure().nextAlphanumeric(5)));
+    var instanceData = instanceIds.stream()
+      .collect(Collectors.toMap(id -> id, id -> instanceData()));
 
-    testGetLinkedBibUpdateStats_positive(linksMock, linksMock, instanceIds, instanceTitles, null);
+    testGetLinkedBibUpdateStats_positive(linksMock, linksMock, instanceIds, instanceData, null);
   }
 
   @Test
@@ -124,23 +147,22 @@ class LinkingServiceDelegateTest {
     var linksMock = links(2, "error");
     var instanceId = linksMock.get(0).getInstanceId();
     linksMock.get(1).setInstanceId(instanceId);
-    var instanceTitle = RandomStringUtils.insecure().nextAlphanumeric(5);
-    var instanceTitles = Map.of(instanceId.toString(), instanceTitle);
+    var instanceData = Map.of(instanceId.toString(), instanceData());
 
     testGetLinkedBibUpdateStats_positive(linksMock, linksMock,
-      singletonList(instanceId.toString()), instanceTitles, null);
+      singletonList(instanceId.toString()), instanceData, null);
   }
 
   @Test
-  void getLinkedBibUpdateStats_positive_noTitle() {
+  void getLinkedBibUpdateStats_positive_noInstanceData() {
     var linksMock = links(2, "error");
     var instanceIds = linksMock.stream()
       .map(InstanceAuthorityLink::getInstanceId)
       .map(UUID::toString)
       .toList();
-    var instanceTitles = Map.of(instanceIds.getFirst(), RandomStringUtils.insecure().nextAlphanumeric(5));
+    var instanceData = Map.of(instanceIds.getFirst(), instanceData());
 
-    testGetLinkedBibUpdateStats_positive(linksMock, linksMock, instanceIds, instanceTitles, null);
+    testGetLinkedBibUpdateStats_positive(linksMock, linksMock, instanceIds, instanceData, null);
   }
 
   @Test
@@ -237,7 +259,7 @@ class LinkingServiceDelegateTest {
   private void testGetLinkedBibUpdateStats_positive(List<InstanceAuthorityLink> linksMock,
                                                     List<InstanceAuthorityLink> linksForStats,
                                                     List<String> instanceIds,
-                                                    Map<String, String> instanceTitles,
+                                                    Map<String, Pair<String, String>> instanceData,
                                                     OffsetDateTime next) {
     var status = LinkStatus.ACTUAL;
     var fromDate = OffsetDateTime.now();
@@ -249,12 +271,19 @@ class LinkingServiceDelegateTest {
       .thenReturn(linksMock);
     when(statsMapper.convertToDto(linksForStats))
       .thenReturn(expectedStats);
-    when(instanceService.getInstanceTitles(instanceIds))
-      .thenReturn(instanceTitles);
+    when(instanceService.getInstanceData(instanceIds))
+      .thenReturn(instanceData);
 
     expectedStats.forEach(bibStatsDto -> {
       var instanceId = bibStatsDto.getInstanceId();
-      bibStatsDto.setInstanceTitle(instanceTitles.get(instanceId.toString()));
+      var title = Optional.ofNullable(instanceData.get(instanceId.toString()))
+        .map(Pair::getLeft)
+        .orElse(null);
+      bibStatsDto.setInstanceTitle(title);
+      var source = Optional.ofNullable(instanceData.get(instanceId.toString()))
+        .map(Pair::getRight)
+        .orElse("");
+      bibStatsDto.setShared(source.startsWith(CONSORTIUM_SOURCE_PREFIX));
     });
 
     var actual = delegate.getLinkedBibUpdateStats(fromDate, toDate, status, limit);
@@ -263,5 +292,17 @@ class LinkingServiceDelegateTest {
       .isEqualTo(new BibStatsDtoCollection()
         .stats(expectedStats)
         .next(next));
+  }
+
+  private static Pair<String, String> instanceData() {
+    return instanceData(false);
+  }
+
+  private static Pair<String, String> instanceData(boolean shared) {
+    var source = RandomStringUtils.insecure().nextAlphanumeric(5);
+    if (shared) {
+      source = CONSORTIUM_SOURCE_PREFIX + source;
+    }
+    return Pair.of(RandomStringUtils.insecure().nextAlphanumeric(5), source);
   }
 }

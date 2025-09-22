@@ -61,6 +61,10 @@
       "type": "integer",
       "description": "Amount of linked bib fields that was failed to update during authority update"
     },
+    "shared": {
+      "type": "boolean",
+      "description": "True if authority is in consortium and shared"
+    },
     "metadata": {
       "$ref": "authorityControlMetadata.json",
       "description": "Meta data for authority control"

@@ -28,6 +28,10 @@
     "errorCause": {
       "description": "Cause of error for updating linked bib",
       "type": "string"
+    },
+    "shared": {
+      "type": "boolean",
+      "description": "True if instance is in consortium and shared"
     }
   }
 }

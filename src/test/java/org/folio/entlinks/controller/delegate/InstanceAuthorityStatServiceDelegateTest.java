@@ -6,6 +6,7 @@ import static org.folio.support.base.TestConstants.TEST_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -22,11 +23,11 @@ import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.LinkAction;
-import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
+import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.client.UsersClient;
 import org.folio.spring.model.ResultList;
@@ -56,13 +57,15 @@ class InstanceAuthorityStatServiceDelegateTest {
   private @Mock AuthoritySourceFileRepository sourceFileRepository;
   private @Mock DataStatsMapper mapper;
   private @Mock UsersClient usersClient;
+  private @Mock ConsortiumTenantsService tenantsService;
   private @InjectMocks InstanceAuthorityStatServiceDelegate delegate;
 
   private AuthoritySourceFile sourceFile;
 
   @BeforeEach
   void setUp() {
-    delegate = new InstanceAuthorityStatServiceDelegate(statService, mapper, usersClient, sourceFileRepository);
+    delegate = new InstanceAuthorityStatServiceDelegate(
+      statService, mapper, usersClient, sourceFileRepository, tenantsService);
     sourceFile = new AuthoritySourceFile();
     sourceFile.setId(TEST_ID);
     sourceFile.setBaseUrl(INPUT_BASE_URL);
@@ -72,16 +75,16 @@ class InstanceAuthorityStatServiceDelegateTest {
     sourceFile.addCode(sourceFileCode);
 
     var statData = List.of(
-      TestDataUtils.authorityDataStat(USER_ID_1, TEST_ID, AuthorityDataStatAction.UPDATE_HEADING),
-      TestDataUtils.authorityDataStat(USER_ID_2, TEST_ID, AuthorityDataStatAction.UPDATE_HEADING)
+      TestDataUtils.authorityDataStat(USER_ID_1, TEST_ID, AuthorityDataStatAction.UPDATE_HEADING, true),
+      TestDataUtils.authorityDataStat(USER_ID_2, TEST_ID, AuthorityDataStatAction.UPDATE_HEADING, false)
     );
     var users = TestDataUtils.usersList(List.of(USER_ID_1, USER_ID_2));
 
     when(statService.fetchDataStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, 3)).thenReturn(statData);
     when(usersClient.query(anyString())).thenReturn(users);
 
-    AuthorityDataStat authorityDataStat1 = statData.get(0);
-    AuthorityDataStat authorityDataStat2 = statData.get(1);
+    var authorityDataStat1 = statData.get(0);
+    var authorityDataStat2 = statData.get(1);
     var userList = users.getResult();
     when(mapper.convertToDto(authorityDataStat1))
       .thenReturn(TestDataUtils.getStatDataDto(authorityDataStat1, userList.getFirst()));
@@ -91,6 +94,9 @@ class InstanceAuthorityStatServiceDelegateTest {
 
   @Test
   void fetchStats() {
+    //  GIVEN
+    when(tenantsService.isCentralTenantContext()).thenReturn(false);
+
     //  WHEN
     when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.of(sourceFile));
     var authorityChangeStatDtoCollection = delegate
@@ -101,7 +107,7 @@ class InstanceAuthorityStatServiceDelegateTest {
     assertNotNull(authorityChangeStatDtoCollection.getStats());
     assertEquals(LIMIT_SIZE, authorityChangeStatDtoCollection.getStats().size());
     var resultStatDtos = authorityChangeStatDtoCollection.getStats();
-    for (AuthorityStatsDto statDto : resultStatDtos) {
+    for (var statDto : resultStatDtos) {
       assertNotNull(statDto.getAction());
       assertNotNull(statDto.getAuthorityId());
       assertNotNull(statDto.getHeadingNew());
@@ -119,8 +125,42 @@ class InstanceAuthorityStatServiceDelegateTest {
       assertNotNull(statDto.getMetadata().getCompletedAt());
       assertNotNull(statDto.getNaturalIdNew());
       assertNotNull(statDto.getNaturalIdOld());
+      assertNotNull(statDto.getShared());
       assertEquals(sourceFile.getName(), statDto.getSourceFileOld());
       assertEquals(sourceFile.getName(), statDto.getSourceFileNew());
+    }
+
+    assertThat(resultStatDtos)
+      .extracting(AuthorityStatsDto::getShared)
+      .containsExactlyInAnyOrder(false, true);
+
+    var resultUserIds = authorityChangeStatDtoCollection.getStats()
+      .stream()
+      .map(AuthorityStatsDto::getMetadata)
+      .map(AuthorityControlMetadata::getStartedByUserId)
+      .toList();
+    assertNull(authorityChangeStatDtoCollection.getNext());
+    assertThat(List.of(USER_ID_1, USER_ID_2)).containsAll(resultUserIds);
+  }
+
+  @Test
+  void fetchStats_whenCentralTenantContext() {
+    //  GIVEN
+    when(tenantsService.isCentralTenantContext()).thenReturn(true);
+
+    //  WHEN
+    when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.of(sourceFile));
+    var authorityChangeStatDtoCollection = delegate
+      .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);
+
+    //  THEN
+    assertNotNull(authorityChangeStatDtoCollection);
+    assertNotNull(authorityChangeStatDtoCollection.getStats());
+    assertEquals(LIMIT_SIZE, authorityChangeStatDtoCollection.getStats().size());
+
+    var resultStatDtos = authorityChangeStatDtoCollection.getStats();
+    for (var statDto : resultStatDtos) {
+      assertTrue(statDto.getShared());
     }
 
     var resultUserIds = authorityChangeStatDtoCollection.getStats()
@@ -134,6 +174,9 @@ class InstanceAuthorityStatServiceDelegateTest {
 
   @Test
   void fetchStats_whenUpdatedUserIsNull() {
+    //  GIVEN
+    when(tenantsService.isCentralTenantContext()).thenReturn(false);
+
     //  WHEN
     when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.of(sourceFile));
     when(usersClient.query(anyString())).thenReturn(ResultList.of(0, null));
@@ -146,7 +189,7 @@ class InstanceAuthorityStatServiceDelegateTest {
     assertNotNull(authorityChangeStatDtoCollection.getStats());
     assertEquals(LIMIT_SIZE, authorityChangeStatDtoCollection.getStats().size());
     var resultStatDtos = authorityChangeStatDtoCollection.getStats();
-    for (AuthorityStatsDto statDto  : resultStatDtos) {
+    for (var statDto : resultStatDtos) {
       assertNotNull(statDto.getAction());
       assertNotNull(statDto.getAuthorityId());
       assertNotNull(statDto.getHeadingNew());
@@ -164,6 +207,7 @@ class InstanceAuthorityStatServiceDelegateTest {
       assertNotNull(statDto.getMetadata().getCompletedAt());
       assertNotNull(statDto.getNaturalIdNew());
       assertNotNull(statDto.getNaturalIdOld());
+      assertNotNull(statDto.getShared());
       assertEquals(sourceFile.getName(), statDto.getSourceFileOld());
       assertEquals(sourceFile.getName(), statDto.getSourceFileNew());
     }
@@ -171,6 +215,9 @@ class InstanceAuthorityStatServiceDelegateTest {
 
   @Test
   void fetchStats_withoutSourceFile() {
+    //  GIVEN
+    when(tenantsService.isCentralTenantContext()).thenReturn(false);
+
     //  WHEN
     when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
@@ -181,6 +228,11 @@ class InstanceAuthorityStatServiceDelegateTest {
     assertNotNull(authorityChangeStatDtoCollection);
     assertNotNull(authorityChangeStatDtoCollection.getStats());
     assertEquals(LIMIT_SIZE, authorityChangeStatDtoCollection.getStats().size());
+
+    var resultStatDtos = authorityChangeStatDtoCollection.getStats();
+    for (var statDto : resultStatDtos) {
+      assertNotNull(statDto.getShared());
+    }
 
     var resultUserIds = authorityChangeStatDtoCollection.getStats()
       .stream()
@@ -193,6 +245,9 @@ class InstanceAuthorityStatServiceDelegateTest {
 
   @Test
   void fetchStats_withoutMetadata() {
+    //  GIVEN
+    when(tenantsService.isCentralTenantContext()).thenReturn(false);
+
     //  WHEN
     when(usersClient.query(anyString())).thenReturn(null);
 
@@ -203,6 +258,11 @@ class InstanceAuthorityStatServiceDelegateTest {
     assertNotNull(authorityChangeStatDtoCollection);
     assertNotNull(authorityChangeStatDtoCollection.getStats());
     assertEquals(LIMIT_SIZE, authorityChangeStatDtoCollection.getStats().size());
+
+    var resultStatDtos = authorityChangeStatDtoCollection.getStats();
+    for (var statDto : resultStatDtos) {
+      assertNotNull(statDto.getShared());
+    }
 
     var resultUserIds = authorityChangeStatDtoCollection.getStats()
       .stream()

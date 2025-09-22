@@ -9,9 +9,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.controller.converter.InstanceAuthorityLinkMapper;
 import org.folio.entlinks.domain.dto.BibStatsDto;
@@ -23,10 +25,12 @@ import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
 import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
+import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagationService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
 import org.folio.entlinks.service.consortium.propagation.model.LinksPropagationData;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
+import org.folio.entlinks.utils.ConsortiumUtils;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +47,7 @@ public class LinkingServiceDelegate {
   private final InstanceAuthorityLinkMapper mapper;
   private final FolioExecutionContext context;
   private final DataStatsMapper statsMapper;
+  private final ConsortiumTenantsService tenantsService;
 
   public InstanceLinkDtoCollection getLinks(UUID instanceId) {
     var links = linkingService.getLinksByInstanceId(instanceId);
@@ -64,7 +69,7 @@ public class LinkingServiceDelegate {
     }
 
     var stats = statsMapper.convertToDto(links);
-    fillInstanceTitles(stats);
+    fillInstanceData(stats);
 
     return bibStatsCollection.stats(stats);
   }
@@ -123,18 +128,22 @@ public class LinkingServiceDelegate {
     }
   }
 
-  private void fillInstanceTitles(List<BibStatsDto> bibStatsList) {
+  private void fillInstanceData(List<BibStatsDto> bibStatsList) {
     var instanceIds = bibStatsList.stream()
       .map(BibStatsDto::getInstanceId)
       .map(UUID::toString)
       .distinct()
       .toList();
 
-    var instanceTitles = instanceService.getInstanceTitles(instanceIds);
+    var instanceData = instanceService.getInstanceData(instanceIds);
+    var isCentralTenant = tenantsService.isCentralTenantContext();
 
     bibStatsList.forEach(bibStatsDto -> {
       var instanceId = bibStatsDto.getInstanceId().toString();
-      var title = instanceTitles.get(instanceId);
+      var title = Optional.ofNullable(instanceData.get(instanceId)).map(Pair::getLeft).orElse(null);
+      var source = Optional.ofNullable(instanceData.get(instanceId)).map(Pair::getRight).orElse(null);
+      var shared = isCentralTenant || ConsortiumUtils.isConsortiumShadowCopy(source);
+      bibStatsDto.setShared(shared);
 
       if (isBlank(title)) {
         log.warn("Title for instance {} is blank", instanceId);

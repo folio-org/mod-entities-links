@@ -6,6 +6,7 @@ import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.AuthorityStatsDtoCollection;
 import org.folio.entlinks.domain.dto.LinkAction;
+import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
@@ -57,7 +59,9 @@ public class InstanceAuthorityStatServiceDelegate {
         if (authorityDataStatDto != null) {
           fillSourceFiles(authorityDataStatDto);
           authorityDataStatDto.setMetadata(getMetadata(users, source));
-          var shared = isCentralTenant || source.getAuthority().isConsortiumShadowCopy();
+          var shared = isCentralTenant || Optional.ofNullable(source.getAuthority())
+            .map(AuthorityBase::isConsortiumShadowCopy)
+            .orElse(false);
           authorityDataStatDto.setShared(shared);
         }
         return authorityDataStatDto;

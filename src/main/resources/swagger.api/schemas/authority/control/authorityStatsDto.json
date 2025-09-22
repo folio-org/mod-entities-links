@@ -63,7 +63,7 @@
     },
     "shared": {
       "type": "boolean",
-      "description": "True if authority is in consortium and shared"
+      "description": "True if authority is in consortium and in central tenant or shared"
     },
     "metadata": {
       "$ref": "authorityControlMetadata.json",

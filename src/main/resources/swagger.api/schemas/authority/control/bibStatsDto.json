@@ -31,7 +31,7 @@
     },
     "shared": {
       "type": "boolean",
-      "description": "True if instance is in consortium and shared"
+      "description": "True if instance is in consortium and in central tenant or shared"
     }
   }
 }

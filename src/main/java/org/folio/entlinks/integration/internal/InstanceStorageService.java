@@ -27,8 +27,8 @@ public class InstanceStorageService {
 
   public Map<String, Pair<String, String>> getInstanceData(List<String> instanceIds) {
     int batchSize = instanceStorageProperties.getBatchSize();
-    log.info("Fetching instance titles [count: {}, with batch size: {}]", instanceIds.size(), batchSize);
-    log.trace("Fetching instance titles for [instance ids: {}]", instanceIds);
+    log.info("Fetching instance data [count: {}, with batch size: {}]", instanceIds.size(), batchSize);
+    log.trace("Fetching instance data for [instance ids: {}]", instanceIds);
     return Lists.partition(instanceIds, batchSize).stream()
       .map(ids -> fetchInstances(buildCql(ids), ids.size()).instances())
       .flatMap(Collection::stream)

@@ -1,4 +1,4 @@
-## v3.1.5
+## v3.1.5 2025-09-24
 ### Bug fixes
 * Upgrade dependencies fixing vulns (Ramsons) CVE-2025-8916, CVE-2025-58056, CVE-2025-58057, CVE-2025-41249 ([MODELINKS-340](https://folio-org.atlassian.net/browse/MODELINKS-340))
 

@@ -11,7 +11,7 @@
 
   <groupId>org.folio</groupId>
   <artifactId>mod-entities-links</artifactId>
-  <version>3.1.5</version>
+  <version>3.1.6-SNAPSHOT</version>
   <description>Module for storing and processing links between entities</description>
   <packaging>jar</packaging>
 
@@ -468,7 +468,7 @@
     <url>https://github.com/folio-org/${project.artifactId}</url>
     <connection>scm:git:git://github.com/folio-org/${project.artifactId}.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/${project.artifactId}.git</developerConnection>
-    <tag>v3.1.5</tag>
+    <tag>release/v3.1</tag>
   </scm>
 
   <repositories>

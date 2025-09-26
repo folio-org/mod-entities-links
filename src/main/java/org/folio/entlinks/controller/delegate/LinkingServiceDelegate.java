@@ -2,18 +2,16 @@ package org.folio.entlinks.controller.delegate;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.tuple.Pair;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.controller.converter.InstanceAuthorityLinkMapper;
 import org.folio.entlinks.domain.dto.BibStatsDto;
@@ -25,7 +23,6 @@ import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
 import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
-import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagationService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
 import org.folio.entlinks.service.consortium.propagation.model.LinksPropagationData;
@@ -47,7 +44,6 @@ public class LinkingServiceDelegate {
   private final InstanceAuthorityLinkMapper mapper;
   private final FolioExecutionContext context;
   private final DataStatsMapper statsMapper;
-  private final ConsortiumTenantsService tenantsService;
 
   public InstanceLinkDtoCollection getLinks(UUID instanceId) {
     var links = linkingService.getLinksByInstanceId(instanceId);
@@ -62,14 +58,13 @@ public class LinkingServiceDelegate {
     var links = linkingService.getLinks(status, fromDate, toDate, limit + 1);
     log.debug("Retrieved links count {}", links.size());
 
-    if (links.size() > limit) {
-      var nextDate = fromTimestamp(links.get(limit).getUpdatedAt());
-      bibStatsCollection.setNext(nextDate);
-      links = links.subList(0, limit);
-    }
-
     var stats = statsMapper.convertToDto(links);
-    fillInstanceData(stats);
+    stats = filterOutShadowCopiesAndFillInstanceTitles(stats);
+    if (stats.size() > limit) {
+      var nextDate = stats.get(limit).getUpdatedAt();
+      bibStatsCollection.setNext(nextDate);
+      stats = stats.subList(0, limit);
+    }
 
     return bibStatsCollection.stats(stats);
   }
@@ -128,7 +123,7 @@ public class LinkingServiceDelegate {
     }
   }
 
-  private void fillInstanceData(List<BibStatsDto> bibStatsList) {
+  private List<BibStatsDto> filterOutShadowCopiesAndFillInstanceTitles(List<BibStatsDto> bibStatsList) {
     var instanceIds = bibStatsList.stream()
       .map(BibStatsDto::getInstanceId)
       .map(UUID::toString)
@@ -136,21 +131,27 @@ public class LinkingServiceDelegate {
       .toList();
 
     var instanceData = instanceService.getInstanceData(instanceIds);
-    var isCentralTenant = tenantsService.isCentralTenantContext();
 
+    var bibStatsResult = new LinkedList<BibStatsDto>();
     bibStatsList.forEach(bibStatsDto -> {
       var instanceId = bibStatsDto.getInstanceId().toString();
-      var title = Optional.ofNullable(instanceData.get(instanceId)).map(Pair::getLeft).orElse(null);
-      var source = Optional.ofNullable(instanceData.get(instanceId)).map(Pair::getRight).orElse(null);
-      var shared = isCentralTenant || ConsortiumUtils.isConsortiumShadowCopy(source);
-      bibStatsDto.setShared(shared);
+      var instanceDataEntry = instanceData.get(instanceId);
+      var isShadowCopy = instanceDataEntry == null
+        || ConsortiumUtils.isConsortiumShadowCopy(instanceDataEntry.getRight());
+      if (isShadowCopy) {
+        return;
+      }
 
+      var title = instanceDataEntry.getLeft();
       if (isBlank(title)) {
         log.warn("Title for instance {} is blank", instanceId);
         return;
       }
 
       bibStatsDto.setInstanceTitle(title);
+      bibStatsResult.add(bibStatsDto);
     });
+
+    return bibStatsResult;
   }
 }

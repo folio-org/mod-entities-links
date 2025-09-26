@@ -62,7 +62,7 @@ class InstanceAuthorityLinkStatisticsConsortiumIT extends IntegrationTestBase {
 
   private static final UUID CENTRAL_AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
   private static final UUID MEMBER_AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f326e");
-  private static final UUID CENTRAL_INSTANCE_ID = UUID.fromString("fea1c418-ba1f-438e-85bb-c6ae1011bf5c");
+  private static final UUID CENTRAL_INSTANCE_ID = UUID.fromString("68de093d-8c0d-44c2-b3a8-79393f6cb196");
   private static final UUID MEMBER_INSTANCE_ID = UUID.fromString("e083463e-96d4-4fa0-8ee1-13bfd4f674cf");
 
   private static final OffsetDateTime TO_DATE = OffsetDateTime.of(LocalDateTime.now().plusHours(1), ZoneOffset.UTC);
@@ -121,24 +121,15 @@ class InstanceAuthorityLinkStatisticsConsortiumIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void getLinkedBibUpdateStats_positive_member() {
-    var statsList = performLinkedBibStatsScenario(false, 2);
-
-    var local = statsList.stream().filter(s -> MEMBER_INSTANCE_ID.equals(s.getInstanceId())).findFirst().orElseThrow();
-    var shared = statsList.stream().filter(s -> CENTRAL_INSTANCE_ID.equals(s.getInstanceId()))
-      .findFirst().orElseThrow();
-
-    assertEquals(false, local.getShared(), "Local instance shared flag should be true for central tenant");
-    assertEquals(true, shared.getShared(), "Shared instance shared flag should be true for central tenant");
+    var statsList = performLinkedBibStatsScenario(false, 1);
+    assertEquals(MEMBER_INSTANCE_ID, statsList.get(0).getInstanceId());
   }
 
   @Test
   @SneakyThrows
   void getLinkedBibUpdateStats_positive_central() {
     var statsList = performLinkedBibStatsScenario(true, 1);
-
-    assertEquals(1, statsList.size(), "Central tenant should have stats for shared instance only");
-    assertEquals(true, statsList.getFirst().getShared(),
-      "Shared instance shared flag should be true for central tenant");
+    assertEquals(CENTRAL_INSTANCE_ID, statsList.get(0).getInstanceId());
   }
 
   private List<BibStatsDto> performLinkedBibStatsScenario(boolean centralTenant, int expectedCount) {

@@ -628,7 +628,7 @@ components:
           type: string
 
     bibStatsDtoCollection:
-      description: Collection of changes statistic. Only for local bib records when consortium
+      description: Collection of changes statistic. For local bibs when consortium member; shared when consortium central
       type: object
       properties:
         stats:
@@ -642,7 +642,7 @@ components:
           format: date-time
 
     authorityStatsDtoCollection:
-      description: Collection of authority changes statistic. Shared and local when consortium
+      description: Collection of authority changes statistic. Shared and local when consortium member; shared when consortium central
       type: object
       properties:
         stats:

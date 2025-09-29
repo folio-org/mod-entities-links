@@ -16,17 +16,6 @@ public class TestConstants {
   public static final String TENANT_ID = "test";
   public static final String CENTRAL_TENANT_ID = "consortium";
   public static final String CONSORTIUM_SOURCE_PREFIX = "CONSORTIUM-";
-  public static final String MEMBER_TENANT_1 = "test1";
-  public static final String MEMBER_TENANT_2 = "test2";
-  public static final String MEMBER_TENANT_3 = "test3";
-  public static final String MEMBER_TENANT_4 = "test4";
-  public static final String MEMBER_TENANT_5 = "test5";
-  public static final String MEMBER_TENANT_6 = "test6";
-  public static final String MEMBER_TENANT_7 = "test7";
-  public static final String MEMBER_TENANT_8 = "test8";
-  public static final String MEMBER_TENANT_9 = "test9";
-  public static final String MEMBER_TENANT_10 = "test10";
-  public static final String MEMBER_TENANT_11 = "test11";
   public static final String USER_ID = "38d3a441-c100-5e8d-bd12-71bde492b723";
   public static final String UPDATER_USER_ID = "4df34034-dc86-4364-8d8a-65ab22d44063";
   public static final String SOURCE_FILE_NAME = "sourceFileName";

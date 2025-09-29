@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
+import org.apache.commons.lang3.tuple.Pair;
+import org.assertj.core.data.MapEntry;
 import org.folio.entlinks.client.InstanceStorageClient;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDto;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDtoCollection;
@@ -38,47 +40,47 @@ class InstanceStorageServiceTest {
   }
 
   @Test
-  void getInstanceTitles_positive() {
-    var e1 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title1");
-    var e2 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title2");
+  void getInstanceData_positive() {
+    var e1 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title1", "source1");
+    var e2 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title2", "source2");
     var instances = List.of(e1, e2);
 
     when(client.getInstanceStorageInstances(anyString(), anyInt()))
       .thenReturn(new InventoryInstanceDtoCollection(instances));
 
     var instanceIds = List.of(e1.id(), e2.id());
-    var actual = service.getInstanceTitles(instanceIds);
+    var actual = service.getInstanceData(instanceIds);
 
     verify(client)
       .getInstanceStorageInstances(String.format("id==(%s or %s)", e1.id(), e2.id()), instanceIds.size());
     assertThat(actual)
       .hasSize(instanceIds.size())
-      .contains(entry(e1.id(), e1.title()), entry(e2.id(), e2.title()));
+      .contains(instanceData(e1), instanceData(e2));
   }
 
   @Test
-  void getInstanceTitles_positive_singleRecord() {
-    var e1 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title1");
+  void getInstanceData_positive_singleRecord() {
+    var e1 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title1", "source1");
     var instances = singletonList(e1);
 
     when(client.getInstanceStorageInstances(anyString(), anyInt()))
       .thenReturn(new InventoryInstanceDtoCollection(instances));
 
     var instanceIds = singletonList(e1.id());
-    var actual = service.getInstanceTitles(instanceIds);
+    var actual = service.getInstanceData(instanceIds);
 
     verify(client)
       .getInstanceStorageInstances(String.format("id==(%s)", e1.id()), instanceIds.size());
     assertThat(actual)
       .hasSize(instanceIds.size())
-      .contains(entry(e1.id(), e1.title()));
+      .contains(instanceData(e1));
   }
 
   @Test
-  void getInstanceTitles_positive_multipleBatches() {
-    var e1 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title1");
-    var e2 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title2");
-    var e3 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title3");
+  void getInstanceData_positive_multipleBatches() {
+    var e1 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title1", "source1");
+    var e2 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title2", "source2");
+    var e3 = new InventoryInstanceDto(UUID.randomUUID().toString(), "title3", "source3");
     var instancesBatch1 = List.of(e1, e2);
     var instancesBatch2 = singletonList(e3);
 
@@ -87,7 +89,7 @@ class InstanceStorageServiceTest {
       .thenReturn(new InventoryInstanceDtoCollection(instancesBatch2));
 
     var instanceIds = List.of(e1.id(), e2.id(), e3.id());
-    var actual = service.getInstanceTitles(instanceIds);
+    var actual = service.getInstanceData(instanceIds);
 
     verify(client)
       .getInstanceStorageInstances(String.format("id==(%s or %s)", e1.id(), e2.id()), instancesBatch1.size());
@@ -95,18 +97,22 @@ class InstanceStorageServiceTest {
       .getInstanceStorageInstances(String.format("id==(%s)", e3.id()), instancesBatch2.size());
     assertThat(actual)
       .hasSize(instanceIds.size())
-      .contains(entry(e1.id(), e1.title()), entry(e2.id(), e2.title()), entry(e3.id(), e3.title()));
+      .contains(instanceData(e1), instanceData(e2), instanceData(e3));
   }
 
   @Test
-  void getInstanceTitles_negative_clientException() {
+  void getInstanceData_negative_clientException() {
     var cause = new IllegalArgumentException("test message");
     when(client.getInstanceStorageInstances(anyString(), anyInt())).thenThrow(cause);
 
     var instanceIds = singletonList(UUID.randomUUID().toString());
-    assertThatThrownBy(() -> service.getInstanceTitles(instanceIds))
+    assertThatThrownBy(() -> service.getInstanceData(instanceIds))
       .isInstanceOf(FolioIntegrationException.class)
       .hasCauseExactlyInstanceOf(cause.getClass())
       .hasMessage("Failed to fetch instances");
+  }
+
+  private static MapEntry<String, Pair<String, String>> instanceData(InventoryInstanceDto dto) {
+    return entry(dto.id(), Pair.of(dto.title(), dto.source()));
   }
 }

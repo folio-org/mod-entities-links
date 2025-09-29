@@ -3,12 +3,13 @@
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### New APIs versions
-* Provides `API_NAME vX.Y`
+* Provides `instance-authority-links-statistics v2.1`
 * Requires `API_NAME vX.Y`
 
 ### Features
 * Pass userId from authority kafka event to link update events ([MODELINKS-322](https://folio-org.atlassian.net/browse/MODELINKS-322))
 * Allow updating controlled subfields ([MODELINKS-326](https://folio-org.atlassian.net/browse/MODELINKS-326))
+* Extend Authority Statistics model with shared flag. Filter out shared records from bib report ([MODELINKS-312](https://folio-org.atlassian.net/browse/MODELINKS-312))
 
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))

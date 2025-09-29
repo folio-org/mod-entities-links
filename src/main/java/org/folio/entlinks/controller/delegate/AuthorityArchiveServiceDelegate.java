@@ -1,5 +1,7 @@
 package org.folio.entlinks.controller.delegate;
 
+import static org.folio.entlinks.utils.ConsortiumUtils.CONSORTIUM_SOURCE_PREFIX;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -28,8 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AuthorityArchiveServiceDelegate {
-
-  private static final String CONSORTIUM_SOURCE_PREFIX = "CONSORTIUM-";
 
   private final AuthorityArchiveService authorityArchiveService;
   private final SettingsService settingsService;

@@ -14,6 +14,7 @@ import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
 import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
+import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authorityExpireEndpoint;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,7 +47,6 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
   public static final String COLLEGE_TENANT_ID = "college";
   public static final String UNIVERSITY_TENANT_ID = "university";
 
-  private static final String CONSORTIUM_SOURCE_PREFIX = "CONSORTIUM-";
   private static final UUID AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
 
   @BeforeAll

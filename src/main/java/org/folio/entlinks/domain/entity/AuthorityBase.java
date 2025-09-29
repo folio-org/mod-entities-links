@@ -1,5 +1,7 @@
 package org.folio.entlinks.domain.entity;
 
+import static org.folio.entlinks.utils.ConsortiumUtils.CONSORTIUM_SOURCE_PREFIX;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -16,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.entlinks.utils.ConsortiumUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -40,8 +43,6 @@ public class AuthorityBase extends MetadataEntity {
   public static final String IDENTIFIERS_COLUMN = "identifiers";
   public static final String NOTES_COLUMN = "notes";
   public static final String DELETED_COLUMN = "deleted";
-
-  private static final String CONSORTIUM_SOURCE_PREFIX = "CONSORTIUM-";
 
   @Id
   @Column(name = ID_COLUMN, nullable = false)
@@ -123,6 +124,6 @@ public class AuthorityBase extends MetadataEntity {
   }
 
   public boolean isConsortiumShadowCopy() {
-    return this.getSource() != null && this.getSource().startsWith(CONSORTIUM_SOURCE_PREFIX);
+    return ConsortiumUtils.isConsortiumShadowCopy(this.getSource());
   }
 }

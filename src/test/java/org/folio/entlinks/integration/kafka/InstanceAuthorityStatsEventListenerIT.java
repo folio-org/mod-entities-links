@@ -57,6 +57,8 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
 
+  private static final UUID INSTANCE_ID = UUID.fromString("fea1c418-ba1f-438e-85bb-c6ae1011bf5c");
+
   private KafkaMessageListenerContainer<String, LinksChangeEvent> container;
   private BlockingQueue<ConsumerRecord<String, LinksChangeEvent>> consumerRecords;
 
@@ -80,8 +82,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void shouldHandleEvent_positive() {
-    var instanceId = UUID.randomUUID();
-    prepareData(instanceId);
+    prepareData(INSTANCE_ID);
 
     var linksChangeEvent = Objects.requireNonNull(getReceivedEvent()).value();
 
@@ -91,7 +92,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
     var event = new LinkUpdateReport()
       .tenant(TENANT_ID)
       .jobId(linksChangeEvent.getJobId())
-      .instanceId(instanceId)
+      .instanceId(INSTANCE_ID)
       .status(FAIL)
       .linkIds(singletonList(linkId.intValue()))
       .failCause(failCause);
@@ -103,8 +104,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void shouldHandleEvent_positive_whenLinkIdsAndInstanceIdAreEmpty() {
-    var instanceId = UUID.randomUUID();
-    prepareData(instanceId);
+    prepareData(INSTANCE_ID);
 
     var linksChangeEvent = Objects.requireNonNull(getReceivedEvent()).value();
 

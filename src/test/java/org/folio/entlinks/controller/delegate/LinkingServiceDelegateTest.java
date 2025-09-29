@@ -10,6 +10,7 @@ import static org.folio.support.TestDataUtils.links;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
+import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doNothing;
@@ -18,12 +19,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.controller.converter.InstanceAuthorityLinkMapper;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
@@ -91,32 +95,57 @@ class LinkingServiceDelegateTest {
       .containsExactlyInAnyOrder(linkDto);
   }
 
+  /**
+   * One link is outside the limit so next link time is filled and 1 link is being filtered out.
+   * */
   @Test
   void getLinkedBibUpdateStats_positive() {
-    var linksMock = links(3, "error");
-    var linksForStats = linksMock.subList(0, 2);
-    var instanceIds = linksForStats.stream()
-      .map(InstanceAuthorityLink::getInstanceId)
-      .map(UUID::toString)
-      .toList();
-    var instanceTitles = instanceIds.stream()
-      .collect(Collectors.toMap(id -> id, id -> RandomStringUtils.insecure().nextAlphanumeric(5)));
-    var nextLinkTime = fromTimestamp(linksMock.getLast().getUpdatedAt());
-
-    testGetLinkedBibUpdateStats_positive(linksMock, linksForStats, instanceIds, instanceTitles, nextLinkTime);
-  }
-
-  @Test
-  void getLinkedBibUpdateStats_positive_noNext() {
-    var linksMock = links(2, "error");
+    var linksMock = links(4, "error");
+    var expectedLinks = linksMock.subList(0, 3);
     var instanceIds = linksMock.stream()
       .map(InstanceAuthorityLink::getInstanceId)
       .map(UUID::toString)
       .toList();
-    var instanceTitles = instanceIds.stream()
-      .collect(Collectors.toMap(id -> id, id -> RandomStringUtils.insecure().nextAlphanumeric(5)));
+    var instanceData = instanceIds.stream()
+      .collect(Collectors.toMap(id -> id, id -> instanceData()));
+    var nextLinkTime = fromTimestamp(linksMock.getLast().getUpdatedAt());
 
-    testGetLinkedBibUpdateStats_positive(linksMock, linksMock, instanceIds, instanceTitles, null);
+    testGetLinkedBibUpdateStats_positive(linksMock, expectedLinks, instanceIds, instanceData, nextLinkTime);
+  }
+
+  /**
+   * 4 links are retrieved from the database while the limit is 3.
+   * 4 links are used to get instance data.
+   * 1 instance data is missing, 1 is instance shadow copy.
+   * So the result contains only 2 links because limit is happening after filtering.
+   * */
+  @Test
+  void getLinkedBibUpdateStats_positive_noNext_shadowFiltered() {
+    var linksMock = links(4, "error");
+    var instanceIds = linksMock.stream()
+      .map(InstanceAuthorityLink::getInstanceId)
+      .map(UUID::toString)
+      .toList();
+    var instanceData = new HashMap<String, Pair<String, String>>();
+    instanceData.put(instanceIds.get(0), instanceData(false));
+    instanceData.put(instanceIds.get(1), instanceData(true));
+    instanceData.put(instanceIds.get(3), instanceData(false));
+    var expectedLinks = List.of(linksMock.get(0), linksMock.get(3));
+
+    testGetLinkedBibUpdateStats_positive(linksMock, expectedLinks, instanceIds, instanceData, null);
+  }
+
+  @Test
+  void getLinkedBibUpdateStats_positive_noNext() {
+    var linksMock = links(3, "error");
+    var instanceIds = linksMock.stream()
+      .map(InstanceAuthorityLink::getInstanceId)
+      .map(UUID::toString)
+      .toList();
+    var instanceData = instanceIds.stream()
+      .collect(Collectors.toMap(id -> id, id -> instanceData()));
+
+    testGetLinkedBibUpdateStats_positive(linksMock, instanceIds, instanceData);
   }
 
   @Test
@@ -124,23 +153,9 @@ class LinkingServiceDelegateTest {
     var linksMock = links(2, "error");
     var instanceId = linksMock.get(0).getInstanceId();
     linksMock.get(1).setInstanceId(instanceId);
-    var instanceTitle = RandomStringUtils.insecure().nextAlphanumeric(5);
-    var instanceTitles = Map.of(instanceId.toString(), instanceTitle);
+    var instanceData = Map.of(instanceId.toString(), instanceData());
 
-    testGetLinkedBibUpdateStats_positive(linksMock, linksMock,
-      singletonList(instanceId.toString()), instanceTitles, null);
-  }
-
-  @Test
-  void getLinkedBibUpdateStats_positive_noTitle() {
-    var linksMock = links(2, "error");
-    var instanceIds = linksMock.stream()
-      .map(InstanceAuthorityLink::getInstanceId)
-      .map(UUID::toString)
-      .toList();
-    var instanceTitles = Map.of(instanceIds.getFirst(), RandomStringUtils.insecure().nextAlphanumeric(5));
-
-    testGetLinkedBibUpdateStats_positive(linksMock, linksMock, instanceIds, instanceTitles, null);
+    testGetLinkedBibUpdateStats_positive(linksMock, singletonList(instanceId.toString()), instanceData);
   }
 
   @Test
@@ -235,33 +250,55 @@ class LinkingServiceDelegateTest {
   }
 
   private void testGetLinkedBibUpdateStats_positive(List<InstanceAuthorityLink> linksMock,
-                                                    List<InstanceAuthorityLink> linksForStats,
                                                     List<String> instanceIds,
-                                                    Map<String, String> instanceTitles,
+                                                    Map<String, Pair<String, String>> instanceData) {
+    testGetLinkedBibUpdateStats_positive(linksMock, linksMock, instanceIds, instanceData, null);
+  }
+
+  private void testGetLinkedBibUpdateStats_positive(List<InstanceAuthorityLink> linksMock,
+                                                    List<InstanceAuthorityLink> expectedLinks,
+                                                    List<String> instanceIds,
+                                                    Map<String, Pair<String, String>> instanceData,
                                                     OffsetDateTime next) {
     var status = LinkStatus.ACTUAL;
     var fromDate = OffsetDateTime.now();
     var toDate = fromDate.plusDays(1);
-    var limit = 2;
-    var expectedStats = stats(linksForStats);
+    var limit = 3;
+    var statsDtos = stats(linksMock);
 
     when(linkingService.getLinks(status, fromDate, toDate, limit + 1))
       .thenReturn(linksMock);
-    when(statsMapper.convertToDto(linksForStats))
-      .thenReturn(expectedStats);
-    when(instanceService.getInstanceTitles(instanceIds))
-      .thenReturn(instanceTitles);
+    when(statsMapper.convertToDto(linksMock))
+      .thenReturn(statsDtos);
+    when(instanceService.getInstanceData(instanceIds))
+      .thenReturn(instanceData);
 
-    expectedStats.forEach(bibStatsDto -> {
+    var expectedStatsDtos = stats(expectedLinks);
+    expectedStatsDtos.forEach(bibStatsDto -> {
       var instanceId = bibStatsDto.getInstanceId();
-      bibStatsDto.setInstanceTitle(instanceTitles.get(instanceId.toString()));
+      var title = Optional.ofNullable(instanceData.get(instanceId.toString()))
+        .map(Pair::getLeft)
+        .orElse(null);
+      bibStatsDto.setInstanceTitle(title);
     });
 
     var actual = delegate.getLinkedBibUpdateStats(fromDate, toDate, status, limit);
 
     assertThat(actual)
       .isEqualTo(new BibStatsDtoCollection()
-        .stats(expectedStats)
+        .stats(expectedStatsDtos)
         .next(next));
+  }
+
+  private static Pair<String, String> instanceData() {
+    return instanceData(false);
+  }
+
+  private static Pair<String, String> instanceData(boolean shared) {
+    var source = RandomStringUtils.insecure().nextAlphanumeric(5);
+    if (shared) {
+      source = CONSORTIUM_SOURCE_PREFIX + source;
+    }
+    return Pair.of(RandomStringUtils.insecure().nextAlphanumeric(5), source);
   }
 }

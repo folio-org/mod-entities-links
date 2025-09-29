@@ -6,6 +6,8 @@ import static java.util.UUID.randomUUID;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
+import static org.folio.support.base.TestConstants.AUTHORITY_CONSORTIUM_SOURCE;
+import static org.folio.support.base.TestConstants.AUTHORITY_SOURCE;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 
@@ -184,10 +186,12 @@ public class TestDataUtils {
       .next(next);
   }
 
-  public static AuthorityDataStat authorityDataStat(UUID userId, UUID sourceFileId, AuthorityDataStatAction action) {
+  public static AuthorityDataStat authorityDataStat(UUID userId, UUID sourceFileId, AuthorityDataStatAction action,
+                                                    boolean shared) {
     var authority = new Authority();
     authority.setNaturalId("naturalId");
     authority.setId(UUID.randomUUID());
+    authority.setSource(shared ? AUTHORITY_CONSORTIUM_SOURCE : AUTHORITY_SOURCE);
     return AuthorityDataStat.builder()
       .id(randomUUID())
       .action(action)

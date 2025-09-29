@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="MODELINKS-342@@default-data:authority-source-file:update-file-name" author="svitlana_kovalova">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority_source_file"/>
+    </preConditions>
+
+    <comment>Correct the abbreviation from LCFGT to LCDGT for "LC Demographic Group Terms"</comment>
+
+    <sql>
+      UPDATE authority_source_file
+      SET name='LC Demographic Group Terms (LCDGT)'
+      WHERE name='LC Demographic Group Terms (LCFGT)';
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

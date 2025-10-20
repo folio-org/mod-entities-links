@@ -14,8 +14,16 @@ public class JdbcUtils {
     return context.getFolioModuleMetadata().getDBSchemaName(context.getTenantId());
   }
 
+  public static String getSchemaName(FolioExecutionContext context, String tenantId) {
+    return context.getFolioModuleMetadata().getDBSchemaName(tenantId);
+  }
+
   public static String getFullPath(FolioExecutionContext context, String tableName) {
     return getSchemaName(context) + "." + tableName;
+  }
+
+  public static String getFullPath(FolioExecutionContext context, String tenant, String tableName) {
+    return getSchemaName(context, tenant) + "." + tableName;
   }
 
   public static String getParamPlaceholder(int size) {

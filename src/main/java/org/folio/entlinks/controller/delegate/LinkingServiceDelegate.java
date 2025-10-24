@@ -24,7 +24,6 @@ import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
 import org.folio.entlinks.service.consortium.UserTenantsService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagationService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.utils.ConsortiumUtils;
 import org.folio.spring.FolioExecutionContext;
@@ -37,7 +36,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LinkingServiceDelegate {
 
-  private final ConsortiumLinksPropagationService propagationService;
   private final InstanceAuthorityLinkingService linkingService;
   private final InstanceStorageService instanceService;
   private final InstanceAuthorityLinkMapper mapper;

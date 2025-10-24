@@ -51,11 +51,6 @@ public class InstanceAuthorityLinkingService {
     return instanceLinkRepository.findByInstanceId(instanceId);
   }
 
-  public List<InstanceAuthorityLink> getLinksByInstanceId(UUID instanceId, String tenantId) {
-    log.info("Loading links for [instanceId: {}, tenantId: {}]", instanceId, tenantId);
-    return instanceLinkJdbcRepository.findByInstanceId(instanceId, tenantId);
-  }
-
   public Page<InstanceAuthorityLink> getLinksByAuthorityId(UUID authorityId, Pageable pageable) {
     log.info("Loading links for [authorityId: {}, page size: {}, page num: {}]", authorityId,
       pageable.getPageSize(), pageable.getOffset());

@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
@@ -22,7 +21,6 @@ import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
 import org.folio.entlinks.domain.dto.UuidCollection;
-import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
 import org.folio.entlinks.service.consortium.UserTenantsService;
@@ -50,13 +48,6 @@ public class LinkingServiceDelegate {
   public InstanceLinkDtoCollection getLinks(UUID instanceId) {
     var links = linkingService.getLinksByInstanceId(instanceId);
     return mapper.convertToDto(links);
-  }
-
-  private List<InstanceAuthorityLink> getLinksForConsortiumMember(UUID instanceId, String centralTenant) {
-    var linksFromMemberTenant = linkingService.getLinksByInstanceId(instanceId);
-    var linksFromCentralTenant = linkingService.getLinksByInstanceId(instanceId, centralTenant);
-    return Stream.concat(linksFromMemberTenant.stream(), linksFromCentralTenant.stream())
-        .toList();
   }
 
   public BibStatsDtoCollection getLinkedBibUpdateStats(OffsetDateTime fromDate, OffsetDateTime toDate,

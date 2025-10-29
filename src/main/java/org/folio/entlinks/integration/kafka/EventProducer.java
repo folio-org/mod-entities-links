@@ -71,6 +71,9 @@ public class EventProducer<T> {
     } else {
       producerRecord = new ProducerRecord<>(topicName(), key, msgBody);
     }
+    if (headersMap.isEmpty() && context.getOkapiHeaders().get("x-okapi-user-id") == null) {
+      context.getOkapiHeaders().put("x-okapi-user-id", List.of("28cc7e54-c688-4dcc-9d06-8694535e6e37"));
+    }
 
     toKafkaHeaders(context.getOkapiHeaders())
       .forEach(header -> producerRecord.headers().add(header));

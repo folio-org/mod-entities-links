@@ -11,12 +11,16 @@ import java.util.Map;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.folio.DataImportEventPayload;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEvent;
 import org.folio.entlinks.integration.kafka.AuthorityChangeFilterStrategy;
 import org.folio.entlinks.integration.kafka.EventProducer;
+import org.folio.entlinks.integration.kafka.deserializer.ConsumerRecordToWrapperConverter;
+import org.folio.entlinks.integration.kafka.deserializer.DataImportEventDeserializer;
+import org.folio.entlinks.integration.kafka.model.Event;
 import org.folio.rspec.domain.dto.SpecificationUpdatedEvent;
 import org.folio.rspec.domain.dto.UpdateRequestEvent;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +34,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.CommonLoggingErrorHandler;
+import org.springframework.kafka.support.converter.BatchMessagingMessageConverter;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
@@ -43,6 +48,37 @@ public class KafkaConfiguration {
 
   public KafkaConfiguration(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
+  }
+
+  /**
+   * Creates and configures {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} as
+   * Spring bean for consuming authority events from Apache Kafka.
+   *
+   * @return {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} object as Spring bean.
+   */
+  @Bean
+  public ConcurrentKafkaListenerContainerFactory<String, DataImportEventPayload> diListenerFactory(
+    ConsumerFactory<String, DataImportEventPayload> consumerFactory) {
+    var listenerFactory = listenerFactory(consumerFactory, true);
+    listenerFactory.setBatchMessageConverter(
+      new BatchMessagingMessageConverter(new ConsumerRecordToWrapperConverter()));
+    return listenerFactory;
+  }
+
+  /**
+   * Creates and configures {@link org.springframework.kafka.core.ConsumerFactory} as Spring bean.
+   *
+   * <p>Key type - {@link String}, value - {@link AuthorityDomainEvent}.</p>
+   *
+   * @return typed {@link org.springframework.kafka.core.ConsumerFactory} object as Spring bean.
+   */
+  @Bean
+  public ConsumerFactory<String, DataImportEventPayload> diConsumerFactory(KafkaProperties kafkaProperties) {
+    var deserializer = new DataImportEventDeserializer(objectMapper);
+    Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties(null));
+    config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
+    return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
   }
 
   /**
@@ -145,6 +181,16 @@ public class KafkaConfiguration {
   @Bean
   public ProducerFactory<String, LinkUpdateReport> linkUpdateProducerFactory(KafkaProperties kafkaProperties) {
     return getProducerConfigProps(kafkaProperties);
+  }
+
+  @Bean
+  public ProducerFactory<String, Event> diProducerFactory(KafkaProperties kafkaProperties) {
+    return getProducerConfigProps(kafkaProperties);
+  }
+
+  @Bean
+  public KafkaTemplate<String, Event> diKafkaTemplate(ProducerFactory<String, Event> diProducerFactory) {
+    return new KafkaTemplate<>(diProducerFactory);
   }
 
   /**

@@ -35,6 +35,7 @@ import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Log4j2
 @Service
@@ -54,6 +55,7 @@ public class AuthoritySourceFileServiceDelegate {
   private final SystemUserScopedExecutionService executionService;
   private final ConsortiumTenantsService consortiumTenantsService;
 
+  @Transactional
   public AuthoritySourceFileDtoCollection getAuthoritySourceFiles(Integer offset, Integer limit, String cqlQuery) {
     var entities = service.getAll(offset, limit, cqlQuery);
     return mapper.toAuthoritySourceFileCollection(entities);

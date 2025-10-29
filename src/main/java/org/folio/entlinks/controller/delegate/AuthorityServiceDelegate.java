@@ -33,11 +33,10 @@ import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.annotation.RequestScope;
 
 @Log4j2
 @Service
-@RequestScope
+//@RequestScope
 public class AuthorityServiceDelegate {
 
   private final AuthorityService service;

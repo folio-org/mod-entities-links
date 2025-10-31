@@ -1,0 +1,13 @@
+{
+    "id": "1a3de5d6-56cb-4d5d-acb2-390b1d92728c",
+    "eventType": "DI_INITIALIZATION_STARTED",
+    "eventMetadata": {
+        "tenantId": "diku",
+        "eventTTL": 1,
+        "publishedBy": "mod-data-import-3.4.0-SNAPSHOT"
+    },
+    "eventPayload": {
+        "jobExecutionId": "3b255ca5-6746-47a1-9bd6-45c5bb948b77",
+        "totalRecords": 2
+    }
+}

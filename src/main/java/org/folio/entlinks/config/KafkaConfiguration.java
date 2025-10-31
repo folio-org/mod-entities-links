@@ -20,7 +20,7 @@ import org.folio.entlinks.integration.kafka.AuthorityChangeFilterStrategy;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.integration.kafka.deserializer.ConsumerRecordToWrapperConverter;
 import org.folio.entlinks.integration.kafka.deserializer.DataImportEventDeserializer;
-import org.folio.entlinks.integration.kafka.model.Event;
+import org.folio.rest.jaxrs.model.Event;
 import org.folio.rspec.domain.dto.SpecificationUpdatedEvent;
 import org.folio.rspec.domain.dto.UpdateRequestEvent;
 import org.springframework.beans.factory.annotation.Value;

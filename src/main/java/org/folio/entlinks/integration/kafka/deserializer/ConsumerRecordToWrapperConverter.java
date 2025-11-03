@@ -1,5 +1,9 @@
 package org.folio.entlinks.integration.kafka.deserializer;
 
+import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.CHUNK_ID_HEADER;
+import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.JOB_EXECUTION_ID_HEADER;
+import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.RECORD_ID_HEADER;
+
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -30,6 +34,10 @@ public class ConsumerRecordToWrapperConverter implements RecordMessageConverter 
       headers.put(h.key(), new String(h.value(), StandardCharsets.UTF_8));
     }
 
+    addHeaderToPayloadContext(payload, RECORD_ID_HEADER, headers);
+    addHeaderToPayloadContext(payload, CHUNK_ID_HEADER, headers);
+    addHeaderToPayloadContext(payload, JOB_EXECUTION_ID_HEADER, headers);
+
     DataImportEventWrapper wrapper = new DataImportEventWrapper(payload, headers,
       headers.get(FolioKafkaProperties.TENANT_ID));
 
@@ -40,6 +48,14 @@ public class ConsumerRecordToWrapperConverter implements RecordMessageConverter 
       .setHeader(KafkaHeaders.OFFSET, consumerRecord.offset())
       .setHeader(KafkaHeaders.TIMESTAMP, consumerRecord.timestamp())
       .build();
+  }
+
+  private void addHeaderToPayloadContext(DataImportEventPayload payload, String headerName,
+                                         Map<String, String> headers) {
+    var value = headers.get(headerName);
+    if (value != null) {
+      payload.getContext().put(headerName, value);
+    }
   }
 
   @Override

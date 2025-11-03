@@ -1,6 +1,7 @@
 spring:
   application:
-    name: mod-entities-links
+    name: @project.artifactId@
+    version: @project.version@
   threads:
     virtual:
       enabled: true
@@ -54,7 +55,7 @@ spring:
   cache:
     cache-names:
       - authority-mapping-rules-cache
-      - authority-linking-rules-cache
+      - authority-mapping-metadata-cache
       - consortium-tenants-cache
       - consortium-central-tenant-cache
     caffeine:

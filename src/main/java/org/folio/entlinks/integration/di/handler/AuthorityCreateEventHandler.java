@@ -38,18 +38,6 @@ public class AuthorityCreateEventHandler implements EventHandler {
     return CompletableFuture.completedFuture(payload);
   }
 
-  private void preparePayload(DataImportEventPayload payload, AuthorityDto createdAuthority) {
-    try {
-      payload.getContext()
-        .put(ActionProfile.FolioRecord.AUTHORITY.value(), objectMapper.writeValueAsString(createdAuthority));
-      payload.setEventType(DataImportEventTypes.DI_INVENTORY_AUTHORITY_CREATED.value());
-      payload.getEventsChain().add(payload.getEventType());
-      payload.setCurrentNode(payload.getCurrentNode().getChildSnapshotWrappers().getFirst());
-    } catch (JsonProcessingException e) {
-      throw new EventProcessingException("Failed to prepare payload for DI event", e);
-    }
-  }
-
   @Override
   public boolean isEligible(DataImportEventPayload payload) {
     var currentNode = payload.getCurrentNode();
@@ -65,6 +53,18 @@ public class AuthorityCreateEventHandler implements EventHandler {
   @Override
   public String getPostProcessingInitializationEventType() {
     return DataImportEventTypes.DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING.value();
+  }
+
+  private void preparePayload(DataImportEventPayload payload, AuthorityDto createdAuthority) {
+    try {
+      payload.getContext()
+        .put(ActionProfile.FolioRecord.AUTHORITY.value(), objectMapper.writeValueAsString(createdAuthority));
+      payload.setEventType(DataImportEventTypes.DI_INVENTORY_AUTHORITY_CREATED.value());
+      payload.getEventsChain().add(payload.getEventType());
+      payload.setCurrentNode(payload.getCurrentNode().getChildSnapshotWrappers().getFirst());
+    } catch (JsonProcessingException e) {
+      throw new EventProcessingException("Failed to prepare payload for DI event", e);
+    }
   }
 
   private boolean isEligibleActionProfile(ProfileSnapshotWrapper currentNode) {

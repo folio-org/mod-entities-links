@@ -8,7 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.folio.DataImportEventPayload;
-import org.folio.entlinks.integration.kafka.model.Event;
+import org.folio.rest.jaxrs.model.Event;
 import org.springframework.stereotype.Component;
 
 @Log4j2

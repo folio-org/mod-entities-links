@@ -15,5 +15,5 @@
  -dddd.     .sdddo++yddh:    dddd:   odddy   `oddds++sddd+`
  `////`       `:/+o++:.      ////.   -///:      -/+oo+/-
 
-  (${application.title} ${application.version} with Spring Boot${spring-boot.formatted-version})
+  (${spring.application.name} ${spring.application.version} with Spring Boot${spring-boot.formatted-version})
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

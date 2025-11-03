@@ -45,13 +45,14 @@ public class DataImportEventService {
    * @return a CompletableFuture that completes when event processing is done
    */
   public CompletableFuture<Void> processEvent(DataImportEventPayload payload) {
-    logDataImport(log, Level.INFO, "Processing data-import %s event".formatted(payload.getEventType()), payload);
+    var eventType = payload.getEventType();
+    logDataImport(log, Level.INFO, "Processing data-import %s event".formatted(eventType), payload);
     return EventManager.handleEvent(payload, new ProfileSnapshotWrapper())
       .handle((diPayload, throwable) -> {
         if (throwable != null) {
-          logDataImport(log, "Failed to process data-import event", diPayload, throwable);
+          logDataImport(log, "Process data-import %s event failed".formatted(eventType), diPayload, throwable);
         } else {
-          logDataImport(log, Level.INFO, "Data-import event processed", diPayload);
+          logDataImport(log, Level.INFO, "Data-import %s event processed".formatted(eventType), diPayload);
         }
         return null;
       });

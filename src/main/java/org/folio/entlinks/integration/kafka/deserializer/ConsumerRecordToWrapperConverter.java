@@ -11,7 +11,6 @@ import java.util.Map;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.header.Header;
 import org.folio.DataImportEventPayload;
 import org.folio.entlinks.integration.kafka.model.DataImportEventWrapper;
 import org.folio.spring.tools.kafka.FolioKafkaProperties;
@@ -27,11 +26,11 @@ public class ConsumerRecordToWrapperConverter implements RecordMessageConverter 
   @Override
   public @NotNull Message<?> toMessage(ConsumerRecord<?, ?> consumerRecord, Acknowledgment acknowledgment,
                                        Consumer<?, ?> consumer, Type payloadType) {
-    DataImportEventPayload payload = (DataImportEventPayload) consumerRecord.value();
+    var payload = (DataImportEventPayload) consumerRecord.value();
 
     Map<String, String> headers = new HashMap<>();
-    for (Header h : consumerRecord.headers()) {
-      headers.put(h.key(), new String(h.value(), StandardCharsets.UTF_8));
+    for (var header : consumerRecord.headers()) {
+      headers.put(header.key(), new String(header.value(), StandardCharsets.UTF_8));
     }
 
     addHeaderToPayloadContext(payload, RECORD_ID_HEADER, headers);
@@ -42,11 +41,11 @@ public class ConsumerRecordToWrapperConverter implements RecordMessageConverter 
       headers.get(FolioKafkaProperties.TENANT_ID));
 
     return MessageBuilder.withPayload(wrapper)
-      .setHeader(KafkaHeaders.RECEIVED_TOPIC, consumerRecord.topic())
-      .setHeader(KafkaHeaders.RECEIVED_PARTITION, consumerRecord.partition())
       .setHeader(KafkaHeaders.KEY, consumerRecord.key())
       .setHeader(KafkaHeaders.OFFSET, consumerRecord.offset())
       .setHeader(KafkaHeaders.TIMESTAMP, consumerRecord.timestamp())
+      .setHeader(KafkaHeaders.RECEIVED_TOPIC, consumerRecord.topic())
+      .setHeader(KafkaHeaders.RECEIVED_PARTITION, consumerRecord.partition())
       .build();
   }
 

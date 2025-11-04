@@ -9,7 +9,6 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
 import org.folio.DataImportEventPayload;
 import org.folio.entlinks.integration.di.handler.DataImportEventHandlerFactory;
-import org.folio.entlinks.integration.kafka.publisher.DataImportEventPublisher;
 import org.folio.processing.events.EventManager;
 import org.folio.rest.jaxrs.model.ProfileSnapshotWrapper;
 import org.springframework.stereotype.Service;

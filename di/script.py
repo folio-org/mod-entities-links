@@ -16,4 +16,4 @@ def process_json_file(file_path):
         json.dump(data, f, indent=4)
 
 # Usage example
-process_json_file('9.json')
+process_json_file('12.json')

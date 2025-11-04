@@ -1,4 +1,4 @@
-package org.folio.entlinks.integration.kafka.publisher;
+package org.folio.entlinks.integration.di;
 
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.CHUNK_ID_HEADER;
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.JOB_EXECUTION_ID_HEADER;
@@ -75,6 +75,7 @@ public class DataImportEventPublisher implements EventPublisher {
         .withId(UUID.randomUUID().toString())
         .withEventPayload(objectMapper.writeValueAsString(payload))
         .withEventMetadata(new EventMetadata()
+          .withEventTTL(1)
           .withTenantId(payload.getTenant())
           .withPublishedBy(applicationMetadata.getFullApplicationName())
           .withPublishedDate(new Date()));

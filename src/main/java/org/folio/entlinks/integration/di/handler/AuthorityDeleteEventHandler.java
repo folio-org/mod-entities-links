@@ -15,7 +15,7 @@ import org.folio.rest.jaxrs.model.ProfileType;
 import org.springframework.stereotype.Component;
 
 /**
- * Data import event handler for authority create events.
+ * Data import event handler for authority delete events.
  */
 @Log4j2
 @Component

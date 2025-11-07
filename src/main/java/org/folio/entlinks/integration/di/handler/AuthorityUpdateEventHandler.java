@@ -15,6 +15,7 @@ import org.folio.MappingProfile;
 import org.folio.entlinks.controller.delegate.AuthorityServiceDelegate;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.integration.di.AuthoritySourceMapper;
+import org.folio.entlinks.integration.di.DataImportEventPublisher;
 import org.folio.entlinks.utils.ConsortiumUtils;
 import org.folio.processing.events.services.handler.EventHandler;
 import org.folio.processing.exceptions.EventProcessingException;
@@ -37,6 +38,7 @@ public class AuthorityUpdateEventHandler implements EventHandler {
   private final ObjectMapper objectMapper;
   private final AuthorityServiceDelegate delegate;
   private final AuthoritySourceMapper sourceMapper;
+  private final DataImportEventPublisher eventPublisher;
 
   @Override
   public CompletableFuture<DataImportEventPayload> handle(DataImportEventPayload payload) {
@@ -49,7 +51,7 @@ public class AuthorityUpdateEventHandler implements EventHandler {
     updatedAuthority.setVersion(currentAuthority.getVersion());
     delegate.updateAuthority(recordId, updatedAuthority);
     preparePayload(payload, updatedAuthority);
-    return CompletableFuture.completedFuture(payload);
+    return eventPublisher.publish(payload).thenApply(event -> payload);
   }
 
   @Override

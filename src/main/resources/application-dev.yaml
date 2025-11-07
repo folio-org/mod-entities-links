@@ -106,7 +106,7 @@ folio:
         auto-offset-reset: EARLIEST
       data-import:
         concurrency: 1
-        topic-pattern: (${folio.environment}\.)[A-Za-z0-9-]+\.\w+\.DI_SRS_MARC_AUTHORITY_RECORD_(CREATED|MODIFIED_READY_FOR_POST_PROCESSING|DELETED)
+        topic-pattern: (${folio.environment}\.)[A-Za-z0-9-]+\.\w+\.DI_SRS_MARC_AUTHORITY_RECORD_(CREATED|MODIFIED_READY_FOR_POST_PROCESSING|DELETED|NOT_MATCHED)
         group-id: ${folio.environment}-mod-entities-links-data-import-group
   instance-authority:
     change:

@@ -1,9 +1,5 @@
 package org.folio.entlinks.controller.delegate;
 
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.CREATE;
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.DELETE;
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.UPDATE;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -105,7 +101,7 @@ public class AuthorityServiceDelegate {
   public void deleteAuthorityById(UUID id) {
     var authority = service.deleteById(id);
     eventPublisher.publishSoftDeleteEvent(mapper.toDto(authority));
-    propagationService.propagate(authority, DELETE, context.getTenantId());
+    //propagationService.propagate(authority, DELETE, context.getTenantId());
   }
 
   @SneakyThrows
@@ -138,7 +134,7 @@ public class AuthorityServiceDelegate {
   private Consumer<Authority> createConsumer() {
     return authority -> {
       eventPublisher.publishCreateEvent(mapper.toDto(authority));
-      propagationService.propagate(authority, CREATE, context.getTenantId());
+      //propagationService.propagate(authority, CREATE, context.getTenantId());
     };
   }
 
@@ -146,7 +142,7 @@ public class AuthorityServiceDelegate {
   private BiConsumer<Authority, Authority> updateConsumer() {
     return (newAuthority, oldAuthority) -> {
       eventPublisher.publishUpdateEvent(mapper.toDto(oldAuthority), mapper.toDto(newAuthority));
-      propagationService.propagate(newAuthority, UPDATE, context.getTenantId());
+      //propagationService.propagate(newAuthority, UPDATE, context.getTenantId());
     };
   }
 }

@@ -101,7 +101,6 @@ public class AuthorityServiceDelegate {
   public void deleteAuthorityById(UUID id) {
     var authority = service.deleteById(id);
     eventPublisher.publishSoftDeleteEvent(mapper.toDto(authority));
-    //propagationService.propagate(authority, DELETE, context.getTenantId());
   }
 
   @SneakyThrows
@@ -134,7 +133,6 @@ public class AuthorityServiceDelegate {
   private Consumer<Authority> createConsumer() {
     return authority -> {
       eventPublisher.publishCreateEvent(mapper.toDto(authority));
-      //propagationService.propagate(authority, CREATE, context.getTenantId());
     };
   }
 
@@ -142,7 +140,6 @@ public class AuthorityServiceDelegate {
   private BiConsumer<Authority, Authority> updateConsumer() {
     return (newAuthority, oldAuthority) -> {
       eventPublisher.publishUpdateEvent(mapper.toDto(oldAuthority), mapper.toDto(newAuthority));
-      //propagationService.propagate(newAuthority, UPDATE, context.getTenantId());
     };
   }
 }

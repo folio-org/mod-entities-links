@@ -21,6 +21,8 @@ import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
 import org.folio.entlinks.domain.dto.UuidCollection;
+import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
 import org.folio.entlinks.service.consortium.UserTenantsService;
@@ -42,20 +44,26 @@ public class LinkingServiceDelegate {
   private final FolioExecutionContext context;
   private final DataStatsMapper statsMapper;
   private final UserTenantsService userTenantsService;
+  private final AuthorityRepository authorityRepository;
+  private final AuthorityJdbcRepository authorityJdbcRepository;
 
   public InstanceLinkDtoCollection getLinks(UUID instanceId) {
     var links = linkingService.getLinksByInstanceId(instanceId);
+    if (!links.isEmpty()) {
+      linkingService.setNaturalIdForSharedAuthority(links);
+    }
     return mapper.convertToDto(links);
   }
 
   public BibStatsDtoCollection getLinkedBibUpdateStats(OffsetDateTime fromDate, OffsetDateTime toDate,
                                                        LinkStatus status, int limit) {
     validateDateRange(fromDate, toDate);
-
-    var bibStatsCollection = new BibStatsDtoCollection();
     var links = linkingService.getLinks(status, fromDate, toDate, limit + 1);
     log.debug("Retrieved links count {}", links.size());
-
+    if (!links.isEmpty()) {
+      linkingService.setNaturalIdForSharedAuthority(links);
+    }
+    var bibStatsCollection = new BibStatsDtoCollection();
     var stats = statsMapper.convertToDto(links);
     stats = filterOutShadowCopiesAndFillInstanceTitles(stats);
     if (stats.size() > limit) {

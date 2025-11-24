@@ -31,8 +31,10 @@ import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionsService;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,6 +61,8 @@ class LinksSuggestionsServiceDelegateTest {
   private @Mock AuthorityRepository authorityRepository;
   private @Mock SourceStorageClient sourceStorageClient;
   private @Mock ConsortiumTenantExecutor executor;
+  private @Mock FolioExecutionContext folioExecutionContext;
+  private @Mock UserTenantsService userTenantsService;
   private @InjectMocks LinksSuggestionsByAuthorityNaturalId serviceDelegate;
 
   @Test
@@ -72,6 +76,7 @@ class LinksSuggestionsServiceDelegateTest {
     var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
     var rules = List.of(getRule("100"));
 
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID)))
         .thenReturn(List.of(authority1, authority2));
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);

@@ -51,7 +51,7 @@ class DataStatsMapperTest {
 
     BibStatsDto dto = mapper.convertToDto(source);
 
-    assertThat(source.getAuthority().getNaturalId()).isEqualTo(dto.getAuthorityNaturalId());
+    assertThat(source.getNaturalId()).isEqualTo(dto.getAuthorityNaturalId());
     assertThat(source.getLinkingRule().getBibField()).isEqualTo(dto.getBibRecordTag());
     assertThat(source.getInstanceId()).isEqualTo(dto.getInstanceId());
     assertThat(source.getErrorCause()).isEqualTo(dto.getErrorCause());
@@ -67,7 +67,7 @@ class DataStatsMapperTest {
 
     InstanceAuthorityLink source = sourceList.getFirst();
     BibStatsDto dto = dtoList.getFirst();
-    assertThat(source.getAuthority().getNaturalId()).isEqualTo(dto.getAuthorityNaturalId());
+    assertThat(source.getNaturalId()).isEqualTo(dto.getAuthorityNaturalId());
     assertThat(source.getLinkingRule().getBibField()).isEqualTo(dto.getBibRecordTag());
     assertThat(source.getInstanceId()).isEqualTo(dto.getInstanceId());
     assertThat(source.getErrorCause()).isEqualTo(dto.getErrorCause());
@@ -77,7 +77,7 @@ class DataStatsMapperTest {
   @NotNull
   private static InstanceAuthorityLink createInstanceAuthorityLink() {
     InstanceAuthorityLink source = new InstanceAuthorityLink();
-    source.setAuthority(new Authority());
+    source.setAuthorityId(UUID.randomUUID());
     source.setInstanceId(TEST_ID);
     source.setUpdatedAt(TEST_DATE);
     source.setErrorCause("SomeErrorCause");

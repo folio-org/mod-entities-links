@@ -18,25 +18,31 @@ import org.springframework.data.repository.query.Param;
 public interface InstanceLinkRepository extends JpaRepository<InstanceAuthorityLink, Long>,
   JpaSpecificationExecutor<InstanceAuthorityLink> {
 
-  List<InstanceAuthorityLink> findByInstanceId(UUID instanceId);
+  @Query("""
+          select l, auth.naturalId
+          from InstanceAuthorityLink l
+          left join Authority auth on l.authorityId = auth.id
+          where l.instanceId = :instanceId
+      """)
+  List<Object[]> findByInstanceId(@Param("instanceId") UUID instanceId);
 
-  @Query("select l from InstanceAuthorityLink l where l.authority.id = :id order by l.id")
+  @Query("select l from InstanceAuthorityLink l where l.authorityId = :id order by l.id")
   Page<InstanceAuthorityLink> findByAuthorityId(@Param("id") UUID id, Pageable pageable);
 
-  @Query("select l.authority.id as id, count(distinct l.instanceId) as totalLinks"
-    + " from InstanceAuthorityLink l where l.authority.id in :authorityIds"
+  @Query("select l.authorityId as id, count(distinct l.instanceId) as totalLinks"
+    + " from InstanceAuthorityLink l where l.authorityId in :authorityIds"
     + " group by id")
   List<LinkCountView> countLinksByAuthorityIds(@Param("authorityIds") Set<UUID> authorityIds);
 
   @Modifying
   @Query("""
     update InstanceAuthorityLink i set i.status = :status, i.errorCause = :errorCause
-    where i.authority.id = :authorityId""")
+    where i.authorityId = :authorityId""")
   void updateStatusAndErrorCauseByAuthorityId(@Param("status") InstanceAuthorityLinkStatus status,
                                               @Param("errorCause") String errorCause,
                                               @Param("authorityId") UUID authorityId);
 
   @Modifying
-  @Query("delete from InstanceAuthorityLink i where i.authority.id in :authorityIds")
+  @Query("delete from InstanceAuthorityLink i where i.authorityId in :authorityIds")
   void deleteByAuthorityIds(@Param("authorityIds") Collection<UUID> authorityIds);
 }

@@ -4,9 +4,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +18,13 @@ import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.AuthorityStatsDtoCollection;
 import org.folio.entlinks.domain.dto.LinkAction;
-import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.utils.DateUtils;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.client.UsersClient;
 import org.folio.spring.model.ResultList;
 import org.springframework.stereotype.Component;
@@ -37,11 +40,43 @@ public class InstanceAuthorityStatServiceDelegate {
   private final UsersClient usersClient;
   private final AuthoritySourceFileRepository sourceFileRepository;
   private final ConsortiumTenantsService tenantsService;
+  private final FolioExecutionContext context;
+  private final UserTenantsService userTenantsService;
 
   public AuthorityStatsDtoCollection fetchAuthorityLinksStats(OffsetDateTime fromDate, OffsetDateTime toDate,
                                                               LinkAction action, Integer limit) {
     var authorityStatsCollection = new AuthorityStatsDtoCollection();
-    var dataStatList = dataStatService.fetchDataStats(fromDate, toDate, action, limit + 1);
+    var centralTenant = userTenantsService.getCentralTenant(context.getTenantId());
+    var isMemberConsortiumTenant = centralTenant.isPresent() && !centralTenant.get().equals(context.getTenantId());
+    List<AuthorityDataStat> dataStatList = new ArrayList<>();
+    Set<UUID> sharedAuthorityIds = new HashSet<>();
+    if (isMemberConsortiumTenant) {
+      // todo: better to receive only shared Authority IDs from Central tenant
+      var sharedDataStats = dataStatService.findActualByActionAndDate(fromDate, toDate, action, limit + 1,
+          centralTenant.get());
+      if (!sharedDataStats.isEmpty()) {
+        sharedAuthorityIds.addAll(sharedDataStats.stream()
+            .map(AuthorityDataStat::getAuthorityId)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet()));
+        // Fetch shared data stats from member tenant as in Member tenant correct total number of linked MARC-BIB
+        var sharedDataStatsFromMemberTenant = dataStatService.fetchDataStatsByIds(fromDate, toDate, action, limit + 1,
+            sharedAuthorityIds);
+        if (! sharedDataStatsFromMemberTenant.isEmpty()) {
+          dataStatList.addAll(sharedDataStatsFromMemberTenant);
+        }
+        var localDataStats = dataStatService.fetchDataStatsExcludeIds(fromDate, toDate, action, limit + 1,
+            sharedAuthorityIds);
+        if (!localDataStats.isEmpty()) {
+          dataStatList.addAll(localDataStats);
+        }
+      } else {
+        dataStatList.addAll(dataStatService.fetchDataStats(fromDate, toDate, action, limit + 1));
+      }
+    } else {
+      dataStatList.addAll(dataStatService.fetchDataStats(fromDate, toDate, action, limit + 1));
+    }
+
     log.debug("Retrieved data stat count {}", dataStatList.size());
 
     if (dataStatList.size() > limit) {
@@ -55,13 +90,13 @@ public class InstanceAuthorityStatServiceDelegate {
     var stats = dataStatList.stream()
       .map(source -> {
         var authorityDataStatDto = dataStatMapper.convertToDto(source);
-
         if (authorityDataStatDto != null) {
           fillSourceFiles(authorityDataStatDto);
           authorityDataStatDto.setMetadata(getMetadata(users, source));
-          var shared = isCentralTenant || Optional.ofNullable(source.getAuthority())
-            .map(AuthorityBase::isConsortiumShadowCopy)
-            .orElse(false);
+          var shared = isCentralTenant
+              || isMemberConsortiumTenant
+              && !sharedAuthorityIds.isEmpty()
+              && sharedAuthorityIds.contains(source.getAuthorityId());
           authorityDataStatDto.setShared(shared);
         }
         return authorityDataStatDto;

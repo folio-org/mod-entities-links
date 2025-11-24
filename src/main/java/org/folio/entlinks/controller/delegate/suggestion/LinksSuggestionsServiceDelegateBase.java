@@ -3,7 +3,6 @@ package org.folio.entlinks.controller.delegate.suggestion;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,36 +55,38 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
     var authoritySearchIds = extractIdsOfLinkableFields(marcBibsContent, rules, ignoreAutoLinkingEnabled);
     log.info("{} authority search ids was extracted", authoritySearchIds.size());
 
-    var authorities = findExistingAuthorities(authoritySearchIds);
-    log.info("{} authorities to suggest found", authorities.size());
+    var authoritiesMap = findExistingAuthorities(authoritySearchIds);
 
-    if (isNotEmpty(authorities)) {
-      var marcAuthoritiesContent = getAuthoritiesParsedContent(authorities);
+    if (!authoritiesMap.isEmpty()) {
+      var marcAuthoritiesContent = getAuthoritiesParsedContent(authoritiesMap);
       suggestionService.fillLinkDetailsWithSuggestedAuthorities(marcBibsContent, marcAuthoritiesContent, rules,
-        getSearchSubfield(), ignoreAutoLinkingEnabled);
+          getSearchSubfield(), ignoreAutoLinkingEnabled);
     } else {
       suggestionService.fillErrorDetailsWithNoSuggestions(marcBibsContent, getSearchSubfield());
     }
-
+    log.info("suggestLinksForMarcRecords: Links suggestion finished for {} bibs : {}",
+        marcBibsContent.size(), marcBibsContent);
     return contentMapper.convertToParsedContentCollection(marcBibsContent);
   }
 
   protected abstract char getSearchSubfield();
 
-  protected abstract List<Authority> findExistingAuthorities(Set<T> ids);
+  protected abstract Map<String, List<Authority>> findExistingAuthorities(Set<T> ids);
 
   protected abstract T extractId(Authority authorityData);
 
-  private List<AuthorityParsedContent> getAuthoritiesParsedContent(List<Authority> authorities) {
-    var authoritiesBySource = authorities.stream()
-        .collect(groupingBy(Authority::isConsortiumShadowCopy));
-
-    var shadowCopyAuthorities = authoritiesBySource.get(Boolean.TRUE);
-    var localCopyAuthorities = authoritiesBySource.get(Boolean.FALSE);
+  private List<AuthorityParsedContent> getAuthoritiesParsedContent(Map<String, List<Authority>> authorities) {
+    var shadowCopyAuthorities = authorities.get("shared");
+    var localCopyAuthorities = authorities.get("local");
     var marcRecordsForShadowCopyAuthorities = isEmpty(shadowCopyAuthorities) ? new StrippedParsedRecordCollection() :
         executor.executeAsCentralTenant(() -> fetchAuthorityParsedRecords(shadowCopyAuthorities));
     var marcRecordsForLocalCopyAuthorities = fetchAuthorityParsedRecords(localCopyAuthorities);
-
+    log.info("getAuthoritiesParsedContent:: fetched {} marc records for {} shadow copy authorities and {}"
+            + " marc records for {} local copy authorities",
+        marcRecordsForShadowCopyAuthorities.getRecords().size(),
+        isEmpty(shadowCopyAuthorities) ? 0 : shadowCopyAuthorities.size(),
+        marcRecordsForLocalCopyAuthorities.getRecords().size(),
+        isEmpty(localCopyAuthorities) ? 0 : localCopyAuthorities.size());
     return Stream.of(
         contentMapper.convertToAuthorityParsedContent(marcRecordsForShadowCopyAuthorities, shadowCopyAuthorities),
         contentMapper.convertToAuthorityParsedContent(marcRecordsForLocalCopyAuthorities, localCopyAuthorities)
@@ -101,9 +102,8 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
 
     var ids = authorities.stream().map(Authority::getId).collect(Collectors.toSet());
     var authorityFetchRequest = sourceStorageClient.buildBatchFetchRequestForAuthority(ids,
-      AuthorityFieldConstants.MIN_FIELD,
-      AuthorityFieldConstants.MAX_FIELD);
-
+        AuthorityFieldConstants.MIN_FIELD,
+        AuthorityFieldConstants.MAX_FIELD);
     return sourceStorageClient.fetchParsedRecordsInBatch(authorityFetchRequest);
   }
 

@@ -116,7 +116,7 @@ public class TestDataUtils {
           .linkingRule(InstanceAuthorityLinkingRule.builder()
             .bibField("100")
             .build())
-          .authority(authority)
+          .naturalId(authority.getNaturalId())
           .errorCause(error)
           .build();
         link.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
@@ -161,7 +161,7 @@ public class TestDataUtils {
       .map(link -> new BibStatsDto()
         .instanceId(link.getInstanceId())
         .bibRecordTag(link.getLinkingRule().getBibField())
-        .authorityNaturalId(link.getAuthority().getNaturalId())
+        .authorityNaturalId(link.getNaturalId())
         .updatedAt(fromTimestamp(link.getUpdatedAt()))
         .errorCause(link.getErrorCause()))
       .toList();
@@ -290,7 +290,7 @@ public class TestDataUtils {
         var parsedRecord = new StrippedParsedRecordParsedRecord(recordContent);
 
         return new StrippedParsedRecord(UUID.randomUUID(), RecordType.MARC_AUTHORITY, parsedRecord)
-          .externalIdsHolder(new ExternalIdsHolder().authorityId(link.getAuthority().getId()));
+          .externalIdsHolder(new ExternalIdsHolder().authorityId(link.getAuthorityId()));
       })
       .toList();
   }
@@ -496,8 +496,9 @@ public class TestDataUtils {
       authority.setNaturalId(naturalId);
       authority.setId(authorityId);
       return InstanceAuthorityLink.builder()
-        .instanceId(instanceId)
-        .authority(authority)
+          .instanceId(instanceId)
+          .authorityId(authorityId)
+          .naturalId(naturalId)
         .linkingRule(InstanceAuthorityLinkingRule.builder()
           .id(TAGS_TO_RULE_IDS.get(tag))
           .bibField(tag)

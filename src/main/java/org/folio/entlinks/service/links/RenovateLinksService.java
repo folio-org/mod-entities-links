@@ -90,7 +90,7 @@ public class RenovateLinksService {
 
     for (var link : links) {
       var linkingRule = link.getLinkingRule();
-      var naturalId = link.getAuthority().getNaturalId();
+      var naturalId = link.getNaturalId();
       var changedTag = linkingRule.getAuthorityField();
 
       authority.getParsedRecord().getContent().getFields().stream()

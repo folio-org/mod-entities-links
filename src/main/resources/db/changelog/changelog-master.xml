@@ -29,4 +29,5 @@
   <include file="/changes/v4.0/add-authority-source-file-index.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v4.0/update-linking-rules-subfields.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v4.1/update-authority-source-file-name.xml" relativeToChangelogFile="true"/>
+  <include file="/changes/v4.1/delete-instance-authority-link-constraint.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

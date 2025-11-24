@@ -21,8 +21,6 @@ import org.folio.entlinks.integration.SettingsService;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityArchivePropagationService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
-import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +36,6 @@ public class AuthorityArchiveServiceDelegate {
   private final AuthorityDomainEventPublisher eventPublisher;
   private final ConsortiumAuthorityArchivePropagationService propagationService;
   private final AuthorityMapper authorityMapper;
-  private final FolioExecutionContext context;
 
   public AuthorityFullDtoCollection retrieveAuthorityArchives(Integer offset, Integer limit, String cqlQuery,
                                                               Boolean idOnly) {
@@ -72,7 +69,6 @@ public class AuthorityArchiveServiceDelegate {
     authorityArchiveService.delete(archive);
     var dto = authorityMapper.toDto(archive);
     eventPublisher.publishHardDeleteEvent(dto);
-    propagationService.propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, context.getTenantId());
   }
 
   private Optional<Integer> fetchAuthoritiesRetentionDuration() {

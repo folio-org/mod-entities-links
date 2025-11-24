@@ -23,7 +23,6 @@ import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.authority.AuthorityS3Service;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.consortium.UserTenantsService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +39,6 @@ public class AuthorityServiceDelegate {
   private final AuthorityMapper mapper;
   private final FolioExecutionContext context;
   private final AuthorityDomainEventPublisher eventPublisher;
-  private final ConsortiumAuthorityPropagationService propagationService;
   private final AuthorityS3Service authorityS3Service;
   private final LocalStorageProperties localStorageProperties;
 
@@ -48,7 +46,6 @@ public class AuthorityServiceDelegate {
                                   @Qualifier("consortiumAuthorityService") AuthorityService consortiumService,
                                   AuthorityMapper mapper, FolioExecutionContext context,
                                   AuthorityDomainEventPublisher eventPublisher,
-                                  ConsortiumAuthorityPropagationService propagationService,
                                   AuthorityS3Service authorityS3Service,
                                   LocalStorageProperties localStorageProperties,
                                   UserTenantsService userTenantsService) {
@@ -58,7 +55,6 @@ public class AuthorityServiceDelegate {
     this.mapper = mapper;
     this.context = context;
     this.eventPublisher = eventPublisher;
-    this.propagationService = propagationService;
     this.authorityS3Service = authorityS3Service;
     this.localStorageProperties = localStorageProperties;
   }
@@ -131,15 +127,12 @@ public class AuthorityServiceDelegate {
 
   @NotNull
   private Consumer<Authority> createConsumer() {
-    return authority -> {
-      eventPublisher.publishCreateEvent(mapper.toDto(authority));
-    };
+    return authority -> eventPublisher.publishCreateEvent(mapper.toDto(authority));
   }
 
   @NotNull
   private BiConsumer<Authority, Authority> updateConsumer() {
-    return (newAuthority, oldAuthority) -> {
-      eventPublisher.publishUpdateEvent(mapper.toDto(oldAuthority), mapper.toDto(newAuthority));
-    };
+    return (newAuthority, oldAuthority) ->
+        eventPublisher.publishUpdateEvent(mapper.toDto(oldAuthority), mapper.toDto(newAuthority));
   }
 }

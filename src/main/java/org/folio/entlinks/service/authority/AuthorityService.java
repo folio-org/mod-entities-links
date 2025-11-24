@@ -16,6 +16,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
@@ -34,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthorityService implements AuthorityServiceI<Authority> {
 
   private final AuthorityRepository repository;
+  private final AuthorityJdbcRepository jdbcRepository;
   private final AuthoritySourceFileRepository sourceFileRepository;
 
   @Override
@@ -63,6 +65,11 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
   public Map<UUID, Authority> getAllByIds(Collection<UUID> ids) {
     return repository.findAllByIdInAndDeletedFalse(ids).stream()
       .collect(Collectors.toMap(Authority::getId, Function.identity()));
+  }
+
+  public Map<UUID, Authority> getAllByIds(Collection<UUID> ids, String tenant) {
+    return jdbcRepository.findAllByIdInAndDeletedFalse(ids, tenant).stream()
+        .collect(Collectors.toMap(Authority::getId, Function.identity()));
   }
 
   @Override

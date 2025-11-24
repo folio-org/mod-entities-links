@@ -112,9 +112,9 @@ class UpdateAuthorityChangeHandlerTest {
 
     when(instanceAuthorityChangeProperties.getNumPartitions()).thenReturn(2);
     when(linkingService.getLinksByAuthorityId(eq(authorityId), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(
-      new InstanceAuthorityLink(1L, authority, instanceId,
+      new InstanceAuthorityLink(1L, authorityId, instanceId,
         new InstanceAuthorityLinkingRule(1, "100", "100", new char[] {'a'}, null, null, true),
-        InstanceAuthorityLinkStatus.ACTUAL, null)
+        InstanceAuthorityLinkStatus.ACTUAL, null, null)
     )));
 
     var changeHolder = new AuthorityChangeHolder(new AuthorityDomainEvent(authorityId,

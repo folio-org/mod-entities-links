@@ -2,6 +2,7 @@ package org.folio.entlinks.domain.repository;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
@@ -13,12 +14,39 @@ import org.springframework.data.repository.query.Param;
 public interface AuthorityDataStatRepository extends JpaRepository<AuthorityDataStat, UUID> {
 
   @Query("""
-    select a from AuthorityDataStat a
-    where a.action = :action
-          and a.startedAt >= :startedAtStart
-          and a.startedAt <= :startedAtEnd
-          and a.authority.deleted = false""")
+      select a
+      from AuthorityDataStat a
+      join Authority auth on a.authorityId = auth.id
+      where a.action = :action
+        and a.startedAt between :startedAtStart and :startedAtEnd
+        and auth.deleted = false""")
   List<AuthorityDataStat> findActualByActionAndDate(@Param("action") AuthorityDataStatAction action,
                                                     @Param("startedAtStart") Timestamp startedAtStart,
                                                     @Param("startedAtEnd") Timestamp startedAtEnd, Pageable pageable);
+
+  @Query("""
+      select a
+      from AuthorityDataStat a
+      join Authority auth on a.authorityId = auth.id
+      where a.action = :action
+        and a.startedAt between :startedAtStart and :startedAtEnd
+       and a.authorityId not in (:ids)
+       and auth.deleted = false""")
+  List<AuthorityDataStat> findActualNotInIdsByActionAndDate(@Param("action") AuthorityDataStatAction action,
+                                                            @Param("startedAtStart") Timestamp startedAtStart,
+                                                            @Param("startedAtEnd") Timestamp startedAtEnd,
+                                                            @Param("ids") Set<UUID> ids,
+                                                            Pageable pageable);
+
+  @Query("""
+      select a
+      from AuthorityDataStat a
+      where a.action = :action
+        and a.startedAt between :startedAtStart and :startedAtEnd
+        and a.authorityId in (:ids)""")
+  List<AuthorityDataStat> findActualInIdsByActionAndDate(@Param("action") AuthorityDataStatAction action,
+                                                         @Param("startedAtStart") Timestamp startedAtStart,
+                                                         @Param("startedAtEnd") Timestamp startedAtEnd,
+                                                         @Param("ids") Set<UUID> ids,
+                                                         Pageable pageable);
 }

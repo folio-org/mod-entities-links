@@ -15,11 +15,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.entity.Authority;
@@ -27,6 +27,8 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.service.authority.AuthorityService;
+import org.folio.entlinks.service.consortium.UserTenantsService;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.support.TestDataUtils.Link;
 import org.junit.jupiter.api.Test;
@@ -51,6 +53,12 @@ class InstanceAuthorityLinkingServiceTest {
   @Mock
   private AuthorityService authorityService;
 
+  @Mock
+  private FolioExecutionContext folioExecutionContext;
+
+  @Mock
+  private UserTenantsService userTenantsService;
+
   @InjectMocks
   private InstanceAuthorityLinkingService service;
 
@@ -63,8 +71,13 @@ class InstanceAuthorityLinkingServiceTest {
       Link.of(2, 3),
       Link.of(3, 2)
     );
-
-    when(instanceLinkRepository.findByInstanceId(any(UUID.class))).thenReturn(existedLinks);
+    var naturalIds = existedLinks.stream().map(InstanceAuthorityLink::getNaturalId).toList();
+    List<Object[]> rows = new ArrayList<>();
+    for (int i = 0; i < existedLinks.size(); i++) {
+      Object[] row = new Object[]{existedLinks.get(i), naturalIds.get(i)};
+      rows.add(row);
+    }
+    when(instanceLinkRepository.findByInstanceId(any(UUID.class))).thenReturn(rows);
 
     var result = service.getLinksByInstanceId(instanceId);
 
@@ -77,9 +90,9 @@ class InstanceAuthorityLinkingServiceTest {
   @Test
   void getLinksByInstanceId_positive_nothingFound() {
     var instanceId = randomUUID();
-    var existedLinks = Collections.<InstanceAuthorityLink>emptyList();
-
-    when(instanceLinkRepository.findByInstanceId(any(UUID.class))).thenReturn(existedLinks);
+    Object[] row = new Object[]{null, null};
+    List<Object[]> rows = List.<Object[]>of(row);
+    when(instanceLinkRepository.findByInstanceId(any(UUID.class))).thenReturn(rows);
 
     var result = service.getLinksByInstanceId(instanceId);
 
@@ -127,10 +140,11 @@ class InstanceAuthorityLinkingServiceTest {
   @Test
   void updateLinks_positive_saveIncomingLinks_whenAnyExist() {
     final var instanceId = randomUUID();
-    final var existedLinks = Collections.<InstanceAuthorityLink>emptyList();
     final var incomingLinks = links(instanceId, Link.of(0, 0), Link.of(1, 1));
 
-    when(instanceLinkRepository.findByInstanceId(any(UUID.class))).thenReturn(existedLinks);
+    Object[] row = new Object[]{null, null};
+    List<Object[]> rows = List.<Object[]>of(row);
+    when(instanceLinkRepository.findByInstanceId(any(UUID.class))).thenReturn(rows);
     doNothing().when(instanceLinkRepository).deleteAllInBatch(any());
     when(instanceLinkRepository.saveAll(any())).thenReturn(emptyList());
     mockAuthorities(incomingLinks);
@@ -154,8 +168,13 @@ class InstanceAuthorityLinkingServiceTest {
     final var instanceId = randomUUID();
     final var existedLinks = links(instanceId, Link.of(0, 0), Link.of(1, 1));
     final var incomingLinks = Collections.<InstanceAuthorityLink>emptyList();
-
-    when(instanceLinkRepository.findByInstanceId(any(UUID.class))).thenReturn(existedLinks);
+    var naturalIds = existedLinks.stream().map(InstanceAuthorityLink::getNaturalId).toList();
+    List<Object[]> rows = new ArrayList<>();
+    for (int i = 0; i < existedLinks.size(); i++) {
+      Object[] row = new Object[]{existedLinks.get(i), naturalIds.get(i)};
+      rows.add(row);
+    }
+    when(instanceLinkRepository.findByInstanceId(any(UUID.class))).thenReturn(rows);
     doNothing().when(instanceLinkRepository).deleteAllInBatch(any());
     when(instanceLinkRepository.saveAll(any())).thenReturn(emptyList());
 
@@ -189,7 +208,13 @@ class InstanceAuthorityLinkingServiceTest {
       Link.of(3, 2)
     );
 
-    when(instanceLinkRepository.findByInstanceId(instanceId)).thenReturn(existedLinks);
+    var naturalIds = existedLinks.stream().map(InstanceAuthorityLink::getNaturalId).toList();
+    List<Object[]> rows = new ArrayList<>();
+    for (int i = 0; i < existedLinks.size(); i++) {
+      Object[] row = new Object[]{existedLinks.get(i), naturalIds.get(i)};
+      rows.add(row);
+    }
+    when(instanceLinkRepository.findByInstanceId(instanceId)).thenReturn(rows);
     doNothing().when(instanceLinkRepository).deleteAllInBatch(any());
     when(instanceLinkRepository.saveAll(any())).thenReturn(emptyList());
     mockAuthorities(incomingLinks);
@@ -223,8 +248,13 @@ class InstanceAuthorityLinkingServiceTest {
       Link.of(2, 2),
       Link.of(3, 3)
     );
-
-    when(instanceLinkRepository.findByInstanceId(instanceId)).thenReturn(existedLinks);
+    var naturalIds = existedLinks.stream().map(InstanceAuthorityLink::getNaturalId).toList();
+    List<Object[]> rows = new ArrayList<>();
+    for (int i = 0; i < existedLinks.size(); i++) {
+      Object[] row = new Object[]{existedLinks.get(i), naturalIds.get(i)};
+      rows.add(row);
+    }
+    when(instanceLinkRepository.findByInstanceId(instanceId)).thenReturn(rows);
     doNothing().when(instanceLinkRepository).deleteAllInBatch(any());
     when(instanceLinkRepository.saveAll(any())).thenReturn(emptyList());
     mockAuthorities(incomingLinks);
@@ -259,7 +289,13 @@ class InstanceAuthorityLinkingServiceTest {
       Link.of(3, 2)
     );
 
-    when(instanceLinkRepository.findByInstanceId(instanceId)).thenReturn(existedLinks);
+    var naturalIds = existedLinks.stream().map(InstanceAuthorityLink::getNaturalId).toList();
+    List<Object[]> rows = new ArrayList<>();
+    for (int i = 0; i < existedLinks.size(); i++) {
+      Object[] row = new Object[]{existedLinks.get(i), naturalIds.get(i)};
+      rows.add(row);
+    }
+    when(instanceLinkRepository.findByInstanceId(instanceId)).thenReturn(rows);
     doNothing().when(instanceLinkRepository).deleteAllInBatch(any());
     when(instanceLinkRepository.saveAll(any())).thenReturn(emptyList());
     mockAuthorities(incomingLinks);
@@ -362,9 +398,10 @@ class InstanceAuthorityLinkingServiceTest {
 
   private void mockAuthorities(List<InstanceAuthorityLink> links) {
     var authoritiesById = links.stream()
-        .map(InstanceAuthorityLink::getAuthority)
-        .collect(Collectors.toMap(Authority::getId, Function.identity()));
-
+        .map(InstanceAuthorityLink::getAuthorityId)
+        .collect(Collectors.toMap(
+            id -> id, id -> Authority.builder().id(id).build()
+        ));
     when(authorityService.getAllByIds(anyCollection())).thenReturn(authoritiesById);
   }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.service.authority.NaturalIdsData;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +27,8 @@ public interface AuthorityRepository extends JpaRepository<Authority, UUID>, Aut
   List<Authority> findAllByIdInAndDeletedFalse(Collection<UUID> ids);
 
   boolean existsAuthorityByAuthoritySourceFileId(UUID sourceFileId);
+
+  @Query("select a.id as id, a.naturalId as naturalId "
+      + "from Authority a where a.deleted = false and a.id in :ids")
+  List<NaturalIdsData> findNaturalIdsByIdInAndDeletedFalse(Collection<UUID> ids);
 }

@@ -13,8 +13,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface InstanceAuthorityLinkMapper {
 
-  @Mapping(target = "authorityId", source = "authority.id")
-  @Mapping(target = "authorityNaturalId", source = "authority.naturalId")
+  @Mapping(target = "authorityId", source = "authorityId")
+  @Mapping(target = "authorityNaturalId", source = "naturalId")
   @Mapping(target = "linkingRuleId", source = "linkingRule.id")
   InstanceLinkDto convertToDto(InstanceAuthorityLink source);
 
@@ -25,8 +25,8 @@ public interface InstanceAuthorityLinkMapper {
       .totalRecords(source.size());
   }
 
-  @Mapping(target = "authority.id", source = "authorityId")
-  @Mapping(target = "authority.naturalId", source = "authorityNaturalId")
+  @Mapping(target = "authorityId", source = "authorityId")
+  @Mapping(target = "naturalId", source = "authorityNaturalId")
   @Mapping(target = "linkingRule.id", source = "linkingRuleId")
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "errorCause", ignore = true)

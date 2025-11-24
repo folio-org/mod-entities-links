@@ -130,6 +130,7 @@ public class AuthorityChangeHolder {
     authority.setDeleted(event.getType().equals(DomainEventType.DELETE));
     AuthorityDataStat authorityDataStat = AuthorityDataStat.builder()
         .authority(authority)
+        .authorityId(getAuthorityId())
         .authorityNaturalIdOld(getOldNaturalId())
         .authorityNaturalIdNew(getNewNaturalId())
         .authoritySourceFileOld(getOldSourceFileId())

@@ -3,6 +3,7 @@ package org.folio.entlinks.service.authority;
 import java.util.Optional;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.ConsortiumIllegalActionException;
@@ -14,8 +15,9 @@ public class ConsortiumAuthorityService extends AuthorityService {
   private final AuthorityRepository repository;
 
   public ConsortiumAuthorityService(AuthorityRepository repository,
+                                    AuthorityJdbcRepository jdbcRepository,
                                     AuthoritySourceFileRepository sourceFileRepository) {
-    super(repository, sourceFileRepository);
+    super(repository, jdbcRepository, sourceFileRepository);
     this.repository = repository;
   }
 

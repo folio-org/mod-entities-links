@@ -36,9 +36,10 @@ import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.LinksCountDto;
 import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagationService;
 import org.folio.entlinks.service.consortium.propagation.model.LinksPropagationData;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
@@ -65,6 +66,8 @@ class LinkingServiceDelegateTest {
   private @Mock DataStatsMapper statsMapper;
   private @Mock ConsortiumLinksPropagationService propagationService;
   private @Mock FolioExecutionContext context;
+  private @Mock UserTenantsService userTenantsService;
+  private @Mock AuthorityRepository authorityRepository;
 
   private @InjectMocks LinkingServiceDelegate delegate;
 
@@ -196,8 +199,6 @@ class LinkingServiceDelegateTest {
     delegate.updateLinks(INSTANCE_ID, dtoCollection);
 
     verify(linkingService).updateLinks(INSTANCE_ID, links);
-    verify(propagationService).propagate(propagationData, ConsortiumAuthorityPropagationService.PropagationType.UPDATE,
-        TENANT_ID);
   }
 
   @Test
@@ -211,8 +212,6 @@ class LinkingServiceDelegateTest {
     delegate.updateLinks(INSTANCE_ID, dtoCollection);
 
     verify(linkingService).updateLinks(INSTANCE_ID, links);
-    verify(propagationService).propagate(propagationData, ConsortiumAuthorityPropagationService.PropagationType.UPDATE,
-        TENANT_ID);
   }
 
   @Test

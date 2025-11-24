@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
-import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.spring.testing.type.UnitTest;
@@ -30,8 +29,8 @@ class InstanceAuthorityLinkMapperTest {
 
     InstanceLinkDto dto = mapper.convertToDto(source);
 
-    assertThat(dto.getAuthorityId()).isEqualTo(source.getAuthority().getId());
-    assertThat(dto.getAuthorityNaturalId()).isEqualTo(source.getAuthority().getNaturalId());
+    assertThat(dto.getAuthorityId()).isEqualTo(source.getAuthorityId());
+    assertThat(dto.getAuthorityNaturalId()).isEqualTo(source.getNaturalId());
     assertThat(dto.getLinkingRuleId()).isEqualTo(source.getLinkingRule().getId());
     assertThat(dto.getId()).isEqualTo(source.getId().intValue());
     assertThat(dto.getInstanceId()).isEqualTo(source.getInstanceId());
@@ -45,8 +44,8 @@ class InstanceAuthorityLinkMapperTest {
 
     InstanceAuthorityLink link = mapper.convertDto(source);
 
-    assertThat(link.getAuthority().getId()).isEqualTo(source.getAuthorityId());
-    assertThat(link.getAuthority().getNaturalId()).isEqualTo(source.getAuthorityNaturalId());
+    assertThat(link.getAuthorityId()).isEqualTo(source.getAuthorityId());
+    assertThat(link.getNaturalId()).isEqualTo(source.getAuthorityNaturalId());
     assertThat(link.getLinkingRule().getId()).isEqualTo(source.getLinkingRuleId());
     assertThat(link.getId().intValue()).isEqualTo(source.getId());
     assertThat(link.getInstanceId()).isEqualTo(source.getInstanceId());
@@ -63,8 +62,8 @@ class InstanceAuthorityLinkMapperTest {
 
     var expected = sourceList.getFirst();
     var actual = linkList.getFirst();
-    assertThat(actual.getAuthority().getId()).isEqualTo(expected.getAuthorityId());
-    assertThat(actual.getAuthority().getNaturalId()).isEqualTo(expected.getAuthorityNaturalId());
+    assertThat(actual.getAuthorityId()).isEqualTo(expected.getAuthorityId());
+    assertThat(actual.getNaturalId()).isEqualTo(expected.getAuthorityNaturalId());
     assertThat(actual.getLinkingRule().getId()).isEqualTo(expected.getLinkingRuleId());
     assertThat(actual.getId().intValue()).isEqualTo(expected.getId());
     assertThat(actual.getInstanceId()).isEqualTo(expected.getInstanceId());
@@ -99,7 +98,8 @@ class InstanceAuthorityLinkMapperTest {
   @NotNull
   private static InstanceAuthorityLink createInstanceAuthorityLink() {
     InstanceAuthorityLink source = new InstanceAuthorityLink();
-    source.setAuthority(new Authority());
+    source.setAuthorityId(UUID.randomUUID());
+    source.setNaturalId(TEST_PROPERTY_VALUE);
     source.setLinkingRule(new InstanceAuthorityLinkingRule());
     source.setId(TEST_LONG_ID);
     source.setInstanceId(TEST_ID);

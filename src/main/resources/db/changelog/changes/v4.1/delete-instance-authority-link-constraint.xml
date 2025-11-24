@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="MODELINKS-358@@drop-instance_authority_link-authority_id-fk" author="Svitlana_Kovalova">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="instance_authority_link"/>
+        <foreignKeyConstraintExists foreignKeyName="fk_instance_authority_link_authority_id"
+                                    schemaName="${database.defaultSchemaName}"
+                                    foreignKeyTableName="instance_authority_link"/>
+      </and>
+    </preConditions>
+
+    <comment>Drop FK fk_instance_authority_link_authority_id on instance_authority_link.authority_id</comment>
+
+    <dropForeignKeyConstraint baseTableName="instance_authority_link"
+                              constraintName="fk_instance_authority_link_authority_id"/>
+
+    <rollback>
+      <addForeignKeyConstraint baseTableName="instance_authority_link"
+                               baseColumnNames="authority_id"
+                               referencedTableName="authority"
+                               referencedColumnNames="id"
+                               constraintName="fk_instance_authority_link_authority_id"
+                               deleteCascade="true"
+                               onDelete="CASCADE"/>
+    </rollback>
+  </changeSet>
+
+</databaseChangeLog>

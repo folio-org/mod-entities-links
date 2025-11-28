@@ -6,6 +6,7 @@ import static org.folio.entlinks.utils.AuthorityChangeUtils.getAuthorityChanges;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -147,11 +148,14 @@ public class InstanceAuthorityLinkUpdateService {
     if (consortiumTenants.isEmpty()) {
       return;
     }
+    var userId = Optional.ofNullable(folioExecutionContext.getUserId())
+      .map(UUID::toString)
+      .orElse(null);
 
     log.debug("Processing authority changes for shadow copies of authorities: [{}]", authorityIds);
     consortiumTenants.forEach(memberTenant -> {
       var changeHolderCopies = changeHolders.stream().map(AuthorityChangeHolder::copy).toList();
-      executionService.executeSystemUserScoped(memberTenant, () -> {
+      executionService.executeSystemUserScoped(memberTenant, userId, () -> {
         var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(authorityIds);
         changeHolderCopies.forEach(changeHolder ->
             changeHolder.setNumberOfLinks(linksNumberByAuthorityId.getOrDefault(changeHolder.getAuthorityId(), 0)));

@@ -147,11 +147,12 @@ public class InstanceAuthorityLinkUpdateService {
     if (consortiumTenants.isEmpty()) {
       return;
     }
+    var userId = folioExecutionContext.getUserId();
 
     log.debug("Processing authority changes for shadow copies of authorities: [{}]", authorityIds);
     consortiumTenants.forEach(memberTenant -> {
       var changeHolderCopies = changeHolders.stream().map(AuthorityChangeHolder::copy).toList();
-      executionService.executeSystemUserScoped(memberTenant, () -> {
+      executionService.executeSystemUserScoped(memberTenant, userId.toString(), () -> {
         var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(authorityIds);
         changeHolderCopies.forEach(changeHolder ->
             changeHolder.setNumberOfLinks(linksNumberByAuthorityId.getOrDefault(changeHolder.getAuthorityId(), 0)));

@@ -4,6 +4,7 @@ import static java.util.Collections.singletonList;
 import static org.folio.support.MockingTestUtils.mockBatchFailedHandling;
 import static org.folio.support.MockingTestUtils.mockBatchSuccessHandling;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -52,7 +53,7 @@ class AuthorityEventListenerTest {
 
   @BeforeEach
   void setUp() {
-    when(executionService.executeSystemUserScoped(any(), any(), any())).thenAnswer(invocation -> {
+    when(executionService.executeSystemUserScoped(any(), anyMap(), any())).thenAnswer(invocation -> {
       var argument = invocation.getArgument(2, Callable.class);
       return argument.call();
     });

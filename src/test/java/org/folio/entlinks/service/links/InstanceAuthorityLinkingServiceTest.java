@@ -25,6 +25,8 @@ import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
+import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
+import org.folio.entlinks.domain.repository.InstanceLinkJdbcRepository;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.consortium.UserTenantsService;
@@ -58,6 +60,12 @@ class InstanceAuthorityLinkingServiceTest {
 
   @Mock
   private UserTenantsService userTenantsService;
+
+  @Mock
+  private AuthorityJdbcRepository authorityJdbcRepository;
+
+  @Mock
+  private InstanceLinkJdbcRepository instanceLinkJdbcRepository;
 
   @InjectMocks
   private InstanceAuthorityLinkingService service;

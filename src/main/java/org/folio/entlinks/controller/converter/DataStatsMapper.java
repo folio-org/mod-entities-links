@@ -16,7 +16,7 @@ import org.mapstruct.Mapping;
 public interface DataStatsMapper {
 
   @Mapping(target = "metadata", ignore = true)
-  @Mapping(target = "authorityId", source = "authorityId")
+  @Mapping(target = "authorityId", source = "authority.id")
   @Mapping(target = "naturalIdOld", source = "authorityNaturalIdOld")
   @Mapping(target = "naturalIdNew", source = "authorityNaturalIdNew")
   @Mapping(target = "sourceFileOld", source = "authoritySourceFileOld")

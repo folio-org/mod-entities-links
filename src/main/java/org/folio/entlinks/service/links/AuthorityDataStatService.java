@@ -8,7 +8,6 @@ import static org.folio.entlinks.utils.ServiceUtils.initId;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -20,7 +19,6 @@ import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
-import org.folio.entlinks.domain.repository.AuthorityDataStatJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityDataStatRepository;
 import org.folio.entlinks.utils.DateUtils;
 import org.springframework.data.domain.PageRequest;
@@ -38,8 +36,6 @@ public class AuthorityDataStatService {
 
   private final InstanceAuthorityLinkingService linkingService;
 
-  private final AuthorityDataStatJdbcRepository dataStatJdbcRepository;
-
   public List<AuthorityDataStat> createInBatch(List<AuthorityDataStat> stats) {
     for (AuthorityDataStat stat : stats) {
       initId(stat);
@@ -54,27 +50,6 @@ public class AuthorityDataStatService {
     Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("startedAt")));
     return statRepository.findActualByActionAndDate(AuthorityDataStatAction.valueOf(action.getValue()),
       DateUtils.toTimestamp(fromDate), DateUtils.toTimestamp(toDate), pageable);
-  }
-
-  public List<AuthorityDataStat> fetchDataStatsExcludeIds(OffsetDateTime fromDate, OffsetDateTime toDate,
-                                                LinkAction action, int limit, Set<UUID> authorityIds) {
-    Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("startedAt")));
-    return statRepository.findActualNotInIdsByActionAndDate(AuthorityDataStatAction.valueOf(action.getValue()),
-        DateUtils.toTimestamp(fromDate), DateUtils.toTimestamp(toDate), authorityIds, pageable);
-  }
-
-  public List<AuthorityDataStat> fetchDataStatsByIds(OffsetDateTime fromDate, OffsetDateTime toDate,
-                                                     LinkAction action, int limit, Set<UUID> authorityIds) {
-    Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("startedAt")));
-    return statRepository.findActualInIdsByActionAndDate(AuthorityDataStatAction.valueOf(action.getValue()),
-        DateUtils.toTimestamp(fromDate), DateUtils.toTimestamp(toDate), authorityIds, pageable);
-  }
-
-  public List<AuthorityDataStat> findActualByActionAndDate(OffsetDateTime fromDate, OffsetDateTime toDate,
-                                                           LinkAction action, int limit, String tenant) {
-    Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("startedAt")));
-    return dataStatJdbcRepository.findActualByActionAndDate(AuthorityDataStatAction.valueOf(action.getValue()),
-        DateUtils.toTimestamp(fromDate), DateUtils.toTimestamp(toDate), pageable, tenant);
   }
 
   @Transactional
@@ -115,7 +90,7 @@ public class AuthorityDataStatService {
 
         linkingService.saveAll(report.getInstanceId(), links);
       } else if (dataStat.isPresent()) {
-        var authorityId = dataStat.get().getAuthorityId();
+        var authorityId = dataStat.get().getAuthority().getId();
         linkingService.updateStatus(authorityId, status, report.getFailCause());
       }
     });

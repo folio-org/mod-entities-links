@@ -1,13 +1,15 @@
 package org.folio.entlinks.domain.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-import jakarta.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.UUID;
@@ -38,9 +40,9 @@ public class AuthorityDataStat extends AuditableEntity implements Identifiable<U
   private UUID id;
 
   @ToString.Exclude
-  @NotNull
-  @Column(name = "authority_id", nullable = false)
-  private UUID authorityId;
+  @ManyToOne
+  @JoinColumn(name = "authority_id", foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+  private Authority authority;
 
   @Enumerated(EnumType.STRING)
   @JdbcTypeCode(SqlTypes.NAMED_ENUM)
@@ -97,11 +99,6 @@ public class AuthorityDataStat extends AuditableEntity implements Identifiable<U
 
   @Column(name = "completed_at")
   private Timestamp completedAt;
-
-  // Non-persistent Authority object for temporary usage
-  @ToString.Exclude
-  @Transient
-  private Authority authority;
 
   @Override
   public int hashCode() {

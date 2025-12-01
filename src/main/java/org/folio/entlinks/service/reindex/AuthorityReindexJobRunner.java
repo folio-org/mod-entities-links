@@ -12,12 +12,20 @@ import static org.folio.entlinks.domain.entity.AuthorityBase.SOURCE_COLUMN;
 import static org.folio.entlinks.domain.entity.AuthorityBase.SOURCE_FILE_COLUMN;
 import static org.folio.entlinks.domain.entity.AuthorityBase.SUBJECT_HEADING_CODE_COLUMN;
 import static org.folio.entlinks.domain.entity.AuthorityBase.VERSION_COLUMN;
+import static org.folio.entlinks.domain.entity.MetadataEntity.CREATED_BY_USER_COLUMN;
+import static org.folio.entlinks.domain.entity.MetadataEntity.CREATED_DATE_COLUMN;
+import static org.folio.entlinks.domain.entity.MetadataEntity.UPDATED_BY_USER_COLUMN;
+import static org.folio.entlinks.domain.entity.MetadataEntity.UPDATED_DATE_COLUMN;
+import static org.folio.entlinks.utils.ObjectUtils.transformIfNotNull;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +37,6 @@ import org.folio.entlinks.domain.entity.AuthorityIdentifier;
 import org.folio.entlinks.domain.entity.AuthorityNote;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.HeadingRef;
-import org.folio.entlinks.domain.entity.MetadataEntity;
 import org.folio.entlinks.domain.entity.ReindexJob;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.spring.FolioExecutionContext;
@@ -45,9 +52,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
+  private static final TypeReference<HeadingRef[]> HEADING_TYPE_REF = new TypeReference<>() { };
+  private static final TypeReference<AuthorityIdentifier[]> IDENTIFIER_TYPE_REF = new TypeReference<>() { };
+  private static final TypeReference<AuthorityNote[]> NOTE_TYPE_REF = new TypeReference<>() { };
   private static final String COUNT_QUERY_TEMPLATE = "SELECT COUNT(*) FROM %s_mod_entities_links.authority";
   private static final String SELECT_QUERY_TEMPLATE =
-      "SELECT * FROM %s_mod_entities_links.authority WHERE deleted = false";
+    "SELECT * FROM %s_mod_entities_links.authority WHERE deleted = false";
 
   private final JdbcTemplate jdbcTemplate;
   private final FolioExecutionContext folioExecutionContext;
@@ -72,13 +82,9 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
     log.info("reindex::count={}", totalRecords);
     ReindexJobProgressTracker progressTracker = new ReindexJobProgressTracker(totalRecords == null ? 0 : totalRecords);
 
-    TypeReference<HeadingRef[]> headingTypeRef = new TypeReference<>() { };
-    TypeReference<AuthorityIdentifier[]> identifierTypeRef = new TypeReference<>() { };
-    TypeReference<AuthorityNote[]> noteTypeRef = new TypeReference<>() { };
     jdbcTemplate.setFetchSize(50);
     var query = selectQuery(context.getTenantId());
-    try (var authorityStream = jdbcTemplate.queryForStream(query,
-        (rs, rowNum) -> toAuthority(rs, headingTypeRef, identifierTypeRef, noteTypeRef))) {
+    try (var authorityStream = jdbcTemplate.queryForStream(query, (rs, rowNum) -> toAuthority(rs))) {
       authorityStream
         .forEach(authority -> {
           eventPublisher.publishReindexEvent(authority, context);
@@ -94,68 +100,63 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
     reindexService.logJobSuccess(context.getJobId());
   }
 
-  private AuthorityDto toAuthority(ResultSet rs,
-                                   TypeReference<HeadingRef[]> headingRefType,
-                                   TypeReference<AuthorityIdentifier[]> identifierTypeRef,
-                                   TypeReference<AuthorityNote[]> noteTypeRef) {
+  private AuthorityDto toAuthority(ResultSet rs) {
     var authority = new Authority();
     try {
-      var id = rs.getString(ID_COLUMN);
-      authority.setId(UUID.fromString(id));
-      var naturalId = rs.getString(NATURAL_ID_COLUMN);
-      authority.setNaturalId(naturalId);
+      authority.setId(UUID.fromString(rs.getString(ID_COLUMN)));
+      authority.setNaturalId(rs.getString(NATURAL_ID_COLUMN));
+      authority.setSource(rs.getString(SOURCE_COLUMN));
+      authority.setVersion(rs.getInt(VERSION_COLUMN));
+
       Optional.ofNullable(rs.getString(SOURCE_FILE_COLUMN))
-          .ifPresent(sourceFileId -> {
-            var sourceFile = new AuthoritySourceFile();
-            sourceFile.setId(UUID.fromString(sourceFileId));
-            authority.setAuthoritySourceFile(sourceFile);
-          });
-      var source = rs.getString(SOURCE_COLUMN);
-      authority.setSource(source);
-      var heading = rs.getString(HEADING_COLUMN);
-      authority.setHeading(heading);
-      var headingType = rs.getString(HEADING_TYPE_COLUMN);
-      authority.setHeadingType(headingType);
-      var version = rs.getInt(VERSION_COLUMN);
-      authority.setVersion(version);
+        .ifPresent(sourceFileId -> {
+          var sourceFile = new AuthoritySourceFile();
+          sourceFile.setId(UUID.fromString(sourceFileId));
+          authority.setAuthoritySourceFile(sourceFile);
+        });
+
+      authority.setHeading(rs.getString(HEADING_COLUMN));
+      authority.setHeadingType(rs.getString(HEADING_TYPE_COLUMN));
+
       var subjectHeadingCode = rs.getString(SUBJECT_HEADING_CODE_COLUMN);
       authority.setSubjectHeadingCode(subjectHeadingCode != null ? subjectHeadingCode.charAt(0) : null);
 
-      var array = rs.getArray(SFT_HEADINGS_COLUMN);
-      if (array != null) {
-        var sftHeadings = objectMapper.readValue(array.toString(), headingRefType);
-        authority.setSftHeadings(Arrays.asList(sftHeadings));
-      }
-      array = rs.getArray(SAFT_HEADINGS_COLUMN);
-      if (array != null) {
-        var saftHeadings = objectMapper.readValue(array.toString(), headingRefType);
-        authority.setSaftHeadings(Arrays.asList(saftHeadings));
-      }
-      array = rs.getArray(IDENTIFIERS_COLUMN);
-      if (array != null) {
-        var identifiers = objectMapper.readValue(array.toString(), identifierTypeRef);
-        authority.setIdentifiers(Arrays.asList(identifiers));
-      }
-      array = rs.getArray(NOTES_COLUMN);
-      if (array != null) {
-        var notes = objectMapper.readValue(array.toString(), noteTypeRef);
-        authority.setNotes(Arrays.asList(notes));
-      }
+      // read JSON arrays from SQL array columns
+      authority.setSftHeadings(readJsonArray(rs, SFT_HEADINGS_COLUMN, HEADING_TYPE_REF));
+      authority.setSaftHeadings(readJsonArray(rs, SAFT_HEADINGS_COLUMN, HEADING_TYPE_REF));
+      authority.setIdentifiers(readJsonArray(rs, IDENTIFIERS_COLUMN, IDENTIFIER_TYPE_REF));
+      authority.setNotes(readJsonArray(rs, NOTES_COLUMN, NOTE_TYPE_REF));
 
-      var createdDate = rs.getTimestamp(MetadataEntity.CREATED_DATE_COLUMN);
-      authority.setCreatedDate(createdDate);
-      var createdBy = rs.getString(MetadataEntity.CREATED_BY_USER_COLUMN);
-      authority.setCreatedByUserId(createdBy != null ? UUID.fromString(createdBy) : null);
-      var updatedDate = rs.getTimestamp(MetadataEntity.UPDATED_DATE_COLUMN);
-      authority.setUpdatedDate(updatedDate);
-      var updatedBy = rs.getString(MetadataEntity.UPDATED_BY_USER_COLUMN);
-      authority.setUpdatedByUserId(updatedBy != null ? UUID.fromString(updatedBy) : null);
+      // metadata
+      populateMetadata(authority, rs);
     } catch (Exception e) {
       log.warn(e);
       throw new IllegalStateException(e);
     }
 
     return mapper.toDto(authority);
+  }
+
+  @SuppressWarnings("java:S1168")
+  private <T> List<T> readJsonArray(ResultSet rs, String column, TypeReference<T[]> typeRef)
+    throws SQLException, JsonProcessingException {
+    var array = rs.getArray(column);
+    if (array == null) {
+      return null;
+    }
+    T[] values = objectMapper.readValue(array.toString(), typeRef);
+    return Arrays.asList(values);
+  }
+
+  private void populateMetadata(Authority authority, ResultSet rs) throws SQLException {
+    var createdDate = rs.getTimestamp(CREATED_DATE_COLUMN);
+    authority.setCreatedDate(createdDate);
+    var createdBy = rs.getString(CREATED_BY_USER_COLUMN);
+    authority.setCreatedByUserId(transformIfNotNull(createdBy, UUID::fromString));
+    var updatedDate = rs.getTimestamp(UPDATED_DATE_COLUMN);
+    authority.setUpdatedDate(updatedDate);
+    var updatedBy = rs.getString(UPDATED_BY_USER_COLUMN);
+    authority.setUpdatedByUserId(transformIfNotNull(updatedBy, UUID::fromString));
   }
 
   private String countQuery(String tenant) {

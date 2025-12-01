@@ -1,5 +1,6 @@
 package org.folio.entlinks.controller.converter;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 import static org.folio.entlinks.domain.entity.AuthorityConstants.CHRON_SUBDIVISION_HEADING;
@@ -43,7 +44,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -98,24 +98,23 @@ class AuthorityUtilityMapperTest {
   @MethodSource("headingTypeAndValueProvider")
   void testExtractAuthoritySftHeadingsWithNonNullValues(String propertyType, String propertyValue) {
     switch (propertyType) {
-      case PERSONAL_NAME_HEADING -> source.setSftPersonalName(Collections.singletonList(propertyValue));
-      case PERSONAL_NAME_TITLE_HEADING -> source.setSftPersonalNameTitle(Collections.singletonList(propertyValue));
-      case CORPORATE_NAME_HEADING -> source.setSftCorporateName(Collections.singletonList(propertyValue));
-      case CORPORATE_NAME_TITLE_HEADING -> source.setSftCorporateNameTitle(Collections.singletonList(propertyValue));
-      case MEETING_NAME_HEADING -> source.setSftMeetingName(Collections.singletonList(propertyValue));
-      case MEETING_NAME_TITLE_HEADING -> source.setSftMeetingNameTitle(Collections.singletonList(propertyValue));
-      case UNIFORM_TITLE_HEADING -> source.setSftUniformTitle(Collections.singletonList(propertyValue));
-      case NAMED_EVENT_HEADING -> source.setSftNamedEvent(Collections.singletonList(propertyValue));
-      case TOPICAL_TERM_HEADING -> source.setSftTopicalTerm(Collections.singletonList(propertyValue));
-      case GEOGRAPHIC_NAME_HEADING -> source.setSftGeographicName(Collections.singletonList(propertyValue));
-      case GENRE_TERM_HEADING -> source.setSftGenreTerm(Collections.singletonList(propertyValue));
-      case CHRON_TERM_HEADING -> source.setSftChronTerm(Collections.singletonList(propertyValue));
-      case MEDIUM_PERF_TERM_HEADING -> source.setSftMediumPerfTerm(Collections.singletonList(propertyValue));
-      case GENERAL_SUBDIVISION_HEADING -> source.setSftGeneralSubdivision(Collections.singletonList(propertyValue));
-      case GEOGRAPHIC_SUBDIVISION_HEADING ->
-        source.setSftGeographicSubdivision(Collections.singletonList(propertyValue));
-      case CHRON_SUBDIVISION_HEADING -> source.setSftChronSubdivision(Collections.singletonList(propertyValue));
-      case FORM_SUBDIVISION_HEADING -> source.setSftFormSubdivision(Collections.singletonList(propertyValue));
+      case PERSONAL_NAME_HEADING -> source.setSftPersonalName(singletonList(propertyValue));
+      case PERSONAL_NAME_TITLE_HEADING -> source.setSftPersonalNameTitle(singletonList(propertyValue));
+      case CORPORATE_NAME_HEADING -> source.setSftCorporateName(singletonList(propertyValue));
+      case CORPORATE_NAME_TITLE_HEADING -> source.setSftCorporateNameTitle(singletonList(propertyValue));
+      case MEETING_NAME_HEADING -> source.setSftMeetingName(singletonList(propertyValue));
+      case MEETING_NAME_TITLE_HEADING -> source.setSftMeetingNameTitle(singletonList(propertyValue));
+      case UNIFORM_TITLE_HEADING -> source.setSftUniformTitle(singletonList(propertyValue));
+      case NAMED_EVENT_HEADING -> source.setSftNamedEvent(singletonList(propertyValue));
+      case TOPICAL_TERM_HEADING -> source.setSftTopicalTerm(singletonList(propertyValue));
+      case GEOGRAPHIC_NAME_HEADING -> source.setSftGeographicName(singletonList(propertyValue));
+      case GENRE_TERM_HEADING -> source.setSftGenreTerm(singletonList(propertyValue));
+      case CHRON_TERM_HEADING -> source.setSftChronTerm(singletonList(propertyValue));
+      case MEDIUM_PERF_TERM_HEADING -> source.setSftMediumPerfTerm(singletonList(propertyValue));
+      case GENERAL_SUBDIVISION_HEADING -> source.setSftGeneralSubdivision(singletonList(propertyValue));
+      case GEOGRAPHIC_SUBDIVISION_HEADING -> source.setSftGeographicSubdivision(singletonList(propertyValue));
+      case CHRON_SUBDIVISION_HEADING -> source.setSftChronSubdivision(singletonList(propertyValue));
+      case FORM_SUBDIVISION_HEADING -> source.setSftFormSubdivision(singletonList(propertyValue));
       default -> fail("Invalid sft heading type - {} cannot be mapped", propertyType);
     }
 
@@ -131,49 +130,56 @@ class AuthorityUtilityMapperTest {
   @MethodSource("saftHeadingTypeAndValueProvider")
   void testExtractAuthoritySaftHeadingsWithNonNullValues(String propertyType, String propertyValue) {
     switch (propertyType) {
-      case PERSONAL_NAME_HEADING -> source.setSaftPersonalName(Collections.singletonList(propertyValue));
-      case PERSONAL_NAME_TITLE_HEADING -> source.setSaftPersonalNameTitle(Collections.singletonList(propertyValue));
-      case CORPORATE_NAME_HEADING -> source.setSaftCorporateName(Collections.singletonList(propertyValue));
-      case CORPORATE_NAME_TITLE_HEADING -> source.setSaftCorporateNameTitle(Collections.singletonList(propertyValue));
-      case MEETING_NAME_HEADING -> source.setSaftMeetingName(Collections.singletonList(propertyValue));
-      case MEETING_NAME_TITLE_HEADING -> source.setSaftMeetingNameTitle(Collections.singletonList(propertyValue));
-      case UNIFORM_TITLE_HEADING -> source.setSaftUniformTitle(Collections.singletonList(propertyValue));
-      case NAMED_EVENT_HEADING -> source.setSaftNamedEvent(Collections.singletonList(propertyValue));
-      case TOPICAL_TERM_HEADING -> source.setSaftTopicalTerm(Collections.singletonList(propertyValue));
-      case GEOGRAPHIC_NAME_HEADING -> source.setSaftGeographicName(Collections.singletonList(propertyValue));
-      case GENRE_TERM_HEADING -> source.setSaftGenreTerm(Collections.singletonList(propertyValue));
-      case CHRON_TERM_HEADING -> source.setSaftChronTerm(Collections.singletonList(propertyValue));
-      case MEDIUM_PERF_TERM_HEADING -> source.setSaftMediumPerfTerm(Collections.singletonList(propertyValue));
-      case GENERAL_SUBDIVISION_HEADING -> source.setSaftGeneralSubdivision(Collections.singletonList(propertyValue));
-      case GEOGRAPHIC_SUBDIVISION_HEADING ->
-        source.setSaftGeographicSubdivision(Collections.singletonList(propertyValue));
-      case CHRON_SUBDIVISION_HEADING -> source.setSaftChronSubdivision(Collections.singletonList(propertyValue));
-      case FORM_SUBDIVISION_HEADING -> source.setSaftFormSubdivision(Collections.singletonList(propertyValue));
-      case PERSONAL_NAME_HEADING_TRUNC -> source.setSaftPersonalNameTrunc(Collections.singletonList(propertyValue));
-      case PERSONAL_NAME_TITLE_HEADING_TRUNC ->
-        source.setSaftPersonalNameTitleTrunc(Collections.singletonList(propertyValue));
-      case CORPORATE_NAME_HEADING_TRUNC -> source.setSaftCorporateNameTrunc(Collections.singletonList(propertyValue));
-      case CORPORATE_NAME_TITLE_HEADING_TRUNC ->
-        source.setSaftCorporateNameTitleTrunc(Collections.singletonList(propertyValue));
-      case MEETING_NAME_HEADING_TRUNC -> source.setSaftMeetingNameTrunc(Collections.singletonList(propertyValue));
-      case MEETING_NAME_TITLE_HEADING_TRUNC ->
-        source.setSaftMeetingNameTitleTrunc(Collections.singletonList(propertyValue));
-      case UNIFORM_TITLE_HEADING_TRUNC -> source.setSaftUniformTitleTrunc(Collections.singletonList(propertyValue));
-      case TOPICAL_TERM_HEADING_TRUNC -> source.setSaftTopicalTermTrunc(Collections.singletonList(propertyValue));
-      case GEOGRAPHIC_NAME_HEADING_TRUNC -> source.setSaftGeographicNameTrunc(Collections.singletonList(propertyValue));
-      case GENRE_TERM_HEADING_TRUNC -> source.setSaftGenreTermTrunc(Collections.singletonList(propertyValue));
-      case NAMED_EVENT_HEADING_TRUNC -> source.setSaftNamedEventTrunc(Collections.singletonList(propertyValue));
-      case CHRON_TERM_HEADING_TRUNC -> source.setSaftChronTermTrunc(Collections.singletonList(propertyValue));
-      case MEDIUM_PERF_TERM_HEADING_TRUNC ->
-        source.setSaftMediumPerfTermTrunc(Collections.singletonList(propertyValue));
-      case GENERAL_SUBDIVISION_HEADING_TRUNC ->
-        source.setSaftGeneralSubdivisionTrunc(Collections.singletonList(propertyValue));
+      case PERSONAL_NAME_HEADING -> source.setSaftPersonalName(singletonList(propertyValue));
+      case PERSONAL_NAME_TITLE_HEADING -> source.setSaftPersonalNameTitle(singletonList(propertyValue));
+      case CORPORATE_NAME_HEADING -> source.setSaftCorporateName(singletonList(propertyValue));
+      case CORPORATE_NAME_TITLE_HEADING -> source.setSaftCorporateNameTitle(singletonList(propertyValue));
+      case MEETING_NAME_HEADING -> source.setSaftMeetingName(singletonList(propertyValue));
+      case MEETING_NAME_TITLE_HEADING -> source.setSaftMeetingNameTitle(singletonList(propertyValue));
+      case UNIFORM_TITLE_HEADING -> source.setSaftUniformTitle(singletonList(propertyValue));
+      case NAMED_EVENT_HEADING -> source.setSaftNamedEvent(singletonList(propertyValue));
+      case TOPICAL_TERM_HEADING -> source.setSaftTopicalTerm(singletonList(propertyValue));
+      case GEOGRAPHIC_NAME_HEADING -> source.setSaftGeographicName(singletonList(propertyValue));
+      case GENRE_TERM_HEADING -> source.setSaftGenreTerm(singletonList(propertyValue));
+      case CHRON_TERM_HEADING -> source.setSaftChronTerm(singletonList(propertyValue));
+      case MEDIUM_PERF_TERM_HEADING -> source.setSaftMediumPerfTerm(singletonList(propertyValue));
+      case GENERAL_SUBDIVISION_HEADING -> source.setSaftGeneralSubdivision(singletonList(propertyValue));
+      case GEOGRAPHIC_SUBDIVISION_HEADING -> source.setSaftGeographicSubdivision(singletonList(propertyValue));
+      case CHRON_SUBDIVISION_HEADING -> source.setSaftChronSubdivision(singletonList(propertyValue));
+      case FORM_SUBDIVISION_HEADING -> source.setSaftFormSubdivision(singletonList(propertyValue));
+      default -> fail("Invalid saft heading type - {} cannot be mapped", propertyType);
+    }
+
+    AuthorityUtilityMapper.extractAuthoritySaftHeadings(source, target);
+
+    var saftHeadings = target.getSaftHeadings();
+    assertThat(saftHeadings).hasSize(1);
+    assertThat(propertyValue).isEqualTo(saftHeadings.getFirst().getHeading());
+    assertThat(propertyType).isEqualTo(saftHeadings.getFirst().getHeadingType());
+  }
+
+  @ParameterizedTest
+  @MethodSource("saftTruncHeadingTypeAndValueProvider")
+  void testExtractAuthoritySaftTruncHeadingsWithNonNullValues(String propertyType, String propertyValue) {
+    switch (propertyType) {
+      case PERSONAL_NAME_HEADING_TRUNC -> source.setSaftPersonalNameTrunc(singletonList(propertyValue));
+      case PERSONAL_NAME_TITLE_HEADING_TRUNC -> source.setSaftPersonalNameTitleTrunc(singletonList(propertyValue));
+      case CORPORATE_NAME_HEADING_TRUNC -> source.setSaftCorporateNameTrunc(singletonList(propertyValue));
+      case CORPORATE_NAME_TITLE_HEADING_TRUNC -> source.setSaftCorporateNameTitleTrunc(singletonList(propertyValue));
+      case MEETING_NAME_HEADING_TRUNC -> source.setSaftMeetingNameTrunc(singletonList(propertyValue));
+      case MEETING_NAME_TITLE_HEADING_TRUNC -> source.setSaftMeetingNameTitleTrunc(singletonList(propertyValue));
+      case UNIFORM_TITLE_HEADING_TRUNC -> source.setSaftUniformTitleTrunc(singletonList(propertyValue));
+      case TOPICAL_TERM_HEADING_TRUNC -> source.setSaftTopicalTermTrunc(singletonList(propertyValue));
+      case GEOGRAPHIC_NAME_HEADING_TRUNC -> source.setSaftGeographicNameTrunc(singletonList(propertyValue));
+      case GENRE_TERM_HEADING_TRUNC -> source.setSaftGenreTermTrunc(singletonList(propertyValue));
+      case NAMED_EVENT_HEADING_TRUNC -> source.setSaftNamedEventTrunc(singletonList(propertyValue));
+      case CHRON_TERM_HEADING_TRUNC -> source.setSaftChronTermTrunc(singletonList(propertyValue));
+      case MEDIUM_PERF_TERM_HEADING_TRUNC -> source.setSaftMediumPerfTermTrunc(singletonList(propertyValue));
+      case GENERAL_SUBDIVISION_HEADING_TRUNC -> source.setSaftGeneralSubdivisionTrunc(singletonList(propertyValue));
       case GEOGRAPHIC_SUBDIVISION_HEADING_TRUNC ->
-        source.setSaftGeographicSubdivisionTrunc(Collections.singletonList(propertyValue));
-      case CHRON_SUBDIVISION_HEADING_TRUNC ->
-        source.setSaftChronSubdivisionTrunc(Collections.singletonList(propertyValue));
-      case FORM_SUBDIVISION_HEADING_TRUNC ->
-        source.setSaftFormSubdivisionTrunc(Collections.singletonList(propertyValue));
+        source.setSaftGeographicSubdivisionTrunc(singletonList(propertyValue));
+      case CHRON_SUBDIVISION_HEADING_TRUNC -> source.setSaftChronSubdivisionTrunc(singletonList(propertyValue));
+      case FORM_SUBDIVISION_HEADING_TRUNC -> source.setSaftFormSubdivisionTrunc(singletonList(propertyValue));
       default -> fail("Invalid saft heading type - {} cannot be mapped", propertyType);
     }
 
@@ -220,7 +226,6 @@ class AuthorityUtilityMapperTest {
   @ParameterizedTest
   @MethodSource("saftHeadingTypeAndValueProvider")
   void testExtractAuthorityDtoSaftHeadings(String headingType, String headingValue) {
-
     var saftHeadings = new ArrayList<HeadingRef>();
     saftHeadings.add(new HeadingRef(headingType, headingValue));
     target.setSaftHeadings(saftHeadings);
@@ -245,6 +250,20 @@ class AuthorityUtilityMapperTest {
       case GEOGRAPHIC_SUBDIVISION_HEADING -> assertTrue(source.getSaftGeographicSubdivision().contains(headingValue));
       case CHRON_SUBDIVISION_HEADING -> assertTrue(source.getSaftChronSubdivision().contains(headingValue));
       case FORM_SUBDIVISION_HEADING -> assertTrue(source.getSaftFormSubdivision().contains(headingValue));
+      default -> fail("Invalid saft heading type - {} cannot be mapped", headingType);
+    }
+  }
+
+  @ParameterizedTest
+  @MethodSource("saftTruncHeadingTypeAndValueProvider")
+  void testExtractAuthorityDtoSaftTruncHeadings(String headingType, String headingValue) {
+    var saftHeadings = new ArrayList<HeadingRef>();
+    saftHeadings.add(new HeadingRef(headingType, headingValue));
+    target.setSaftHeadings(saftHeadings);
+
+    AuthorityUtilityMapper.extractAuthorityDtoSaftHeadings(target, source);
+
+    switch (headingType) {
       case PERSONAL_NAME_HEADING_TRUNC -> assertTrue(source.getSaftPersonalNameTrunc().contains(headingValue));
       case PERSONAL_NAME_TITLE_HEADING_TRUNC ->
         assertTrue(source.getSaftPersonalNameTitleTrunc().contains(headingValue));
@@ -357,7 +376,12 @@ class AuthorityUtilityMapperTest {
       arguments(NAMED_EVENT_HEADING, TEST_STRING),
       arguments(TOPICAL_TERM_HEADING, TEST_STRING),
       arguments(GEOGRAPHIC_NAME_HEADING, TEST_STRING),
-      arguments(GENRE_TERM_HEADING, TEST_STRING),
+      arguments(GENRE_TERM_HEADING, TEST_STRING)
+    );
+  }
+
+  private static Stream<Arguments> saftTruncHeadingTypeAndValueProvider() {
+    return Stream.of(
       arguments(PERSONAL_NAME_HEADING_TRUNC, TEST_STRING),
       arguments(PERSONAL_NAME_TITLE_HEADING_TRUNC, TEST_STRING),
       arguments(CORPORATE_NAME_HEADING_TRUNC, TEST_STRING),

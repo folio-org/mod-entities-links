@@ -84,83 +84,88 @@ class ConsortiumAuthoritySourceFilesIT extends IntegrationTestBase {
       .andExpect(status().isUnprocessableEntity())
       .andExpect(exceptionMatch(AuthorityArchiveConstraintException.class))
       .andExpect(errorMessageMatch(is("Cannot complete operation on the entity due to it's relation with"
-        + " Authority Archive/Authority.")));
+                                      + " Authority Archive/Authority.")));
 
     assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, CENTRAL_TENANT_ID));
   }
 
   @Test
   @SneakyThrows
-  @DisplayName("CREATE/PATCH: Creating/Updating source file should preserve user's id for shadow copies in metadata")
-  void createAndUpdateSourceFile_positive_shouldPreserveCreatedByAndUpdatedByUserIdForShadowCopies() {
+  @DisplayName("CREATE: Creating source file should preserve user's id for shadow copies in metadata")
+  void createSourceFile_positive_shouldPreserveCreatedByAndUpdatedByUserIdForShadowCopies() {
     var sourceFileId = UUID.randomUUID();
     var dto = new AuthoritySourceFilePostDto()
-        .id(sourceFileId).name("authority source file").code("code").type("type").selectable(true);
+      .id(sourceFileId).name("authority source file").code("code").type("type").selectable(true);
 
     // create source file with user id = UPDATER_USER_ID
     doPost(authoritySourceFilesEndpoint(), dto, tenantAndUserIdHeaders(CENTRAL_TENANT_ID, UPDATER_USER_ID));
 
     awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, COLLEGE_TENANT_ID)));
+      assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, COLLEGE_TENANT_ID)));
     awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_CODE_TABLE, COLLEGE_TENANT_ID)));
+      assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_CODE_TABLE, COLLEGE_TENANT_ID)));
 
     tryGet(authoritySourceFilesEndpoint(), tenantHeaders(CENTRAL_TENANT_ID))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("totalRecords", is(1)))
-        .andExpect(jsonPath("authoritySourceFiles[0]._version", is(0)))
-        .andExpect(jsonPath("authoritySourceFiles[0].selectable", is(true)))
-        .andExpect(jsonPath("authoritySourceFiles[0].metadata", notNullValue()))
-        .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(UPDATER_USER_ID)))
-        .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedByUserId", is(UPDATER_USER_ID)));
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("totalRecords", is(1)))
+      .andExpect(jsonPath("authoritySourceFiles[0]._version", is(0)))
+      .andExpect(jsonPath("authoritySourceFiles[0].selectable", is(true)))
+      .andExpect(jsonPath("authoritySourceFiles[0].metadata", notNullValue()))
+      .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(UPDATER_USER_ID)))
+      .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedByUserId", is(UPDATER_USER_ID)));
+  }
+
+  @Test
+  @SneakyThrows
+  @DisplayName("PATCH: Updating source file should preserve user's id for shadow copies in metadata")
+  void updateSourceFile_positive_shouldPreserveCreatedByAndUpdatedByUserIdForShadowCopies() {
+    var sourceFileId = UUID.randomUUID();
+    var dto = new AuthoritySourceFilePostDto()
+      .id(sourceFileId).name("authority source file").code("code").type("type").selectable(true);
+
+    // create source file with user id = UPDATER_USER_ID
+    doPost(authoritySourceFilesEndpoint(), dto, tenantAndUserIdHeaders(CENTRAL_TENANT_ID, UPDATER_USER_ID));
+
+    awaitUntilAsserted(() ->
+      assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, COLLEGE_TENANT_ID)));
+    awaitUntilAsserted(() ->
+      assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_CODE_TABLE, COLLEGE_TENANT_ID)));
 
     var patch = new AuthoritySourceFilePatchDto(0).name("updated").code("codeUpdated").selectable(false);
     // update source file with user id = UPDATER_USER_ID
     tryPatch(authoritySourceFilesEndpoint(sourceFileId), patch,
-        tenantAndUserIdHeaders(CENTRAL_TENANT_ID, UPDATER_USER_ID))
-        .andExpect(status().isNoContent());
+      tenantAndUserIdHeaders(CENTRAL_TENANT_ID, UPDATER_USER_ID))
+      .andExpect(status().isNoContent());
 
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_SOURCE_FILE_TABLE, COLLEGE_TENANT_ID,
-            "name = 'updated' and _version = 1")));
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_SOURCE_FILE_CODE_TABLE, COLLEGE_TENANT_ID,
-            "code = 'codeUpdated'")));
+    awaitUntilAsserted(
+      () -> assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_SOURCE_FILE_TABLE, COLLEGE_TENANT_ID,
+        "name = 'updated' and _version = 1")));
+    awaitUntilAsserted(
+      () -> assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_SOURCE_FILE_CODE_TABLE, COLLEGE_TENANT_ID,
+        "code = 'codeUpdated'")));
 
     tryGet(authoritySourceFilesEndpoint(), tenantHeaders(COLLEGE_TENANT_ID))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("totalRecords", is(1)))
-        .andExpect(jsonPath("authoritySourceFiles[0]._version", is(1)))
-        .andExpect(jsonPath("authoritySourceFiles[0].metadata", notNullValue()))
-        .andExpect(jsonPath("authoritySourceFiles[0].codes", hasSize(1)))
-        .andExpect(jsonPath("authoritySourceFiles[0].codes[0]", is(patch.getCode())))
-        .andExpect(jsonPath("authoritySourceFiles[0].selectable", is(false)))
-        .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(UPDATER_USER_ID)))
-        .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedByUserId", is(UPDATER_USER_ID)));
-
-    // delete source file
-    doDelete(authoritySourceFilesEndpoint(sourceFileId), tenantHeaders(CENTRAL_TENANT_ID));
-
-    awaitUntilAsserted(() ->
-        assertEquals(0, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_CODE_TABLE, CENTRAL_TENANT_ID)));
-    awaitUntilAsserted(() ->
-        assertEquals(0, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, CENTRAL_TENANT_ID)));
-    awaitUntilAsserted(() ->
-        assertEquals(0, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_CODE_TABLE, COLLEGE_TENANT_ID)));
-    awaitUntilAsserted(() ->
-        assertEquals(0, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, COLLEGE_TENANT_ID)));
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("totalRecords", is(1)))
+      .andExpect(jsonPath("authoritySourceFiles[0]._version", is(1)))
+      .andExpect(jsonPath("authoritySourceFiles[0].metadata", notNullValue()))
+      .andExpect(jsonPath("authoritySourceFiles[0].codes", hasSize(1)))
+      .andExpect(jsonPath("authoritySourceFiles[0].codes[0]", is(patch.getCode())))
+      .andExpect(jsonPath("authoritySourceFiles[0].selectable", is(false)))
+      .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(UPDATER_USER_ID)))
+      .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedByUserId", is(UPDATER_USER_ID)));
   }
 
   private AuthorityDto authorityDto(UUID sourceFileId) {
     return new AuthorityDto()
-        .id(UUID.fromString(AUTHORITY_ID))
-        .sourceFileId(sourceFileId)
-        .naturalId("n12345")
-        .source("MARC")
-        .personalName("Sylvester Stallone")
-        .subjectHeadings("a");
+      .id(UUID.fromString(AUTHORITY_ID))
+      .sourceFileId(sourceFileId)
+      .naturalId("n12345")
+      .source("MARC")
+      .personalName("Sylvester Stallone")
+      .subjectHeadings("a");
   }
 
   private ResultMatcher errorMessageMatch(Matcher<String> errorMessageMatcher) {

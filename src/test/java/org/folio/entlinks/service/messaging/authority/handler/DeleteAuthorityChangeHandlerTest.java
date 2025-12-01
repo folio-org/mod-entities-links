@@ -73,14 +73,11 @@ class DeleteAuthorityChangeHandlerTest {
   void handle_positive_shouldHardDeleteAuthorityAndLinks() {
     var id1 = UUID.randomUUID();
     var id2 = UUID.randomUUID();
-    var authorityDto = new AuthorityDto().naturalId("n12345").personalName("name");
-    var authorityDomainEvent1 = new AuthorityDomainEvent(
-        id1, authorityDto, authorityDto, DomainEventType.DELETE, TENANT_ID);
-    var authorityDomainEvent2 = new AuthorityDomainEvent(
-        id2, authorityDto, authorityDto, DomainEventType.DELETE, TENANT_ID);
+    var authorityDomainEvent1 = prepareAuthorityDeleteEvent(id1);
+    var authorityDomainEvent2 = prepareAuthorityDeleteEvent(id2);
     var events = List.of(
-        new AuthorityChangeHolder(authorityDomainEvent1, emptyMap(), emptyMap(), 1),
-        new AuthorityChangeHolder(authorityDomainEvent2, emptyMap(), emptyMap(), 1)
+      new AuthorityChangeHolder(authorityDomainEvent1, emptyMap(), emptyMap(), 1),
+      new AuthorityChangeHolder(authorityDomainEvent2, emptyMap(), emptyMap(), 1)
     );
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
@@ -91,14 +88,11 @@ class DeleteAuthorityChangeHandlerTest {
 
     doNothing().when(linkingService).deleteByAuthorityIdIn(anySet());
     when(properties.getNumPartitions()).thenReturn(1);
-    when(linkingService.getLinksByAuthorityId(eq(id1), any())).thenReturn(
-      new PageImpl<>(List.of(link1.toEntity(instanceId1)), Pageable.ofSize(1), 2)
-    ).thenReturn(
-      new PageImpl<>(List.of(link2.toEntity(instanceId2)))
-    );
-    when(linkingService.getLinksByAuthorityId(eq(id2), any())).thenReturn(
-      new PageImpl<>(List.of(link3.toEntity(instanceId3)))
-    );
+    when(linkingService.getLinksByAuthorityId(eq(id1), any()))
+      .thenReturn(new PageImpl<>(List.of(link1.toEntity(instanceId1)), Pageable.ofSize(1), 2))
+      .thenReturn(new PageImpl<>(List.of(link2.toEntity(instanceId2))));
+    when(linkingService.getLinksByAuthorityId(eq(id2), any()))
+      .thenReturn(new PageImpl<>(List.of(link3.toEntity(instanceId3))));
 
     var actual = handler.handle(events);
 
@@ -120,14 +114,14 @@ class DeleteAuthorityChangeHandlerTest {
   void handle_positive_shouldDeleteLinksOnlyWithoutDeletingAuthoritiesOnHeadingTypeChangeUpdateEvent() {
     var id = UUID.randomUUID();
     var authorityDomainEvent = new AuthorityDomainEvent(
-        id,
-        new AuthorityDto().naturalId("n12345").corporateName("Beatles"),
-        new AuthorityDto().naturalId("n12345").corporateNameTitle("Beatles mono"),
-        DomainEventType.UPDATE,
-        TENANT_ID);
+      id,
+      new AuthorityDto().naturalId("n12345").corporateName("Beatles"),
+      new AuthorityDto().naturalId("n12345").corporateNameTitle("Beatles mono"),
+      DomainEventType.UPDATE,
+      TENANT_ID);
     var changes = Map.of(
-        CORPORATE_NAME, new AuthorityChange(CORPORATE_NAME, null, "Beatles"),
-        CORPORATE_NAME_TITLE, new AuthorityChange(CORPORATE_NAME, "Beatles mono", null)
+      CORPORATE_NAME, new AuthorityChange(CORPORATE_NAME, null, "Beatles"),
+      CORPORATE_NAME_TITLE, new AuthorityChange(CORPORATE_NAME, "Beatles mono", null)
     );
     var authorityEvents = List.of(new AuthorityChangeHolder(authorityDomainEvent, changes, emptyMap(), 1));
     var link = TestDataUtils.Link.of(1, 1);
@@ -135,16 +129,16 @@ class DeleteAuthorityChangeHandlerTest {
     doNothing().when(linkingService).deleteByAuthorityIdIn(Set.of(id));
     when(properties.getNumPartitions()).thenReturn(1);
     when(linkingService.getLinksByAuthorityId(eq(id), any())).thenReturn(
-        new PageImpl<>(List.of(link.toEntity(instanceId)), Pageable.ofSize(1), 1));
+      new PageImpl<>(List.of(link.toEntity(instanceId)), Pageable.ofSize(1), 1));
 
     var actual = handler.handle(authorityEvents);
 
     verify(linkingService).getLinksByAuthorityId(eq(id), any());
     verify(linkingService).deleteByAuthorityIdIn(Set.of(id));
     assertThat(actual)
-        .hasSize(1)
-        .extracting(LinksChangeEvent::getAuthorityId, LinksChangeEvent::getType, LinksChangeEvent::getUpdateTargets)
-        .contains(tuple(id, TypeEnum.DELETE, List.of(changeTarget(instanceId, link))));
+      .hasSize(1)
+      .extracting(LinksChangeEvent::getAuthorityId, LinksChangeEvent::getType, LinksChangeEvent::getUpdateTargets)
+      .contains(tuple(id, TypeEnum.DELETE, List.of(changeTarget(instanceId, link))));
     verifyNoInteractions(authorityService);
   }
 
@@ -160,6 +154,11 @@ class DeleteAuthorityChangeHandlerTest {
     var actual = handler.handle(null);
 
     assertThat(actual).isEmpty();
+  }
+
+  private AuthorityDomainEvent prepareAuthorityDeleteEvent(UUID id) {
+    var authorityDto = new AuthorityDto().naturalId("n12345").personalName("name");
+    return new AuthorityDomainEvent(id, authorityDto, authorityDto, DomainEventType.DELETE, TENANT_ID);
   }
 
   private ChangeTarget changeTarget(UUID instanceId, TestDataUtils.Link link) {

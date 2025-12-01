@@ -228,20 +228,7 @@ class AuthoritySourceFileServiceDelegateTest {
     var expected = new AuthoritySourceFile(existing);
     expected.setBaseUrl(SANITIZED_BASE_URL + changeUrlSuffix);
 
-    mockAsConsortiumCentralTenant();
-    when(service.getById(existing.getId())).thenReturn(existing);
-    when(service.authoritiesExistForSourceFile(existing.getId())).thenReturn(true);
-    when(mapper.partialUpdate(any(AuthoritySourceFilePatchDto.class), any(AuthoritySourceFile.class)))
-      .thenAnswer(i -> i.getArguments()[1]);
-    var existingDto = new AuthoritySourceFileDto().id(existing.getId());
-    var modifiedDto = new AuthoritySourceFileDto().id(existing.getId());
-    AtomicReference<BiConsumer<AuthoritySourceFile, AuthoritySourceFile>> consumer = new AtomicReference<>();
-    when(mapper.toDto(any(AuthoritySourceFile.class))).thenReturn(modifiedDto).thenReturn(existingDto);
-    when(service.update(any(UUID.class), any(AuthoritySourceFile.class), any())).thenAnswer(invocation -> {
-      consumer.set(invocation.getArgument(2));
-      consumer.get().accept(expected, existing);
-      return expected;
-    });
+    final var consumer = mockConsortiumPartialUpdateConsumer(existing, expected);
     var dto = new AuthoritySourceFilePatchDto().baseUrl(INPUT_BASE_URL + changeUrlSuffix);
 
     delegate.patchAuthoritySourceFile(existing.getId(), dto);
@@ -268,7 +255,7 @@ class AuthoritySourceFileServiceDelegateTest {
     when(service.getById(existing.getId())).thenReturn(existing);
     when(service.authoritiesExistForSourceFile(existing.getId())).thenReturn(true);
     when(mapper.partialUpdate(any(AuthoritySourceFilePatchDto.class), any(AuthoritySourceFile.class)))
-        .thenAnswer(i -> i.getArguments()[1]);
+      .thenAnswer(i -> i.getArguments()[1]);
     when(service.update(any(UUID.class), any(AuthoritySourceFile.class), eq(null))).thenReturn(expected);
     var dto = new AuthoritySourceFilePatchDto();
 
@@ -303,10 +290,10 @@ class AuthoritySourceFileServiceDelegateTest {
       when(service.authoritiesExistForSourceFile(id, "member", "authority")).thenReturn(authoritiesReferencedAtMember);
     }
     var dto = new AuthoritySourceFilePatchDto()
-        .name("name").type("type").selectable(true).version(1).baseUrl("baseUrl").code("a")
-        .hridManagement(new AuthoritySourceFilePatchDtoHridManagement().startNumber(1));
+      .name("name").type("type").selectable(true).version(1).baseUrl("baseUrl").code("a")
+      .hridManagement(new AuthoritySourceFilePatchDtoHridManagement().startNumber(1));
     var expected = new RequestBodyValidationException(
-        "Unable to patch. Authority source file source is FOLIO or it has authority references", errors);
+      "Unable to patch. Authority source file source is FOLIO or it has authority references", errors);
 
     var ex = assertThrows(RequestBodyValidationException.class,
       () -> delegate.patchAuthoritySourceFile(id, dto));
@@ -369,10 +356,10 @@ class AuthoritySourceFileServiceDelegateTest {
     when(service.authoritiesExistForSourceFile(id, "college", "authority")).thenReturn(true);
 
     var exc = assertThrows(RequestBodyValidationException.class,
-        () -> delegate.deleteAuthoritySourceFileById(id));
+      () -> delegate.deleteAuthoritySourceFileById(id));
 
     assertThat(exc.getMessage())
-        .isEqualTo("Unable to delete. Authority source file has referenced authorities");
+      .isEqualTo("Unable to delete. Authority source file has referenced authorities");
 
     verifyNoMoreInteractions(service);
     verifyNoInteractions(propagationService);
@@ -481,6 +468,25 @@ class AuthoritySourceFileServiceDelegateTest {
         new Parameter("hridManagement.startNumber").value("1"))),
       Arguments.of(AuthoritySourceFileSource.LOCAL, false, true, List.of(new Parameter("code").value("a"),
         new Parameter("hridManagement.startNumber").value("1"))));
+  }
+
+  private AtomicReference<BiConsumer<AuthoritySourceFile, AuthoritySourceFile>> mockConsortiumPartialUpdateConsumer(
+    AuthoritySourceFile existing, AuthoritySourceFile expected) {
+    mockAsConsortiumCentralTenant();
+    when(service.getById(existing.getId())).thenReturn(existing);
+    when(service.authoritiesExistForSourceFile(existing.getId())).thenReturn(true);
+    when(mapper.partialUpdate(any(AuthoritySourceFilePatchDto.class), any(AuthoritySourceFile.class)))
+      .thenAnswer(i -> i.getArguments()[1]);
+    var existingDto = new AuthoritySourceFileDto().id(existing.getId());
+    var modifiedDto = new AuthoritySourceFileDto().id(existing.getId());
+    AtomicReference<BiConsumer<AuthoritySourceFile, AuthoritySourceFile>> consumer = new AtomicReference<>();
+    when(mapper.toDto(any(AuthoritySourceFile.class))).thenReturn(modifiedDto).thenReturn(existingDto);
+    when(service.update(any(UUID.class), any(AuthoritySourceFile.class), any())).thenAnswer(invocation -> {
+      consumer.set(invocation.getArgument(2));
+      consumer.get().accept(expected, existing);
+      return expected;
+    });
+    return consumer;
   }
 
   private void mockAsNonConsortiumTenant() {

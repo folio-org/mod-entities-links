@@ -26,6 +26,7 @@ import org.folio.entlinks.domain.dto.LinkDetails;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.ParsedRecordContent;
 import org.folio.entlinks.domain.dto.ParsedRecordContentCollection;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.spring.testing.type.IntegrationTest;
@@ -51,45 +52,28 @@ class ConsortiumLinksSuggestionsIT extends IntegrationTestBase {
   private static final String LINKABLE_AUTHORITY_ID = "417f3355-081c-4aae-9209-ccb305f25f7e";
   private static final String NATURAL_ID = "n12345";
 
-  @BeforeAll
-  static void prepare() {
-    setUpConsortium(CENTRAL_TENANT_ID, List.of(COLLEGE_TENANT_ID, UNIVERSITY_TENANT_ID), true);
-  }
-
   @BeforeEach
-  public void setup() {
-    var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
-    sourceFile.setBaseUrl(BASE_URL);
-    sourceFile.setBaseUrlProtocol("http");
-    var sourceFileCode1 = sourceFile.getAuthoritySourceFileCodes().iterator().next();
-    var sourceFileCode2 = new AuthoritySourceFileCode();
-    sourceFileCode1.setCode("n");
-    sourceFileCode2.setAuthoritySourceFile(sourceFile);
-    sourceFileCode2.setCode(NATURAL_ID.substring(0, 2));
-    sourceFile.addCode(sourceFileCode2);
-    databaseHelper.saveAuthoritySourceFile(CENTRAL_TENANT_ID, sourceFile);
-    databaseHelper.saveAuthoritySourceFileCode(CENTRAL_TENANT_ID, sourceFile.getId(), sourceFileCode1);
-    databaseHelper.saveAuthoritySourceFileCode(CENTRAL_TENANT_ID, sourceFile.getId(), sourceFileCode2);
-    databaseHelper.saveAuthoritySourceFile(COLLEGE_TENANT_ID, sourceFile);
-    databaseHelper.saveAuthoritySourceFileCode(COLLEGE_TENANT_ID, sourceFile.getId(), sourceFileCode1);
-    databaseHelper.saveAuthoritySourceFileCode(COLLEGE_TENANT_ID, sourceFile.getId(), sourceFileCode2);
-    databaseHelper.saveAuthoritySourceFile(UNIVERSITY_TENANT_ID, sourceFile);
-    databaseHelper.saveAuthoritySourceFileCode(UNIVERSITY_TENANT_ID, sourceFile.getId(), sourceFileCode1);
-    databaseHelper.saveAuthoritySourceFileCode(UNIVERSITY_TENANT_ID, sourceFile.getId(), sourceFileCode2);
+  void setup() {
+    var sourceFile = setupSourceFile();
 
     var authorityDto = new AuthorityDto()
-        .id(UUID.fromString(LINKABLE_AUTHORITY_ID))
-        .sourceFileId(sourceFile.getId())
-        .naturalId(NATURAL_ID)
-        .source("MARC")
-        .personalName("Personal Name")
-        .subjectHeadings("a");
+      .id(UUID.fromString(LINKABLE_AUTHORITY_ID))
+      .sourceFileId(sourceFile.getId())
+      .naturalId(NATURAL_ID)
+      .source("MARC")
+      .personalName("Personal Name")
+      .subjectHeadings("a");
     doPost(authorityEndpoint(), authorityDto, tenantHeaders(CENTRAL_TENANT_ID));
     assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID));
     awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, COLLEGE_TENANT_ID)));
+      assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, COLLEGE_TENANT_ID)));
     awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID)));
+      assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID)));
+  }
+
+  @BeforeAll
+  static void prepare() {
+    setUpConsortium(CENTRAL_TENANT_ID, List.of(COLLEGE_TENANT_ID, UNIVERSITY_TENANT_ID), true);
   }
 
   @Test
@@ -164,6 +148,28 @@ class ConsortiumLinksSuggestionsIT extends IntegrationTestBase {
         .records(List.of(expectedRecord)), objectMapper)));
   }
 
+  private AuthoritySourceFile setupSourceFile() {
+    var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+    sourceFile.setBaseUrl(BASE_URL);
+    sourceFile.setBaseUrlProtocol("http");
+    var sourceFileCode1 = sourceFile.getAuthoritySourceFileCodes().iterator().next();
+    var sourceFileCode2 = new AuthoritySourceFileCode();
+    sourceFileCode1.setCode("n");
+    sourceFileCode2.setAuthoritySourceFile(sourceFile);
+    sourceFileCode2.setCode(NATURAL_ID.substring(0, 2));
+    sourceFile.addCode(sourceFileCode2);
+    databaseHelper.saveAuthoritySourceFile(CENTRAL_TENANT_ID, sourceFile);
+    databaseHelper.saveAuthoritySourceFileCode(CENTRAL_TENANT_ID, sourceFile.getId(), sourceFileCode1);
+    databaseHelper.saveAuthoritySourceFileCode(CENTRAL_TENANT_ID, sourceFile.getId(), sourceFileCode2);
+    databaseHelper.saveAuthoritySourceFile(COLLEGE_TENANT_ID, sourceFile);
+    databaseHelper.saveAuthoritySourceFileCode(COLLEGE_TENANT_ID, sourceFile.getId(), sourceFileCode1);
+    databaseHelper.saveAuthoritySourceFileCode(COLLEGE_TENANT_ID, sourceFile.getId(), sourceFileCode2);
+    databaseHelper.saveAuthoritySourceFile(UNIVERSITY_TENANT_ID, sourceFile);
+    databaseHelper.saveAuthoritySourceFileCode(UNIVERSITY_TENANT_ID, sourceFile.getId(), sourceFileCode1);
+    databaseHelper.saveAuthoritySourceFileCode(UNIVERSITY_TENANT_ID, sourceFile.getId(), sourceFileCode2);
+    return sourceFile;
+  }
+
   private ParsedRecordContent getRecord(String bibField, LinkDetails linkDetails, Map<String, String> subfields) {
     var field = new FieldContentValue();
     field.setLinkDetails(linkDetails);
@@ -176,8 +182,8 @@ class ConsortiumLinksSuggestionsIT extends IntegrationTestBase {
 
   private LinkDetails getLinkDetails(LinkStatus linkStatus) {
     return new LinkDetails().linkingRuleId(1)
-        .authorityId(UUID.fromString(LINKABLE_AUTHORITY_ID))
-        .authorityNaturalId(NATURAL_ID)
-        .status(linkStatus);
+      .authorityId(UUID.fromString(LINKABLE_AUTHORITY_ID))
+      .authorityNaturalId(NATURAL_ID)
+      .status(linkStatus);
   }
 }

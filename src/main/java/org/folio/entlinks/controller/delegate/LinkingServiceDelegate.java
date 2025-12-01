@@ -82,7 +82,7 @@ public class LinkingServiceDelegate {
     // if the current tenant is a CONSORTIUM member tenant
     if (centralTenant.isPresent() && !centralTenant.get().equals(context.getTenantId())) {
       var countLinksFromCentralTenant = linkingService.countLinksByAuthorityIds(ids, centralTenant.get());
-      for (Map.Entry<UUID, Integer> entry : countLinksFromCentralTenant.entrySet()) {
+      for (var entry : countLinksFromCentralTenant.entrySet()) {
         countLinks.merge(entry.getKey(), entry.getValue(), Integer::sum);
       }
     }

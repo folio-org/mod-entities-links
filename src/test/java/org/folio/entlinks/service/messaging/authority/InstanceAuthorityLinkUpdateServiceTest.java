@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -218,9 +219,11 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     var expected = new LinksChangeEvent().type(LinksChangeEvent.TypeEnum.UPDATE);
     when(linkingService.countLinksByAuthorityIds(Set.of(id)))
-      .thenReturn(Map.of(id, 1))
-      .thenReturn(Map.of(id, 2))
-      .thenReturn(Map.of(id, 3));
+      .thenReturn(new HashMap<>(Map.of(id, 1)))
+      .thenReturn(new HashMap<>(Map.of(id, 2)))
+      .thenReturn(new HashMap<>(Map.of(id, 3)));
+    when(linkingService.countLinksByAuthorityIds(Set.of(id), TENANT_ID))
+      .thenReturn(new HashMap<>(Map.of(id, 2)));
     when(sourceRecordService.getAuthoritySourceRecordById(any())).thenReturn(sourceRecord);
     when(updateHandler.handle(changeHolderCaptor.capture())).thenReturn(List.of(expected));
     when(folioExecutionContext.getTenantId()).thenReturn(TENANT_ID);
@@ -242,7 +245,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
       .hasSize(3)
       .allMatch(changeHolder -> changeHolder.getSourceRecord() == sourceRecord)
       .extracting(AuthorityChangeHolder::getNumberOfLinks)
-      .containsExactlyInAnyOrder(1, 2, 3);
+      .containsExactlyInAnyOrder(1, 4, 5);
 
     verify(authorityDataStatService, times(3)).createInBatch(anyList());
   }

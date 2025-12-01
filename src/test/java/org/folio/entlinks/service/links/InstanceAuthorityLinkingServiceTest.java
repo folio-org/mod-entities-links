@@ -6,6 +6,7 @@ import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.folio.support.TestDataUtils.links;
+import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anySet;
@@ -25,6 +26,8 @@ import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
+import org.folio.entlinks.domain.entity.projection.LinkCountViewImpl;
+import org.folio.entlinks.domain.repository.InstanceLinkJdbcRepository;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.spring.testing.type.UnitTest;
@@ -50,6 +53,9 @@ class InstanceAuthorityLinkingServiceTest {
 
   @Mock
   private AuthorityService authorityService;
+
+  @Mock
+  private InstanceLinkJdbcRepository instanceLinkJdbcRepository;
 
   @InjectMocks
   private InstanceAuthorityLinkingService service;
@@ -285,7 +291,7 @@ class InstanceAuthorityLinkingServiceTest {
     var authorityId1 = randomUUID();
     var authorityId2 = randomUUID();
     var authorityId3 = randomUUID();
-    var resultSet = List.of(
+    var resultSet = List.<LinkCountView>of(
       linkCountView(authorityId1, 10),
       linkCountView(authorityId2, 15)
     );
@@ -298,6 +304,26 @@ class InstanceAuthorityLinkingServiceTest {
     assertThat(result)
       .hasSize(2)
       .contains(entry(authorityId1, 10), entry(authorityId2, 15));
+  }
+
+  @Test
+  void countLinksByAuthorityIds_positive_byTenant() {
+    var authorityId1 = randomUUID();
+    var authorityId2 = randomUUID();
+    var authorityId3 = randomUUID();
+    var resultSet = List.of(
+      linkCountView(authorityId1, 5),
+      linkCountView(authorityId2, 20)
+    );
+
+    when(instanceLinkJdbcRepository.countLinksByAuthorityIds(anySet(), eq(TENANT_ID))).thenReturn(resultSet);
+
+    var authorityIds = Set.of(authorityId1, authorityId2, authorityId3);
+    var result = service.countLinksByAuthorityIds(authorityIds, TENANT_ID);
+
+    assertThat(result)
+      .hasSize(2)
+      .contains(entry(authorityId1, 5), entry(authorityId2, 20));
   }
 
   @Test
@@ -346,24 +372,17 @@ class InstanceAuthorityLinkingServiceTest {
     return ArgumentCaptor.forClass(listClass);
   }
 
-  private LinkCountView linkCountView(UUID id, int totalLinks) {
-    return new LinkCountView() {
-      @Override
-      public UUID getId() {
-        return id;
-      }
-
-      @Override
-      public Integer getTotalLinks() {
-        return totalLinks;
-      }
-    };
+  private LinkCountViewImpl linkCountView(UUID id, int totalLinks) {
+    var view = new LinkCountViewImpl();
+    view.setId(id);
+    view.setTotalLinks(totalLinks);
+    return view;
   }
 
   private void mockAuthorities(List<InstanceAuthorityLink> links) {
     var authoritiesById = links.stream()
-        .map(InstanceAuthorityLink::getAuthority)
-        .collect(Collectors.toMap(Authority::getId, Function.identity()));
+      .map(InstanceAuthorityLink::getAuthority)
+      .collect(Collectors.toMap(Authority::getId, Function.identity()));
 
     when(authorityService.getAllByIds(anyCollection())).thenReturn(authoritiesById);
   }

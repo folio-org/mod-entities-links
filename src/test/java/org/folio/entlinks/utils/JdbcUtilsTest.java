@@ -23,6 +23,7 @@ class JdbcUtilsTest {
     when(context.getFolioModuleMetadata()).thenReturn(metadata);
     when(context.getTenantId()).thenReturn("testTenant");
     when(metadata.getDBSchemaName("testTenant")).thenReturn("testSchema");
+    when(metadata.getDBSchemaName("anotherTenant")).thenReturn("anotherSchema");
   }
 
   @Test
@@ -32,9 +33,21 @@ class JdbcUtilsTest {
   }
 
   @Test
+  void testGetSchemaNameWithTenantId() {
+    String schemaName = JdbcUtils.getSchemaName(context, "anotherTenant");
+    assertEquals("anotherSchema", schemaName);
+  }
+
+  @Test
   void testGetFullPath() {
     String fullPath = JdbcUtils.getFullPath(context, "testTable");
     assertEquals("testSchema.testTable", fullPath);
+  }
+
+  @Test
+  void testGetFullPathWithTenant() {
+    String fullPath = JdbcUtils.getFullPath(context, "anotherTenant", "testTable");
+    assertEquals("anotherSchema.testTable", fullPath);
   }
 
   @Test

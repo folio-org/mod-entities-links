@@ -157,7 +157,7 @@ public class InstanceAuthorityLinkUpdateService {
       executionService.executeSystemUserScoped(memberTenant, () -> {
         var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(authorityIds);
         if (!countLinksFromCentralTenant.isEmpty()) {
-          for (Map.Entry<UUID, Integer> entry : countLinksFromCentralTenant.entrySet()) {
+          for (var entry : countLinksFromCentralTenant.entrySet()) {
             linksNumberByAuthorityId.merge(entry.getKey(), entry.getValue(), Integer::sum);
           }
         }

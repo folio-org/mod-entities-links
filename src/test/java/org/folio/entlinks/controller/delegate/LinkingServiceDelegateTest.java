@@ -10,6 +10,7 @@ import static org.folio.support.TestDataUtils.links;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
+import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
 import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -38,9 +39,7 @@ import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagationService;
-import org.folio.entlinks.service.consortium.propagation.model.LinksPropagationData;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
@@ -63,8 +62,8 @@ class LinkingServiceDelegateTest {
   private @Mock InstanceAuthorityLinkMapper mapper;
   private @Mock InstanceStorageService instanceService;
   private @Mock DataStatsMapper statsMapper;
-  private @Mock ConsortiumLinksPropagationService propagationService;
   private @Mock FolioExecutionContext context;
+  private @Mock UserTenantsService userTenantsService;
 
   private @InjectMocks LinkingServiceDelegate delegate;
 
@@ -188,7 +187,6 @@ class LinkingServiceDelegateTest {
       TestDataUtils.Link.of(2, 3),
       TestDataUtils.Link.of(3, 2)
     ));
-    final var propagationData = new LinksPropagationData(INSTANCE_ID, links);
 
     doNothing().when(linkingService).updateLinks(INSTANCE_ID, links);
     when(mapper.convertDto(dtoCollection.getLinks())).thenReturn(links);
@@ -196,23 +194,18 @@ class LinkingServiceDelegateTest {
     delegate.updateLinks(INSTANCE_ID, dtoCollection);
 
     verify(linkingService).updateLinks(INSTANCE_ID, links);
-    verify(propagationService).propagate(propagationData, ConsortiumAuthorityPropagationService.PropagationType.UPDATE,
-        TENANT_ID);
   }
 
   @Test
   void updateLinks_positive_emptyLinks() {
     final var links = links(INSTANCE_ID);
     final var dtoCollection = linksDtoCollection(linksDto(INSTANCE_ID));
-    final var propagationData = new LinksPropagationData(INSTANCE_ID, links);
 
     doNothing().when(linkingService).updateLinks(INSTANCE_ID, links);
 
     delegate.updateLinks(INSTANCE_ID, dtoCollection);
 
     verify(linkingService).updateLinks(INSTANCE_ID, links);
-    verify(propagationService).propagate(propagationData, ConsortiumAuthorityPropagationService.PropagationType.UPDATE,
-        TENANT_ID);
   }
 
   @Test
@@ -247,6 +240,29 @@ class LinkingServiceDelegateTest {
       .hasSize(ids.size())
       .extracting(LinksCountDto::getId, LinksCountDto::getTotalLinks)
       .containsExactlyInAnyOrder(tuple(ids.get(0), 2), tuple(ids.get(1), 1), tuple(ids.get(2), 0));
+  }
+
+  @Test
+  void countLinksByAuthorityIds_positive_consortium() {
+    var ids = List.of(randomUUID(), randomUUID(), randomUUID());
+    var memberTenantCounts = new HashMap<UUID, Integer>();
+    memberTenantCounts.put(ids.get(0), 2);
+    memberTenantCounts.put(ids.get(1), 1);
+    var centralTenantCounts = Map.of(ids.get(0), 1, ids.get(2), 3);
+
+    when(context.getTenantId()).thenReturn(TENANT_ID);
+    when(userTenantsService.getCentralTenant(TENANT_ID)).thenReturn(Optional.of(CENTRAL_TENANT_ID));
+    when(linkingService.countLinksByAuthorityIds(new HashSet<>(ids))).thenReturn(memberTenantCounts);
+    when(linkingService.countLinksByAuthorityIds(new HashSet<>(ids), CENTRAL_TENANT_ID))
+      .thenReturn(centralTenantCounts);
+    when(mapper.convert(anyMap())).thenCallRealMethod();
+
+    var actual = delegate.countLinksByAuthorityIds(new UuidCollection().ids(ids));
+
+    assertThat(actual.getLinks())
+      .hasSize(ids.size())
+      .extracting(LinksCountDto::getId, LinksCountDto::getTotalLinks)
+      .containsExactlyInAnyOrder(tuple(ids.get(0), 3), tuple(ids.get(1), 1), tuple(ids.get(2), 3));
   }
 
   private void testGetLinkedBibUpdateStats_positive(List<InstanceAuthorityLink> linksMock,

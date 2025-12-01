@@ -69,20 +69,6 @@ class ConsortiumInstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(linksMatch(hasSize(2)))
       .andExpect(linksMatch(incomingLinks))
       .andExpect(totalRecordsMatch(2));
-
-    httpHeaders.put(XOkapiHeaders.TENANT, singletonList(COLLEGE_TENANT_ID));
-    awaitUntilAsserted(() ->
-        doGet(linksInstanceEndpoint(), httpHeaders, instanceId)
-            .andExpect(linksMatch(hasSize(2)))
-            .andExpect(linksMatch(incomingLinks))
-            .andExpect(totalRecordsMatch(2)));
-
-    httpHeaders.put(XOkapiHeaders.TENANT, singletonList(UNIVERSITY_TENANT_ID));
-    awaitUntilAsserted(() ->
-        doGet(linksInstanceEndpoint(), httpHeaders, instanceId)
-            .andExpect(linksMatch(hasSize(2)))
-            .andExpect(linksMatch(incomingLinks))
-            .andExpect(totalRecordsMatch(2)));
   }
 
   private InstanceLinkDtoCollection createLinkDtoCollection(int num, UUID instanceId) {

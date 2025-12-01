@@ -23,7 +23,6 @@ import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
-import org.folio.entlinks.domain.entity.projection.LinkCountViewImpl;
 import org.folio.entlinks.domain.repository.InstanceLinkJdbcRepository;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.service.authority.AuthorityService;
@@ -112,7 +111,7 @@ public class InstanceAuthorityLinkingService {
       log.info("Count links for [authority ids amount: {}, tenantId: {}]", authorityIds.size(), tenantId);
     }
     return instanceLinkJdbcRepository.countLinksByAuthorityIds(authorityIds, tenantId).stream()
-        .collect(Collectors.toMap(LinkCountViewImpl::getId, LinkCountViewImpl::getTotalLinks));
+        .collect(Collectors.toMap(LinkCountView::getId, LinkCountView::getTotalLinks));
   }
 
   @Transactional

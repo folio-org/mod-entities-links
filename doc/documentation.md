@@ -164,7 +164,6 @@ reflected on them.
 |:-------|:--------------------------------|:-------------------------------------------------|:--------------------------------------------|
 | GET    | `/links/instances/{instanceId}` | `entities-links.instances.collection.get`        | Get links collection related to Instance    |
 | PUT    | `/links/instances/{instanceId}` | `entities-links.instances.collection.put`        | Update links collection related to Instance |
-| POST   | `/links/authorities/bulk/count` | `instance-authority-links.authorities.bulk.post` | Retrieve number of links by authority IDs   |
 
 **Examples**
 
@@ -208,38 +207,6 @@ Request body:
       "authorityNaturalId": "mp96352145",
       "instanceId": "b2658a84-912b-4ed9-83d7-e8201f4d27ec",
       "linkingRuleId": 1
-    }
-  ]
-}
-```
-
-<a name='count-number-of-links-for-each-authority-id'></a>
-
-_Count number of links for each authority id:_
-
-`POST /links/authorities/bulk/count`
-
-Request body:
-```json
-{
-  "ids": [
-    "611d2938-9824-4817-a737-7ff26ab26d03",
-    "8e6a8a67-dd6b-4b40-899e-9b9167e9ad20"
-  ]
-}
-```
-
-Response:
-```json
-{
-  "links": [
-    {
-      "id": "8e6a8a67-dd6b-4b40-899e-9b9167e9ad20",
-      "totalLinks": 11
-    },
-    {
-      "id": "611d2938-9824-4817-a737-7ff26ab26d03",
-      "totalLinks": 0
     }
   ]
 }

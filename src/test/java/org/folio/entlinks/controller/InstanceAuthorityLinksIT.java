@@ -2,7 +2,6 @@ package org.folio.entlinks.controller;
 
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
-import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.MatchUtils.errorCodeMatch;
 import static org.folio.support.MatchUtils.errorMessageMatch;
 import static org.folio.support.MatchUtils.errorParameterMatch;
@@ -10,19 +9,16 @@ import static org.folio.support.MatchUtils.errorTotalMatch;
 import static org.folio.support.MatchUtils.errorTypeMatch;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceFile;
-import static org.folio.support.TestDataUtils.Link.TAGS;
 import static org.folio.support.TestDataUtils.NATURAL_IDS;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.base.TestConstants.TENANT_ID;
-import static org.folio.support.base.TestConstants.authoritiesLinksCountEndpoint;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,9 +30,6 @@ import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
-import org.folio.entlinks.domain.dto.LinksCountDto;
-import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
-import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.exception.type.ErrorType;
 import org.folio.spring.testing.extension.DatabaseCleanup;
@@ -285,74 +278,6 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
       .andExpect(errorMessageMatch(containsString("must not be null")))
       .andExpect(errorParameterMatch(is("links[0]." + missingField)));
-  }
-
-  @Test
-  @SneakyThrows
-  void countNumberOfTitles_positive_whenInstanceLinksExist() {
-    var instanceId = randomUUID();
-    var authorityId = TestDataUtils.AUTHORITY_IDS[0];
-    var authority1 = authority(0, 0);
-    databaseHelper.saveAuthority(TENANT_ID, authority1);
-    var links = linksDtoCollection(linksDto(instanceId,
-      new Link(authorityId, TAGS[1]),
-      new Link(authorityId, TAGS[2]),
-      new Link(authorityId, TAGS[3])
-    ));
-    doPut(linksInstanceEndpoint(), links, instanceId);
-
-    var secondInstanceId = randomUUID();
-    var secondAuthorityId = TestDataUtils.AUTHORITY_IDS[1];
-    var authority2 = authority(1, 0);
-    databaseHelper.saveAuthority(TENANT_ID, authority2);
-    var secondLinks = linksDtoCollection(linksDto(secondInstanceId,
-      new Link(authorityId, TAGS[1]),
-      new Link(authorityId, TAGS[2]),
-      new Link(secondAuthorityId, TAGS[0]),
-      new Link(secondAuthorityId, TAGS[2])
-    ));
-    doPut(linksInstanceEndpoint(), secondLinks, secondInstanceId);
-
-    var requestBody = new UuidCollection(List.of(authorityId, secondAuthorityId));
-    doPost(authoritiesLinksCountEndpoint(), requestBody)
-      .andExpect(status().isOk())
-      .andExpect(linksMatch(hasSize(2)))
-      .andExpect(content().json(asJson(new LinksCountDtoCollection(
-        List.of(
-          new LinksCountDto().id(secondAuthorityId).totalLinks(1),
-          new LinksCountDto().id(authorityId).totalLinks(2)
-        )), objectMapper)));
-  }
-
-  @Test
-  @SneakyThrows
-  void countNumberOfTitles_positive_whenInstanceLinksNotExistThenReturnZeroCount() {
-    var requestBody = new UuidCollection(List.of(randomUUID(), randomUUID()));
-    doPost(authoritiesLinksCountEndpoint(), requestBody)
-      .andExpect(status().isOk())
-      .andExpect(linksMatch(hasSize(2)))
-      .andExpect(jsonPath("$.links.[0].totalLinks", is(0)))
-      .andExpect(jsonPath("$.links.[1].totalLinks", is(0)));
-  }
-
-  @Test
-  @SneakyThrows
-  void countNumberOfTitles_positive_whenRequestBodyIsEmptyThenReturnEmptyList() {
-    var requestBody = new UuidCollection(List.of());
-    doPost(authoritiesLinksCountEndpoint(), requestBody)
-      .andExpect(status().isOk())
-      .andExpect(linksMatch(hasSize(0)));
-  }
-
-  @Test
-  @SneakyThrows
-  void countNumberOfTitles_negative_whenRequestBodyInvalidThenThrowsValidationException() {
-    var requestBody = List.of("not uuid collection object");
-    tryPost(authoritiesLinksCountEndpoint(), requestBody)
-      .andExpect(status().isBadRequest())
-      .andExpect(errorTotalMatch(1))
-      .andExpect(errorTypeMatch(is("HttpMessageNotReadableException")))
-      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())));
   }
 
   static Stream<Arguments> requiredFieldMissingProvider() {

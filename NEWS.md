@@ -4,6 +4,7 @@
 
 ### New APIs versions
 * Provides `instance-authority-links-statistics v2.1`
+* Provides `instance-authority-links v2.2`
 * Requires `API_NAME vX.Y`
 
 ### Features

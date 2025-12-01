@@ -4,11 +4,8 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -19,14 +16,10 @@ import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.LinkStatus;
-import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
-import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
-import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.utils.ConsortiumUtils;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -39,9 +32,7 @@ public class LinkingServiceDelegate {
   private final InstanceAuthorityLinkingService linkingService;
   private final InstanceStorageService instanceService;
   private final InstanceAuthorityLinkMapper mapper;
-  private final FolioExecutionContext context;
   private final DataStatsMapper statsMapper;
-  private final UserTenantsService userTenantsService;
 
   public InstanceLinkDtoCollection getLinks(UUID instanceId) {
     var links = linkingService.getLinksByInstanceId(instanceId);
@@ -72,32 +63,6 @@ public class LinkingServiceDelegate {
     validateLinks(instanceId, links);
     var incomingLinks = mapper.convertDto(links);
     linkingService.updateLinks(instanceId, incomingLinks);
-  }
-
-  public LinksCountDtoCollection countLinksByAuthorityIds(UuidCollection authorityIdCollection) {
-    var ids = new HashSet<>(authorityIdCollection.getIds());
-    var countLinks = linkingService.countLinksByAuthorityIds(ids);
-    var centralTenant = userTenantsService.getCentralTenant(context.getTenantId());
-
-    // if the current tenant is a CONSORTIUM member tenant
-    if (centralTenant.isPresent() && !centralTenant.get().equals(context.getTenantId())) {
-      var countLinksFromCentralTenant = linkingService.countLinksByAuthorityIds(ids, centralTenant.get());
-      for (var entry : countLinksFromCentralTenant.entrySet()) {
-        countLinks.merge(entry.getKey(), entry.getValue(), Integer::sum);
-      }
-    }
-
-    var linkCountMap = fillInMissingIdsWithZeros(countLinks, ids);
-
-    return new LinksCountDtoCollection(mapper.convert(linkCountMap));
-  }
-
-  private Map<UUID, Integer> fillInMissingIdsWithZeros(Map<UUID, Integer> linksCountMap, HashSet<UUID> ids) {
-    var result = new HashMap<>(linksCountMap);
-    for (UUID id : ids) {
-      result.putIfAbsent(id, 0);
-    }
-    return result;
   }
 
   private void validateLinks(UUID instanceId, List<InstanceLinkDto> links) {

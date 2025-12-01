@@ -4,16 +4,13 @@ import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.from;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 import static org.folio.support.TestDataUtils.links;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
-import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
 import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
 import static org.folio.support.base.TestConstants.TENANT_ID;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
@@ -21,7 +18,6 @@ import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,8 +30,6 @@ import org.folio.entlinks.controller.converter.InstanceAuthorityLinkMapper;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.LinkStatus;
-import org.folio.entlinks.domain.dto.LinksCountDto;
-import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
@@ -224,45 +218,6 @@ class LinkingServiceDelegateTest {
       .hasMessage("Link should have instanceId = " + INSTANCE_ID)
       .extracting(RequestBodyValidationException::getInvalidParameters)
       .returns(4, from(List::size));
-  }
-
-  @Test
-  void countLinksByAuthorityIds_positive() {
-    var ids = List.of(randomUUID(), randomUUID(), randomUUID());
-
-    when(linkingService.countLinksByAuthorityIds(new HashSet<>(ids))).thenReturn(
-      Map.of(ids.get(0), 2, ids.get(1), 1));
-    when(mapper.convert(anyMap())).thenCallRealMethod();
-
-    var actual = delegate.countLinksByAuthorityIds(new UuidCollection().ids(ids));
-
-    assertThat(actual.getLinks())
-      .hasSize(ids.size())
-      .extracting(LinksCountDto::getId, LinksCountDto::getTotalLinks)
-      .containsExactlyInAnyOrder(tuple(ids.get(0), 2), tuple(ids.get(1), 1), tuple(ids.get(2), 0));
-  }
-
-  @Test
-  void countLinksByAuthorityIds_positive_consortium() {
-    var ids = List.of(randomUUID(), randomUUID(), randomUUID());
-    var memberTenantCounts = new HashMap<UUID, Integer>();
-    memberTenantCounts.put(ids.get(0), 2);
-    memberTenantCounts.put(ids.get(1), 1);
-    var centralTenantCounts = Map.of(ids.get(0), 1, ids.get(2), 3);
-
-    when(context.getTenantId()).thenReturn(TENANT_ID);
-    when(userTenantsService.getCentralTenant(TENANT_ID)).thenReturn(Optional.of(CENTRAL_TENANT_ID));
-    when(linkingService.countLinksByAuthorityIds(new HashSet<>(ids))).thenReturn(memberTenantCounts);
-    when(linkingService.countLinksByAuthorityIds(new HashSet<>(ids), CENTRAL_TENANT_ID))
-      .thenReturn(centralTenantCounts);
-    when(mapper.convert(anyMap())).thenCallRealMethod();
-
-    var actual = delegate.countLinksByAuthorityIds(new UuidCollection().ids(ids));
-
-    assertThat(actual.getLinks())
-      .hasSize(ids.size())
-      .extracting(LinksCountDto::getId, LinksCountDto::getTotalLinks)
-      .containsExactlyInAnyOrder(tuple(ids.get(0), 3), tuple(ids.get(1), 1), tuple(ids.get(2), 3));
   }
 
   private void testGetLinkedBibUpdateStats_positive(List<InstanceAuthorityLink> linksMock,

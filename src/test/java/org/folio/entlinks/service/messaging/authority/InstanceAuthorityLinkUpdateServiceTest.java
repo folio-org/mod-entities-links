@@ -29,7 +29,6 @@ import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
-import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHandler;
@@ -64,7 +63,6 @@ class InstanceAuthorityLinkUpdateServiceTest {
   private @Mock ConsortiumTenantsService consortiumTenantsService;
   private @Mock FolioExecutionContext folioExecutionContext;
   private @Mock SystemUserScopedExecutionService executionService;
-  private @Mock UserTenantsService userTenantsService;
 
   private InstanceAuthorityLinkUpdateService service;
 
@@ -75,7 +73,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     service = new InstanceAuthorityLinkUpdateService(authorityDataStatService,
       mappingRulesProcessingService, linkingService, eventProducer, List.of(updateHandler, deleteHandler),
-      sourceRecordService, consortiumTenantsService, folioExecutionContext, executionService, userTenantsService);
+      sourceRecordService, consortiumTenantsService, folioExecutionContext, executionService);
   }
 
   @Test

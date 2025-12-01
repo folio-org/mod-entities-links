@@ -18,7 +18,6 @@ import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
-import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHandler;
@@ -42,7 +41,6 @@ public class InstanceAuthorityLinkUpdateService {
   private final ConsortiumTenantsService consortiumTenantsService;
   private final FolioExecutionContext folioExecutionContext;
   private final SystemUserScopedExecutionService executionService;
-  private final UserTenantsService userTenantsService;
 
   public InstanceAuthorityLinkUpdateService(AuthorityDataStatService authorityDataStatService,
                                             AuthorityMappingRulesProcessingService mappingRulesProcessingService,
@@ -52,8 +50,7 @@ public class InstanceAuthorityLinkUpdateService {
                                             AuthoritySourceRecordService sourceRecordService,
                                             ConsortiumTenantsService consortiumTenantsService,
                                             FolioExecutionContext folioExecutionContext,
-                                            SystemUserScopedExecutionService executionService,
-                                            UserTenantsService userTenantsService) {
+                                            SystemUserScopedExecutionService executionService) {
     this.authorityDataStatService = authorityDataStatService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.linkingService = linkingService;
@@ -64,7 +61,6 @@ public class InstanceAuthorityLinkUpdateService {
     this.consortiumTenantsService = consortiumTenantsService;
     this.folioExecutionContext = folioExecutionContext;
     this.executionService = executionService;
-    this.userTenantsService = userTenantsService;
   }
 
   public void handleAuthoritiesChanges(List<AuthorityDomainEvent> events) {
@@ -72,19 +68,6 @@ public class InstanceAuthorityLinkUpdateService {
         .map(AuthorityDomainEvent::getId)
         .collect(Collectors.toSet());
     var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(incomingAuthorityIds);
-    var tenantId = folioExecutionContext.getTenantId();
-    var centralTenant = userTenantsService.getCentralTenant(tenantId);
-    var isMemberConsortiumTenant = centralTenant.isPresent() && !centralTenant.get().equals(tenantId);
-    if (!isMemberConsortiumTenant) {
-      log.debug("Processing authority changes for shadow copies of authorities: [{}]", incomingAuthorityIds);
-      var countLinksFromCentralTenant = linkingService.countLinksByAuthorityIds(incomingAuthorityIds,
-          folioExecutionContext.getTenantId());
-      if (!countLinksFromCentralTenant.isEmpty()) {
-        for (Map.Entry<UUID, Integer> entry : countLinksFromCentralTenant.entrySet()) {
-          linksNumberByAuthorityId.merge(entry.getKey(), entry.getValue(), Integer::sum);
-        }
-      }
-    }
 
     var fieldTagRelation = mappingRulesProcessingService.getFieldTagRelations();
     var changeHolders = events.stream()
@@ -95,6 +78,7 @@ public class InstanceAuthorityLinkUpdateService {
 
     prepareAndSaveAuthorityDataStats(changeHolders);
     processEventsByChangeType(changeHolders);
+    processChangesForShadowAuthorities(incomingAuthorityIds, changeHolders);
   }
 
   private void fillChangeHoldersWithSourceRecord(List<AuthorityChangeHolder> changeHolders) {
@@ -179,7 +163,7 @@ public class InstanceAuthorityLinkUpdateService {
         }
         changeHolderCopies.forEach(changeHolder ->
             changeHolder.setNumberOfLinks(linksNumberByAuthorityId.getOrDefault(changeHolder.getAuthorityId(), 0)));
-        prepareAndSaveAuthorityDataStats(changeHolderCopies);
+        //prepareAndSaveAuthorityDataStats(changeHolderCopies);
         processEventsByChangeType(changeHolderCopies);
         return null;
       });

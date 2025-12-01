@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.projection.LinkCountViewImpl;
-import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -24,16 +24,16 @@ public class InstanceLinkJdbcRepository {
     """;
 
   private final JdbcTemplate jdbcTemplate;
-  private final FolioExecutionContext folioExecutionContext;
+  private final FolioModuleMetadata folioModuleMetadata;
 
-  public InstanceLinkJdbcRepository(JdbcTemplate jdbcTemplate, FolioExecutionContext folioExecutionContext) {
+  public InstanceLinkJdbcRepository(JdbcTemplate jdbcTemplate, FolioModuleMetadata folioModuleMetadata) {
     this.jdbcTemplate = jdbcTemplate;
-    this.folioExecutionContext = folioExecutionContext;
+    this.folioModuleMetadata = folioModuleMetadata;
   }
 
   @SuppressWarnings("java:S2077")
   public List<LinkCountViewImpl> countLinksByAuthorityIds(Set<UUID> authorityIds, String tenantId) {
-    var path = getFullPath(folioExecutionContext, tenantId, INSTANCE_AUTHORITY_LINK_TABLE);
+    var path = getFullPath(folioModuleMetadata, tenantId, INSTANCE_AUTHORITY_LINK_TABLE);
     var idsString = authorityIds.stream()
       .map(id -> "'" + id + "'")
       .collect(joining(","));

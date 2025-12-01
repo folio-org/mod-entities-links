@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.experimental.UtilityClass;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
 
 @UtilityClass
 public class JdbcUtils {
@@ -22,8 +23,8 @@ public class JdbcUtils {
     return getSchemaName(context) + "." + tableName;
   }
 
-  public static String getFullPath(FolioExecutionContext context, String tenant, String tableName) {
-    return getSchemaName(context, tenant) + "." + tableName;
+  public static String getFullPath(FolioModuleMetadata folioModuleMetadata, String tenant, String tableName) {
+    return folioModuleMetadata.getDBSchemaName(tenant) + "." + tableName;
   }
 
   public static String getParamPlaceholder(int size) {

@@ -2,14 +2,17 @@ package org.folio.entlinks;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.mustache.MustacheAutoConfiguration;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @EnableKafka
 @EnableCaching
 @EnableAsync
-@SpringBootApplication
+@ComponentScan("org.folio")
+@SpringBootApplication(exclude = MustacheAutoConfiguration.class)
 public class EntityLinksApplication {
 
   public static void main(String[] args) {

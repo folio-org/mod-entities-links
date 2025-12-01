@@ -1,37 +1,34 @@
-version: "3.8"
-
 services:
 
-  mod-entities-links:
-    container_name: mod-entities-links
-    image: dev.folio/mod-entities-links
-    build:
-      context: ../
-      dockerfile: Dockerfile
-    networks:
-      - mod-entities-links-local
-    ports:
-      - "8081:8081"
-      - "${DEBUG_PORT}:${DEBUG_PORT}"
-    depends_on:
-      - api-mock
-      - kafka
-      - postgres
-    environment:
-      ENV: ${ENV}
-      KAFKA_HOST: ${KAFKA_HOST}
-      KAFKA_PORT: ${KAFKA_PORT}
-      REPLICATION_FACTOR: ${REPLICATION_FACTOR}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PORT: ${DB_PORT}
-      DB_HOST: ${DB_HOST}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_PASSWORD: ${DB_PASSWORD}
-      JAVA_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:${DEBUG_PORT}"
+#  mod-entities-links:
+#    container_name: mod-entities-links
+#    image: dev.folio/mod-entities-links
+#    build:
+#      context: ../
+#      dockerfile: Dockerfile
+#    networks:
+#      - mod-entities-links-local
+#    ports:
+#      - "8081:8081"
+#      - "${DEBUG_PORT}:${DEBUG_PORT}"
+#    depends_on:
+#      - api-mock
+#      - kafka
+#      - postgres
+#    environment:
+#      ENV: ${ENV}
+#      KAFKA_HOST: ${KAFKA_HOST}
+#      KAFKA_PORT: ${KAFKA_PORT}
+#      REPLICATION_FACTOR: ${REPLICATION_FACTOR}
+#      DB_USERNAME: ${DB_USERNAME}
+#      DB_PORT: ${DB_PORT}
+#      DB_HOST: ${DB_HOST}
+#      DB_DATABASE: ${DB_DATABASE}
+#      DB_PASSWORD: ${DB_PASSWORD}
+#      JAVA_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:${DEBUG_PORT}"
 
   api-mock:
-    container_name: api-mock_mod-entities-links
-    image: wiremock/wiremock:2.32.0
+    image: wiremock/wiremock:3.8.0
     networks:
       - mod-entities-links-local
     command:
@@ -39,77 +36,66 @@ services:
     ports:
       - "9130:8080"
     volumes:
-      - ./mappings:/home/wiremock/mappings
-
-  zookeeper:
-    container_name: zookeeper_mod-entities-links
-    image: wurstmeister/zookeeper:3.4.6
-    networks:
-      - mod-entities-links-local
-    ports:
-      - "2181:2181"
-
-  kafka:
-    container_name: kafka_mod-entities-links
-    image: wurstmeister/kafka:2.13-2.8.1
-    networks:
-      - mod-entities-links-local
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-      - "29092:29092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:29092
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://localhost:29092
-      KAFKA_ADVERTISED_HOST_NAME: kafka
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_MESSAGE_MAX_BYTES: 1000000
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-
-  kafka-ui:
-    container_name: kafka-ui_mod-entities-links
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - "8080:8080"
-    depends_on:
-      - zookeeper
-      - kafka
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-      KAFKA_CLUSTERS_0_JMXPORT: 9997
-    networks:
-      - mod-entities-links-local
+      - ../src/test/resources/mappings:/home/wiremock/mappings
 
   postgres:
-    container_name: postgres_mod-entities-links
     image: postgres:16-alpine
-    networks:
-      - mod-entities-links-local
     ports:
-      - "5432:5432"
+      - ${DB_PORT}:5432
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
-      PGDATA: "/data/postgres"
+    networks:
+      - mod-entities-links-local
 
   pgadmin:
-    container_name: pgadmin_mod-entities-links
-    image: dpage/pgadmin4:latest
+    image: dpage/pgadmin4:9.4
+    ports:
+      - ${PGADMIN_PORT}:80
+    volumes:
+      - "pgadmin-data:/var/lib/pgadmin"
+    environment:
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    networks:
+      - mod-entities-links-local
+
+  kafka:
+    image: apache/kafka-native
     networks:
       - mod-entities-links-local
     ports:
-      - ${PGADMIN_PORT}:80
+      - ${KAFKA_PORT}:9093
+      - 29092:29092
     environment:
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
-      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
+      # Configure listeners for both docker and host communication
+      KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:29092,DOCKER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: HOST://localhost:29092,DOCKER://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
+      # Settings required for KRaft mode
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
+      # Listener to use for broker-to-broker communication
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      # Required for a single node cluster
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    networks:
+      - mod-entities-links-local
+    ports:
+      - ${KAFKA_UI_PORT}:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:${KAFKA_PORT}
+    depends_on:
+      - kafka
 
 networks:
   mod-entities-links-local:

@@ -121,37 +121,9 @@ class AuthorityServiceTest {
 
   @Test
   void shouldUpdateAuthority() {
-    UUID id = UUID.randomUUID();
-
-    var existed = new Authority();
-    existed.setId(id);
-    existed.setHeading("heading");
-    existed.setHeadingType("personalName");
-    existed.setSource("MARC");
-    existed.setNaturalId("natural");
-    existed.setVersion(0);
-    existed.setSaftHeadings(List.of(new HeadingRef("personalName", "saft")));
-    existed.setSftHeadings(List.of(new HeadingRef("personalName", "sft")));
-    existed.setNotes(List.of(new AuthorityNote(UUID.randomUUID(), "note", true)));
-    existed.setIdentifiers(List.of(new AuthorityIdentifier("identifier", UUID.randomUUID())));
-    var sourceFileOld = new AuthoritySourceFile();
-    sourceFileOld.setId(UUID.randomUUID());
-    existed.setAuthoritySourceFile(sourceFileOld);
-
-    var modified = new Authority();
-    modified.setId(id);
-    modified.setHeading("new heading");
-    modified.setHeadingType("personalNameNew");
-    modified.setSource("MARCNEW");
-    modified.setNaturalId("naturalNew");
-    modified.setVersion(1);
-    modified.setSaftHeadings(List.of(new HeadingRef("personalNameNew", "saftNew")));
-    modified.setSftHeadings(List.of(new HeadingRef("personalNameNew", "sftNew")));
-    modified.setNotes(List.of(new AuthorityNote(UUID.randomUUID(), "noteNew", true)));
-    modified.setIdentifiers(List.of(new AuthorityIdentifier("identifierNew", UUID.randomUUID())));
-    var sourceFileNew = new AuthoritySourceFile();
-    sourceFileNew.setId(UUID.randomUUID());
-    modified.setAuthoritySourceFile(sourceFileNew);
+    var id = UUID.randomUUID();
+    var existed = getExistedAuthority(id);
+    var modified = getModifiedAuthority(id);
 
     when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(existed));
     when(sourceFileRepository.existsById(any(UUID.class))).thenReturn(true);
@@ -238,5 +210,41 @@ class AuthorityServiceTest {
     service.deleteByIds(List.of(UUID.randomUUID()));
 
     verify(repository).deleteAllByIdInBatch(anyIterable());
+  }
+
+  private Authority getModifiedAuthority(UUID id) {
+    var modified = new Authority();
+    modified.setId(id);
+    modified.setHeading("new heading");
+    modified.setHeadingType("personalNameNew");
+    modified.setSource("MARCNEW");
+    modified.setNaturalId("naturalNew");
+    modified.setVersion(1);
+    modified.setSaftHeadings(List.of(new HeadingRef("personalNameNew", "saftNew")));
+    modified.setSftHeadings(List.of(new HeadingRef("personalNameNew", "sftNew")));
+    modified.setNotes(List.of(new AuthorityNote(UUID.randomUUID(), "noteNew", true)));
+    modified.setIdentifiers(List.of(new AuthorityIdentifier("identifierNew", UUID.randomUUID())));
+    var sourceFileNew = new AuthoritySourceFile();
+    sourceFileNew.setId(UUID.randomUUID());
+    modified.setAuthoritySourceFile(sourceFileNew);
+    return modified;
+  }
+
+  private Authority getExistedAuthority(UUID id) {
+    var existed = new Authority();
+    existed.setId(id);
+    existed.setHeading("heading");
+    existed.setHeadingType("personalName");
+    existed.setSource("MARC");
+    existed.setNaturalId("natural");
+    existed.setVersion(0);
+    existed.setSaftHeadings(List.of(new HeadingRef("personalName", "saft")));
+    existed.setSftHeadings(List.of(new HeadingRef("personalName", "sft")));
+    existed.setNotes(List.of(new AuthorityNote(UUID.randomUUID(), "note", true)));
+    existed.setIdentifiers(List.of(new AuthorityIdentifier("identifier", UUID.randomUUID())));
+    var sourceFileOld = new AuthoritySourceFile();
+    sourceFileOld.setId(UUID.randomUUID());
+    existed.setAuthoritySourceFile(sourceFileOld);
+    return existed;
   }
 }

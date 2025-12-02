@@ -39,9 +39,13 @@ import static org.folio.entlinks.domain.entity.AuthorityConstants.UNIFORM_TITLE_
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import lombok.experimental.UtilityClass;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.dto.AuthorityDto;
@@ -54,307 +58,55 @@ import org.folio.entlinks.domain.entity.RelationshipType;
 @Log4j2
 public class AuthorityUtilityMapper {
 
+  private static final Map<String, Function<AuthorityDto, String>> HEADING_EXTRACTORS =
+    createHeadingExtractors();
+  private static final Map<String, BiConsumer<AuthorityDto, String>> HEADING_SETTERS =
+    createHeadingSetters();
+  private static final Map<String, Function<AuthorityDto, List<String>>> SFT_HEADING_EXTRACTORS =
+    createSftHeadingExtractors();
+  private static final Map<String, BiConsumer<AuthorityDto, String>> SFT_HEADING_ADDERS =
+    createSftHeadingAdders();
+  private static final Map<String, Function<AuthorityDto, List<String>>> SAFT_HEADING_EXTRACTORS =
+    createSaftHeadingExtractors();
+  private static final Map<String, BiConsumer<AuthorityDto, String>> SAFT_HEADING_ADDERS =
+    createSaftHeadingAdders();
+  private static final Map<String, Function<AuthorityDto, List<String>>> SAFT_TRUNC_HEADING_EXTRACTORS =
+    createSaftTruncHeadingExtractors();
+  private static final Map<String, BiConsumer<AuthorityDto, String>> SAFT_TRUNC_HEADING_ADDERS =
+    createSaftTruncHeadingAdders();
+
   public static void extractAuthorityHeading(AuthorityDto source, AuthorityBase target) {
-    if (Objects.nonNull(source.getPersonalName())) {
-      target.setHeading(source.getPersonalName());
-      target.setHeadingType(PERSONAL_NAME_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getPersonalNameTitle())) {
-      target.setHeading(source.getPersonalNameTitle());
-      target.setHeadingType(PERSONAL_NAME_TITLE_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getCorporateName())) {
-      target.setHeading(source.getCorporateName());
-      target.setHeadingType(CORPORATE_NAME_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getCorporateNameTitle())) {
-      target.setHeading(source.getCorporateNameTitle());
-      target.setHeadingType(CORPORATE_NAME_TITLE_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getMeetingName())) {
-      target.setHeading(source.getMeetingName());
-      target.setHeadingType(MEETING_NAME_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getMeetingNameTitle())) {
-      target.setHeading(source.getMeetingNameTitle());
-      target.setHeadingType(MEETING_NAME_TITLE_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getUniformTitle())) {
-      target.setHeading(source.getUniformTitle());
-      target.setHeadingType(UNIFORM_TITLE_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getNamedEvent())) {
-      target.setHeading(source.getNamedEvent());
-      target.setHeadingType(NAMED_EVENT_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getTopicalTerm())) {
-      target.setHeading(source.getTopicalTerm());
-      target.setHeadingType(TOPICAL_TERM_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getGeographicName())) {
-      target.setHeading(source.getGeographicName());
-      target.setHeadingType(GEOGRAPHIC_NAME_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getGenreTerm())) {
-      target.setHeading(source.getGenreTerm());
-      target.setHeadingType(GENRE_TERM_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getChronTerm())) {
-      target.setHeading(source.getChronTerm());
-      target.setHeadingType(CHRON_TERM_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getMediumPerfTerm())) {
-      target.setHeading(source.getMediumPerfTerm());
-      target.setHeadingType(MEDIUM_PERF_TERM_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getGeneralSubdivision())) {
-      target.setHeading(source.getGeneralSubdivision());
-      target.setHeadingType(GENERAL_SUBDIVISION_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getGeographicSubdivision())) {
-      target.setHeading(source.getGeographicSubdivision());
-      target.setHeadingType(GEOGRAPHIC_SUBDIVISION_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getChronSubdivision())) {
-      target.setHeading(source.getChronSubdivision());
-      target.setHeadingType(CHRON_SUBDIVISION_HEADING);
-      return;
-    }
-    if (Objects.nonNull(source.getFormSubdivision())) {
-      target.setHeading(source.getFormSubdivision());
-      target.setHeadingType(FORM_SUBDIVISION_HEADING);
+    for (Map.Entry<String, Function<AuthorityDto, String>> entry : HEADING_EXTRACTORS.entrySet()) {
+      var heading = entry.getValue().apply(source);
+      if (Objects.nonNull(heading)) {
+        target.setHeading(heading);
+        target.setHeadingType(entry.getKey());
+        return;
+      }
     }
   }
 
   public static void extractAuthoritySftHeadings(AuthorityDto source, AuthorityBase target) {
-    List<HeadingRef> sftHeadings = new ArrayList<>();
-    if (isNotEmpty(source.getSftPersonalName())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftPersonalName(), PERSONAL_NAME_HEADING));
-    }
-    if (isNotEmpty(source.getSftPersonalNameTitle())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftPersonalNameTitle(), PERSONAL_NAME_TITLE_HEADING));
-    }
-    if (isNotEmpty(source.getSftCorporateName())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftCorporateName(), CORPORATE_NAME_HEADING));
-    }
-    if (isNotEmpty(source.getSftCorporateNameTitle())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftCorporateNameTitle(), CORPORATE_NAME_TITLE_HEADING));
-    }
-    if (isNotEmpty(source.getSftMeetingName())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftMeetingName(), MEETING_NAME_HEADING));
-    }
-    if (isNotEmpty(source.getSftMeetingNameTitle())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftMeetingNameTitle(), MEETING_NAME_TITLE_HEADING));
-    }
-    if (isNotEmpty(source.getSftUniformTitle())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftUniformTitle(), UNIFORM_TITLE_HEADING));
-    }
-    if (isNotEmpty(source.getSftNamedEvent())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftNamedEvent(), NAMED_EVENT_HEADING));
-    }
-    if (isNotEmpty(source.getSftTopicalTerm())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftTopicalTerm(), TOPICAL_TERM_HEADING));
-    }
-    if (isNotEmpty(source.getSftGeographicName())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftGeographicName(), GEOGRAPHIC_NAME_HEADING));
-    }
-    if (isNotEmpty(source.getSftGenreTerm())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftGenreTerm(), GENRE_TERM_HEADING));
-    }
-    if (isNotEmpty(source.getSftChronTerm())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftChronTerm(), CHRON_TERM_HEADING));
-    }
-    if (isNotEmpty(source.getSftMediumPerfTerm())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftMediumPerfTerm(), MEDIUM_PERF_TERM_HEADING));
-    }
-    if (isNotEmpty(source.getSftGeneralSubdivision())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftGeneralSubdivision(), GENERAL_SUBDIVISION_HEADING));
-    }
-    if (isNotEmpty(source.getSftGeographicSubdivision())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftGeographicSubdivision(), GEOGRAPHIC_SUBDIVISION_HEADING));
-    }
-    if (isNotEmpty(source.getSftChronSubdivision())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftChronSubdivision(), CHRON_SUBDIVISION_HEADING));
-    }
-    if (isNotEmpty(source.getSftFormSubdivision())) {
-      sftHeadings.addAll(asSftHeadings(source.getSftFormSubdivision(), FORM_SUBDIVISION_HEADING));
-    }
+    var sftHeadings = extractHeadingsFromMap(source, SFT_HEADING_EXTRACTORS);
     target.setSftHeadings(sftHeadings);
   }
 
   public static void extractAuthoritySaftHeadings(AuthorityDto source, AuthorityBase target) {
-    List<HeadingRef> saftHeadings = new ArrayList<>();
-    if (isNotEmpty(source.getSaftPersonalName())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftPersonalName(), PERSONAL_NAME_HEADING));
-    }
-    if (isNotEmpty(source.getSaftPersonalNameTitle())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftPersonalNameTitle(), PERSONAL_NAME_TITLE_HEADING));
-    }
-    if (isNotEmpty(source.getSaftCorporateName())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftCorporateName(), CORPORATE_NAME_HEADING));
-    }
-    if (isNotEmpty(source.getSaftCorporateNameTitle())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftCorporateNameTitle(), CORPORATE_NAME_TITLE_HEADING));
-    }
-    if (isNotEmpty(source.getSaftMeetingName())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftMeetingName(), MEETING_NAME_HEADING));
-    }
-    if (isNotEmpty(source.getSaftMeetingNameTitle())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftMeetingNameTitle(), MEETING_NAME_TITLE_HEADING));
-    }
-    if (isNotEmpty(source.getSaftUniformTitle())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftUniformTitle(), UNIFORM_TITLE_HEADING));
-    }
-    if (isNotEmpty(source.getSaftNamedEvent())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftNamedEvent(), NAMED_EVENT_HEADING));
-    }
-    if (isNotEmpty(source.getSaftTopicalTerm())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftTopicalTerm(), TOPICAL_TERM_HEADING));
-    }
-    if (isNotEmpty(source.getSaftGeographicName())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftGeographicName(), GEOGRAPHIC_NAME_HEADING));
-    }
-    if (isNotEmpty(source.getSaftGenreTerm())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftGenreTerm(), GENRE_TERM_HEADING));
-    }
-    if (isNotEmpty(source.getSaftChronTerm())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftChronTerm(), CHRON_TERM_HEADING));
-    }
-    if (isNotEmpty(source.getSaftMediumPerfTerm())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftMediumPerfTerm(), MEDIUM_PERF_TERM_HEADING));
-    }
-    if (isNotEmpty(source.getSaftGeneralSubdivision())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftGeneralSubdivision(), GENERAL_SUBDIVISION_HEADING));
-    }
-    if (isNotEmpty(source.getSaftGeographicSubdivision())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftGeographicSubdivision(), GEOGRAPHIC_SUBDIVISION_HEADING));
-    }
-    if (isNotEmpty(source.getSaftChronSubdivision())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftChronSubdivision(), CHRON_SUBDIVISION_HEADING));
-    }
-    if (isNotEmpty(source.getSaftFormSubdivision())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftFormSubdivision(), FORM_SUBDIVISION_HEADING));
-    }
-    extractAuthoritySaftHeadingsTruncated(source, saftHeadings);
+    var saftHeadings = extractHeadingsFromMap(source, SAFT_HEADING_EXTRACTORS);
+    saftHeadings.addAll(extractHeadingsFromMap(source, SAFT_TRUNC_HEADING_EXTRACTORS));
     addRelationshipsToSaftHeadings(source, saftHeadings);
     target.setSaftHeadings(saftHeadings);
-  }
-
-  private void extractAuthoritySaftHeadingsTruncated(AuthorityDto source, List<HeadingRef> saftHeadings) {
-    if (isNotEmpty(source.getSaftPersonalNameTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftPersonalNameTrunc(), PERSONAL_NAME_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftPersonalNameTitleTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftPersonalNameTitleTrunc(), PERSONAL_NAME_TITLE_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftCorporateNameTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftCorporateNameTrunc(), CORPORATE_NAME_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftCorporateNameTitleTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftCorporateNameTitleTrunc(), CORPORATE_NAME_TITLE_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftMeetingNameTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftMeetingNameTrunc(), MEETING_NAME_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftMeetingNameTitleTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftMeetingNameTitleTrunc(), MEETING_NAME_TITLE_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftUniformTitleTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftUniformTitleTrunc(), UNIFORM_TITLE_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftTopicalTermTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftTopicalTermTrunc(), TOPICAL_TERM_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftGeographicNameTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftGeographicNameTrunc(), GEOGRAPHIC_NAME_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftGenreTermTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftGenreTermTrunc(), GENRE_TERM_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftNamedEventTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftNamedEventTrunc(), NAMED_EVENT_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftChronTermTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftChronTermTrunc(), CHRON_TERM_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftMediumPerfTermTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftMediumPerfTermTrunc(), MEDIUM_PERF_TERM_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftGeneralSubdivisionTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftGeneralSubdivisionTrunc(), GENERAL_SUBDIVISION_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftGeographicSubdivisionTrunc())) {
-      saftHeadings.addAll(
-        asSftHeadings(source.getSaftGeographicSubdivisionTrunc(), GEOGRAPHIC_SUBDIVISION_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftChronSubdivisionTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftChronSubdivisionTrunc(), CHRON_SUBDIVISION_HEADING_TRUNC));
-    }
-    if (isNotEmpty(source.getSaftFormSubdivisionTrunc())) {
-      saftHeadings.addAll(asSftHeadings(source.getSaftFormSubdivisionTrunc(), FORM_SUBDIVISION_HEADING_TRUNC));
-    }
-  }
-
-  private void addRelationshipsToSaftHeadings(final AuthorityDto source, final List<HeadingRef> headingRefs) {
-    processRelationshipHeadings(source.getSaftBroaderTerm(), headingRefs, RelationshipType.BROADER_TERM);
-    processRelationshipHeadings(source.getSaftNarrowerTerm(), headingRefs, RelationshipType.NARROWER_TERM);
-    processRelationshipHeadings(source.getSaftEarlierHeading(), headingRefs, RelationshipType.EARLIER_HEADING);
-    processRelationshipHeadings(source.getSaftLaterHeading(), headingRefs, RelationshipType.LATER_HEADING);
-  }
-
-  private void processRelationshipHeadings(List<RelatedHeading> relationshipHeadings,
-      final List<HeadingRef> headingRefs, final RelationshipType relationshipType) {
-    if (isNotEmpty(relationshipHeadings)) {
-      headingRefs.forEach(headingRef ->
-          relationshipHeadings.forEach(relationshipHeading -> {
-            if (relationshipHeading.getHeadingType().equals(headingRef.getHeadingType())
-                && relationshipHeading.getHeadingRef().equals(headingRef.getHeading())) {
-              Set<RelationshipType> relationshipTypeSet = getOrCreateRelationshipTypeSet(headingRef);
-              relationshipTypeSet.add(relationshipType);
-            }
-          })
-      );
-    }
   }
 
   public static void extractAuthorityDtoHeadingValue(AuthorityBase source, AuthorityDto target) {
     if (source.getHeadingType() == null || source.getHeading() == null) {
       return;
     }
-    switch (source.getHeadingType()) {
-      case PERSONAL_NAME_HEADING -> target.setPersonalName(source.getHeading());
-      case PERSONAL_NAME_TITLE_HEADING -> target.setPersonalNameTitle(source.getHeading());
-      case CORPORATE_NAME_HEADING -> target.setCorporateName(source.getHeading());
-      case CORPORATE_NAME_TITLE_HEADING -> target.setCorporateNameTitle(source.getHeading());
-      case MEETING_NAME_HEADING -> target.setMeetingName(source.getHeading());
-      case MEETING_NAME_TITLE_HEADING -> target.setMeetingNameTitle(source.getHeading());
-      case UNIFORM_TITLE_HEADING -> target.setUniformTitle(source.getHeading());
-      case NAMED_EVENT_HEADING -> target.setNamedEvent(source.getHeading());
-      case TOPICAL_TERM_HEADING -> target.setTopicalTerm(source.getHeading());
-      case GEOGRAPHIC_NAME_HEADING -> target.setGeographicName(source.getHeading());
-      case GENRE_TERM_HEADING -> target.setGenreTerm(source.getHeading());
-      case CHRON_TERM_HEADING -> target.setChronTerm(source.getHeading());
-      case MEDIUM_PERF_TERM_HEADING -> target.setMediumPerfTerm(source.getHeading());
-      case GENERAL_SUBDIVISION_HEADING -> target.setGeneralSubdivision(source.getHeading());
-      case GEOGRAPHIC_SUBDIVISION_HEADING -> target.setGeographicSubdivision(source.getHeading());
-      case CHRON_SUBDIVISION_HEADING -> target.setChronSubdivision(source.getHeading());
-      case FORM_SUBDIVISION_HEADING -> target.setFormSubdivision(source.getHeading());
-      default -> log.warn("Invalid heading type - {} cannot be mapped", source.getHeadingType());
+    var setter = HEADING_SETTERS.get(source.getHeadingType());
+    if (setter != null) {
+      setter.accept(target, source.getHeading());
+    } else {
+      log.warn("Invalid heading type - {} cannot be mapped", source.getHeadingType());
     }
   }
 
@@ -372,101 +124,278 @@ public class AuthorityUtilityMapper {
     source.getSaftHeadings().forEach(headingRef -> extractAuthorityDtoSaftHeading(headingRef, target));
   }
 
-  private void extractAuthorityDtoSftHeading(HeadingRef headingRef, AuthorityDto target) {
-    if (headingRef == null || headingRef.getHeadingType() == null) {
-      return;
+  private static Map<String, Function<AuthorityDto, String>> createHeadingExtractors() {
+    Map<String, Function<AuthorityDto, String>> map = new LinkedHashMap<>();
+    map.put(PERSONAL_NAME_HEADING, AuthorityDto::getPersonalName);
+    map.put(PERSONAL_NAME_TITLE_HEADING, AuthorityDto::getPersonalNameTitle);
+    map.put(CORPORATE_NAME_HEADING, AuthorityDto::getCorporateName);
+    map.put(CORPORATE_NAME_TITLE_HEADING, AuthorityDto::getCorporateNameTitle);
+    map.put(MEETING_NAME_HEADING, AuthorityDto::getMeetingName);
+    map.put(MEETING_NAME_TITLE_HEADING, AuthorityDto::getMeetingNameTitle);
+    map.put(UNIFORM_TITLE_HEADING, AuthorityDto::getUniformTitle);
+    map.put(NAMED_EVENT_HEADING, AuthorityDto::getNamedEvent);
+    map.put(TOPICAL_TERM_HEADING, AuthorityDto::getTopicalTerm);
+    map.put(GEOGRAPHIC_NAME_HEADING, AuthorityDto::getGeographicName);
+    map.put(GENRE_TERM_HEADING, AuthorityDto::getGenreTerm);
+    map.put(CHRON_TERM_HEADING, AuthorityDto::getChronTerm);
+    map.put(MEDIUM_PERF_TERM_HEADING, AuthorityDto::getMediumPerfTerm);
+    map.put(GENERAL_SUBDIVISION_HEADING, AuthorityDto::getGeneralSubdivision);
+    map.put(GEOGRAPHIC_SUBDIVISION_HEADING, AuthorityDto::getGeographicSubdivision);
+    map.put(CHRON_SUBDIVISION_HEADING, AuthorityDto::getChronSubdivision);
+    map.put(FORM_SUBDIVISION_HEADING, AuthorityDto::getFormSubdivision);
+    return map;
+  }
+
+  private static Map<String, Function<AuthorityDto, List<String>>> createSftHeadingExtractors() {
+    Map<String, Function<AuthorityDto, List<String>>> map = new LinkedHashMap<>();
+    map.put(PERSONAL_NAME_HEADING, AuthorityDto::getSftPersonalName);
+    map.put(PERSONAL_NAME_TITLE_HEADING, AuthorityDto::getSftPersonalNameTitle);
+    map.put(CORPORATE_NAME_HEADING, AuthorityDto::getSftCorporateName);
+    map.put(CORPORATE_NAME_TITLE_HEADING, AuthorityDto::getSftCorporateNameTitle);
+    map.put(MEETING_NAME_HEADING, AuthorityDto::getSftMeetingName);
+    map.put(MEETING_NAME_TITLE_HEADING, AuthorityDto::getSftMeetingNameTitle);
+    map.put(UNIFORM_TITLE_HEADING, AuthorityDto::getSftUniformTitle);
+    map.put(NAMED_EVENT_HEADING, AuthorityDto::getSftNamedEvent);
+    map.put(TOPICAL_TERM_HEADING, AuthorityDto::getSftTopicalTerm);
+    map.put(GEOGRAPHIC_NAME_HEADING, AuthorityDto::getSftGeographicName);
+    map.put(GENRE_TERM_HEADING, AuthorityDto::getSftGenreTerm);
+    map.put(CHRON_TERM_HEADING, AuthorityDto::getSftChronTerm);
+    map.put(MEDIUM_PERF_TERM_HEADING, AuthorityDto::getSftMediumPerfTerm);
+    map.put(GENERAL_SUBDIVISION_HEADING, AuthorityDto::getSftGeneralSubdivision);
+    map.put(GEOGRAPHIC_SUBDIVISION_HEADING, AuthorityDto::getSftGeographicSubdivision);
+    map.put(CHRON_SUBDIVISION_HEADING, AuthorityDto::getSftChronSubdivision);
+    map.put(FORM_SUBDIVISION_HEADING, AuthorityDto::getSftFormSubdivision);
+    return map;
+  }
+
+  private static Map<String, Function<AuthorityDto, List<String>>> createSaftHeadingExtractors() {
+    Map<String, Function<AuthorityDto, List<String>>> map = new LinkedHashMap<>();
+    map.put(PERSONAL_NAME_HEADING, AuthorityDto::getSaftPersonalName);
+    map.put(PERSONAL_NAME_TITLE_HEADING, AuthorityDto::getSaftPersonalNameTitle);
+    map.put(CORPORATE_NAME_HEADING, AuthorityDto::getSaftCorporateName);
+    map.put(CORPORATE_NAME_TITLE_HEADING, AuthorityDto::getSaftCorporateNameTitle);
+    map.put(MEETING_NAME_HEADING, AuthorityDto::getSaftMeetingName);
+    map.put(MEETING_NAME_TITLE_HEADING, AuthorityDto::getSaftMeetingNameTitle);
+    map.put(UNIFORM_TITLE_HEADING, AuthorityDto::getSaftUniformTitle);
+    map.put(NAMED_EVENT_HEADING, AuthorityDto::getSaftNamedEvent);
+    map.put(TOPICAL_TERM_HEADING, AuthorityDto::getSaftTopicalTerm);
+    map.put(GEOGRAPHIC_NAME_HEADING, AuthorityDto::getSaftGeographicName);
+    map.put(GENRE_TERM_HEADING, AuthorityDto::getSaftGenreTerm);
+    map.put(CHRON_TERM_HEADING, AuthorityDto::getSaftChronTerm);
+    map.put(MEDIUM_PERF_TERM_HEADING, AuthorityDto::getSaftMediumPerfTerm);
+    map.put(GENERAL_SUBDIVISION_HEADING, AuthorityDto::getSaftGeneralSubdivision);
+    map.put(GEOGRAPHIC_SUBDIVISION_HEADING, AuthorityDto::getSaftGeographicSubdivision);
+    map.put(CHRON_SUBDIVISION_HEADING, AuthorityDto::getSaftChronSubdivision);
+    map.put(FORM_SUBDIVISION_HEADING, AuthorityDto::getSaftFormSubdivision);
+    return map;
+  }
+
+  private static Map<String, Function<AuthorityDto, List<String>>> createSaftTruncHeadingExtractors() {
+    Map<String, Function<AuthorityDto, List<String>>> map = new LinkedHashMap<>();
+    map.put(PERSONAL_NAME_HEADING_TRUNC, AuthorityDto::getSaftPersonalNameTrunc);
+    map.put(PERSONAL_NAME_TITLE_HEADING_TRUNC, AuthorityDto::getSaftPersonalNameTitleTrunc);
+    map.put(CORPORATE_NAME_HEADING_TRUNC, AuthorityDto::getSaftCorporateNameTrunc);
+    map.put(CORPORATE_NAME_TITLE_HEADING_TRUNC, AuthorityDto::getSaftCorporateNameTitleTrunc);
+    map.put(MEETING_NAME_HEADING_TRUNC, AuthorityDto::getSaftMeetingNameTrunc);
+    map.put(MEETING_NAME_TITLE_HEADING_TRUNC, AuthorityDto::getSaftMeetingNameTitleTrunc);
+    map.put(UNIFORM_TITLE_HEADING_TRUNC, AuthorityDto::getSaftUniformTitleTrunc);
+    map.put(TOPICAL_TERM_HEADING_TRUNC, AuthorityDto::getSaftTopicalTermTrunc);
+    map.put(GEOGRAPHIC_NAME_HEADING_TRUNC, AuthorityDto::getSaftGeographicNameTrunc);
+    map.put(GENRE_TERM_HEADING_TRUNC, AuthorityDto::getSaftGenreTermTrunc);
+    map.put(NAMED_EVENT_HEADING_TRUNC, AuthorityDto::getSaftNamedEventTrunc);
+    map.put(CHRON_TERM_HEADING_TRUNC, AuthorityDto::getSaftChronTermTrunc);
+    map.put(MEDIUM_PERF_TERM_HEADING_TRUNC, AuthorityDto::getSaftMediumPerfTermTrunc);
+    map.put(GENERAL_SUBDIVISION_HEADING_TRUNC, AuthorityDto::getSaftGeneralSubdivisionTrunc);
+    map.put(GEOGRAPHIC_SUBDIVISION_HEADING_TRUNC, AuthorityDto::getSaftGeographicSubdivisionTrunc);
+    map.put(CHRON_SUBDIVISION_HEADING_TRUNC, AuthorityDto::getSaftChronSubdivisionTrunc);
+    map.put(FORM_SUBDIVISION_HEADING_TRUNC, AuthorityDto::getSaftFormSubdivisionTrunc);
+    return map;
+  }
+
+  private static Map<String, BiConsumer<AuthorityDto, String>> createHeadingSetters() {
+    Map<String, BiConsumer<AuthorityDto, String>> map = new LinkedHashMap<>();
+    map.put(PERSONAL_NAME_HEADING, AuthorityDto::setPersonalName);
+    map.put(PERSONAL_NAME_TITLE_HEADING, AuthorityDto::setPersonalNameTitle);
+    map.put(CORPORATE_NAME_HEADING, AuthorityDto::setCorporateName);
+    map.put(CORPORATE_NAME_TITLE_HEADING, AuthorityDto::setCorporateNameTitle);
+    map.put(MEETING_NAME_HEADING, AuthorityDto::setMeetingName);
+    map.put(MEETING_NAME_TITLE_HEADING, AuthorityDto::setMeetingNameTitle);
+    map.put(UNIFORM_TITLE_HEADING, AuthorityDto::setUniformTitle);
+    map.put(NAMED_EVENT_HEADING, AuthorityDto::setNamedEvent);
+    map.put(TOPICAL_TERM_HEADING, AuthorityDto::setTopicalTerm);
+    map.put(GEOGRAPHIC_NAME_HEADING, AuthorityDto::setGeographicName);
+    map.put(GENRE_TERM_HEADING, AuthorityDto::setGenreTerm);
+    map.put(CHRON_TERM_HEADING, AuthorityDto::setChronTerm);
+    map.put(MEDIUM_PERF_TERM_HEADING, AuthorityDto::setMediumPerfTerm);
+    map.put(GENERAL_SUBDIVISION_HEADING, AuthorityDto::setGeneralSubdivision);
+    map.put(GEOGRAPHIC_SUBDIVISION_HEADING, AuthorityDto::setGeographicSubdivision);
+    map.put(CHRON_SUBDIVISION_HEADING, AuthorityDto::setChronSubdivision);
+    map.put(FORM_SUBDIVISION_HEADING, AuthorityDto::setFormSubdivision);
+    return map;
+  }
+
+  private static Map<String, BiConsumer<AuthorityDto, String>> createSftHeadingAdders() {
+    Map<String, BiConsumer<AuthorityDto, String>> map = new LinkedHashMap<>();
+    map.put(PERSONAL_NAME_HEADING, AuthorityDto::addSftPersonalNameItem);
+    map.put(PERSONAL_NAME_TITLE_HEADING, AuthorityDto::addSftPersonalNameTitleItem);
+    map.put(CORPORATE_NAME_HEADING, AuthorityDto::addSftCorporateNameItem);
+    map.put(CORPORATE_NAME_TITLE_HEADING, AuthorityDto::addSftCorporateNameTitleItem);
+    map.put(MEETING_NAME_HEADING, AuthorityDto::addSftMeetingNameItem);
+    map.put(MEETING_NAME_TITLE_HEADING, AuthorityDto::addSftMeetingNameTitleItem);
+    map.put(UNIFORM_TITLE_HEADING, AuthorityDto::addSftUniformTitleItem);
+    map.put(NAMED_EVENT_HEADING, AuthorityDto::addSftNamedEventItem);
+    map.put(TOPICAL_TERM_HEADING, AuthorityDto::addSftTopicalTermItem);
+    map.put(GEOGRAPHIC_NAME_HEADING, AuthorityDto::addSftGeographicNameItem);
+    map.put(GENRE_TERM_HEADING, AuthorityDto::addSftGenreTermItem);
+    map.put(CHRON_TERM_HEADING, AuthorityDto::addSftChronTermItem);
+    map.put(MEDIUM_PERF_TERM_HEADING, AuthorityDto::addSftMediumPerfTermItem);
+    map.put(GENERAL_SUBDIVISION_HEADING, AuthorityDto::addSftGeneralSubdivisionItem);
+    map.put(GEOGRAPHIC_SUBDIVISION_HEADING, AuthorityDto::addSftGeographicSubdivisionItem);
+    map.put(CHRON_SUBDIVISION_HEADING, AuthorityDto::addSftChronSubdivisionItem);
+    map.put(FORM_SUBDIVISION_HEADING, AuthorityDto::addSftFormSubdivisionItem);
+    return map;
+  }
+
+  private static Map<String, BiConsumer<AuthorityDto, String>> createSaftHeadingAdders() {
+    Map<String, BiConsumer<AuthorityDto, String>> map = new LinkedHashMap<>();
+    map.put(PERSONAL_NAME_HEADING, AuthorityDto::addSaftPersonalNameItem);
+    map.put(PERSONAL_NAME_TITLE_HEADING, AuthorityDto::addSaftPersonalNameTitleItem);
+    map.put(CORPORATE_NAME_HEADING, AuthorityDto::addSaftCorporateNameItem);
+    map.put(CORPORATE_NAME_TITLE_HEADING, AuthorityDto::addSaftCorporateNameTitleItem);
+    map.put(MEETING_NAME_HEADING, AuthorityDto::addSaftMeetingNameItem);
+    map.put(MEETING_NAME_TITLE_HEADING, AuthorityDto::addSaftMeetingNameTitleItem);
+    map.put(UNIFORM_TITLE_HEADING, AuthorityDto::addSaftUniformTitleItem);
+    map.put(NAMED_EVENT_HEADING, AuthorityDto::addSaftNamedEventItem);
+    map.put(TOPICAL_TERM_HEADING, AuthorityDto::addSaftTopicalTermItem);
+    map.put(GEOGRAPHIC_NAME_HEADING, AuthorityDto::addSaftGeographicNameItem);
+    map.put(GENRE_TERM_HEADING, AuthorityDto::addSaftGenreTermItem);
+    map.put(CHRON_TERM_HEADING, AuthorityDto::addSaftChronTermItem);
+    map.put(MEDIUM_PERF_TERM_HEADING, AuthorityDto::addSaftMediumPerfTermItem);
+    map.put(GENERAL_SUBDIVISION_HEADING, AuthorityDto::addSaftGeneralSubdivisionItem);
+    map.put(GEOGRAPHIC_SUBDIVISION_HEADING, AuthorityDto::addSaftGeographicSubdivisionItem);
+    map.put(CHRON_SUBDIVISION_HEADING, AuthorityDto::addSaftChronSubdivisionItem);
+    map.put(FORM_SUBDIVISION_HEADING, AuthorityDto::addSaftFormSubdivisionItem);
+    return map;
+  }
+
+  private static Map<String, BiConsumer<AuthorityDto, String>> createSaftTruncHeadingAdders() {
+    Map<String, BiConsumer<AuthorityDto, String>> map = new LinkedHashMap<>();
+    map.put(PERSONAL_NAME_HEADING_TRUNC, AuthorityDto::addSaftPersonalNameTruncItem);
+    map.put(PERSONAL_NAME_TITLE_HEADING_TRUNC, AuthorityDto::addSaftPersonalNameTitleTruncItem);
+    map.put(CORPORATE_NAME_HEADING_TRUNC, AuthorityDto::addSaftCorporateNameTruncItem);
+    map.put(CORPORATE_NAME_TITLE_HEADING_TRUNC, AuthorityDto::addSaftCorporateNameTitleTruncItem);
+    map.put(MEETING_NAME_HEADING_TRUNC, AuthorityDto::addSaftMeetingNameTruncItem);
+    map.put(MEETING_NAME_TITLE_HEADING_TRUNC, AuthorityDto::addSaftMeetingNameTitleTruncItem);
+    map.put(UNIFORM_TITLE_HEADING_TRUNC, AuthorityDto::addSaftUniformTitleTruncItem);
+    map.put(TOPICAL_TERM_HEADING_TRUNC, AuthorityDto::addSaftTopicalTermTruncItem);
+    map.put(GEOGRAPHIC_NAME_HEADING_TRUNC, AuthorityDto::addSaftGeographicNameTruncItem);
+    map.put(GENRE_TERM_HEADING_TRUNC, AuthorityDto::addSaftGenreTermTruncItem);
+    map.put(NAMED_EVENT_HEADING_TRUNC, AuthorityDto::addSaftNamedEventTruncItem);
+    map.put(CHRON_TERM_HEADING_TRUNC, AuthorityDto::addSaftChronTermTruncItem);
+    map.put(MEDIUM_PERF_TERM_HEADING_TRUNC, AuthorityDto::addSaftMediumPerfTermTruncItem);
+    map.put(GENERAL_SUBDIVISION_HEADING_TRUNC, AuthorityDto::addSaftGeneralSubdivisionTruncItem);
+    map.put(GEOGRAPHIC_SUBDIVISION_HEADING_TRUNC, AuthorityDto::addSaftGeographicSubdivisionTruncItem);
+    map.put(CHRON_SUBDIVISION_HEADING_TRUNC, AuthorityDto::addSaftChronSubdivisionTruncItem);
+    map.put(FORM_SUBDIVISION_HEADING_TRUNC, AuthorityDto::addSaftFormSubdivisionTruncItem);
+    return map;
+  }
+
+  private static List<HeadingRef> extractHeadingsFromMap(AuthorityDto source,
+                                                         Map<String, Function<AuthorityDto, List<String>>> extractors) {
+    var headings = new ArrayList<HeadingRef>();
+    for (var entry : extractors.entrySet()) {
+      var values = entry.getValue().apply(source);
+      if (isNotEmpty(values)) {
+        headings.addAll(asSftHeadings(values, entry.getKey()));
+      }
     }
-    switch (headingRef.getHeadingType()) {
-      case PERSONAL_NAME_HEADING -> target.addSftPersonalNameItem(headingRef.getHeading());
-      case PERSONAL_NAME_TITLE_HEADING -> target.addSftPersonalNameTitleItem(headingRef.getHeading());
-      case CORPORATE_NAME_HEADING -> target.addSftCorporateNameItem(headingRef.getHeading());
-      case CORPORATE_NAME_TITLE_HEADING -> target.addSftCorporateNameTitleItem(headingRef.getHeading());
-      case MEETING_NAME_HEADING -> target.addSftMeetingNameItem(headingRef.getHeading());
-      case MEETING_NAME_TITLE_HEADING -> target.addSftMeetingNameTitleItem(headingRef.getHeading());
-      case UNIFORM_TITLE_HEADING -> target.addSftUniformTitleItem(headingRef.getHeading());
-      case NAMED_EVENT_HEADING -> target.addSftNamedEventItem(headingRef.getHeading());
-      case TOPICAL_TERM_HEADING -> target.addSftTopicalTermItem(headingRef.getHeading());
-      case GEOGRAPHIC_NAME_HEADING -> target.addSftGeographicNameItem(headingRef.getHeading());
-      case GENRE_TERM_HEADING -> target.addSftGenreTermItem(headingRef.getHeading());
-      case CHRON_TERM_HEADING -> target.addSftChronTermItem(headingRef.getHeading());
-      case MEDIUM_PERF_TERM_HEADING -> target.addSftMediumPerfTermItem(headingRef.getHeading());
-      case GENERAL_SUBDIVISION_HEADING -> target.addSftGeneralSubdivisionItem(headingRef.getHeading());
-      case GEOGRAPHIC_SUBDIVISION_HEADING -> target.addSftGeographicSubdivisionItem(headingRef.getHeading());
-      case CHRON_SUBDIVISION_HEADING -> target.addSftChronSubdivisionItem(headingRef.getHeading());
-      case FORM_SUBDIVISION_HEADING -> target.addSftFormSubdivisionItem(headingRef.getHeading());
-      default -> log.warn("Invalid sft heading type - {} cannot be mapped", headingRef.getHeadingType());
+    return headings;
+  }
+
+  private static void addRelationshipsToSaftHeadings(final AuthorityDto source, final List<HeadingRef> headingRefs) {
+    processRelationshipHeadings(source.getSaftBroaderTerm(), headingRefs, RelationshipType.BROADER_TERM);
+    processRelationshipHeadings(source.getSaftNarrowerTerm(), headingRefs, RelationshipType.NARROWER_TERM);
+    processRelationshipHeadings(source.getSaftEarlierHeading(), headingRefs, RelationshipType.EARLIER_HEADING);
+    processRelationshipHeadings(source.getSaftLaterHeading(), headingRefs, RelationshipType.LATER_HEADING);
+  }
+
+  private static void processRelationshipHeadings(List<RelatedHeading> relationshipHeadings,
+                                                  final List<HeadingRef> headingRefs,
+                                                  final RelationshipType relationshipType) {
+    if (isNotEmpty(relationshipHeadings)) {
+      headingRefs.forEach(headingRef ->
+        relationshipHeadings.forEach(relationshipHeading -> {
+          if (isProperRelationship(headingRef, relationshipHeading)) {
+            var relationshipTypeSet = getOrCreateRelationshipTypeSet(headingRef);
+            relationshipTypeSet.add(relationshipType);
+          }
+        })
+      );
     }
   }
 
-  private void extractAuthorityDtoSaftHeading(HeadingRef headingRef, AuthorityDto target) {
+  private static boolean isProperRelationship(HeadingRef headingRef, RelatedHeading relationshipHeading) {
+    return Objects.equals(relationshipHeading.getHeadingType(), headingRef.getHeadingType())
+           && Objects.equals(relationshipHeading.getHeadingRef(), headingRef.getHeading());
+  }
+
+  private static void extractAuthorityDtoSftHeading(HeadingRef headingRef, AuthorityDto target) {
     if (headingRef == null || headingRef.getHeadingType() == null) {
       return;
     }
-    switch (headingRef.getHeadingType()) {
-      case PERSONAL_NAME_HEADING -> target.addSaftPersonalNameItem(headingRef.getHeading());
-      case PERSONAL_NAME_TITLE_HEADING -> target.addSaftPersonalNameTitleItem(headingRef.getHeading());
-      case CORPORATE_NAME_HEADING -> target.addSaftCorporateNameItem(headingRef.getHeading());
-      case CORPORATE_NAME_TITLE_HEADING -> target.addSaftCorporateNameTitleItem(headingRef.getHeading());
-      case MEETING_NAME_HEADING -> target.addSaftMeetingNameItem(headingRef.getHeading());
-      case MEETING_NAME_TITLE_HEADING -> target.addSaftMeetingNameTitleItem(headingRef.getHeading());
-      case UNIFORM_TITLE_HEADING -> target.addSaftUniformTitleItem(headingRef.getHeading());
-      case NAMED_EVENT_HEADING -> target.addSaftNamedEventItem(headingRef.getHeading());
-      case TOPICAL_TERM_HEADING -> target.addSaftTopicalTermItem(headingRef.getHeading());
-      case GEOGRAPHIC_NAME_HEADING -> target.addSaftGeographicNameItem(headingRef.getHeading());
-      case GENRE_TERM_HEADING -> target.addSaftGenreTermItem(headingRef.getHeading());
-      case CHRON_TERM_HEADING -> target.addSaftChronTermItem(headingRef.getHeading());
-      case MEDIUM_PERF_TERM_HEADING -> target.addSaftMediumPerfTermItem(headingRef.getHeading());
-      case GENERAL_SUBDIVISION_HEADING -> target.addSaftGeneralSubdivisionItem(headingRef.getHeading());
-      case GEOGRAPHIC_SUBDIVISION_HEADING -> target.addSaftGeographicSubdivisionItem(headingRef.getHeading());
-      case CHRON_SUBDIVISION_HEADING -> target.addSaftChronSubdivisionItem(headingRef.getHeading());
-      case FORM_SUBDIVISION_HEADING -> target.addSaftFormSubdivisionItem(headingRef.getHeading());
-      case PERSONAL_NAME_HEADING_TRUNC -> target.addSaftPersonalNameTruncItem(headingRef.getHeading());
-      case PERSONAL_NAME_TITLE_HEADING_TRUNC -> target.addSaftPersonalNameTitleTruncItem(headingRef.getHeading());
-      case CORPORATE_NAME_HEADING_TRUNC -> target.addSaftCorporateNameTruncItem(headingRef.getHeading());
-      case CORPORATE_NAME_TITLE_HEADING_TRUNC -> target.addSaftCorporateNameTitleTruncItem(headingRef.getHeading());
-      case MEETING_NAME_HEADING_TRUNC -> target.addSaftMeetingNameTruncItem(headingRef.getHeading());
-      case MEETING_NAME_TITLE_HEADING_TRUNC -> target.addSaftMeetingNameTitleTruncItem(headingRef.getHeading());
-      case UNIFORM_TITLE_HEADING_TRUNC -> target.addSaftUniformTitleTruncItem(headingRef.getHeading());
-      case TOPICAL_TERM_HEADING_TRUNC -> target.addSaftTopicalTermTruncItem(headingRef.getHeading());
-      case GEOGRAPHIC_NAME_HEADING_TRUNC -> target.addSaftGeographicNameTruncItem(headingRef.getHeading());
-      case GENRE_TERM_HEADING_TRUNC -> target.addSaftGenreTermTruncItem(headingRef.getHeading());
-      case NAMED_EVENT_HEADING_TRUNC -> target.addSaftNamedEventTruncItem(headingRef.getHeading());
-      case CHRON_TERM_HEADING_TRUNC -> target.addSaftChronTermTruncItem(headingRef.getHeading());
-      case MEDIUM_PERF_TERM_HEADING_TRUNC -> target.addSaftMediumPerfTermTruncItem(headingRef.getHeading());
-      case GENERAL_SUBDIVISION_HEADING_TRUNC -> target.addSaftGeneralSubdivisionTruncItem(headingRef.getHeading());
-      case GEOGRAPHIC_SUBDIVISION_HEADING_TRUNC ->
-        target.addSaftGeographicSubdivisionTruncItem(headingRef.getHeading());
-      case CHRON_SUBDIVISION_HEADING_TRUNC -> target.addSaftChronSubdivisionTruncItem(headingRef.getHeading());
-      case FORM_SUBDIVISION_HEADING_TRUNC -> target.addSaftFormSubdivisionTruncItem(headingRef.getHeading());
-      default -> log.warn("Invalid saft heading type - {} cannot be mapped", headingRef.getHeadingType());
+    var adder = SFT_HEADING_ADDERS.get(headingRef.getHeadingType());
+    if (adder != null) {
+      adder.accept(target, headingRef.getHeading());
+    } else {
+      log.warn("Invalid sft heading type - {} cannot be mapped", headingRef.getHeadingType());
+    }
+  }
+
+  private static void extractAuthorityDtoSaftHeading(HeadingRef headingRef, AuthorityDto target) {
+    if (headingRef == null || headingRef.getHeadingType() == null) {
+      return;
+    }
+    var adder = getSaftHeadingAdder(headingRef);
+    if (adder != null) {
+      adder.accept(target, headingRef.getHeading());
+    } else {
+      log.warn("Invalid saft heading type - {} cannot be mapped", headingRef.getHeadingType());
     }
     extractSaftHeadingsRelationships(headingRef, target);
   }
 
-  private void extractSaftHeadingsRelationships(HeadingRef headingRef, AuthorityDto target) {
+  private static BiConsumer<AuthorityDto, String> getSaftHeadingAdder(HeadingRef headingRef) {
+    var adder = SAFT_HEADING_ADDERS.get(headingRef.getHeadingType());
+    if (adder == null) {
+      adder = SAFT_TRUNC_HEADING_ADDERS.get(headingRef.getHeadingType());
+    }
+    return adder;
+  }
+
+  private static void extractSaftHeadingsRelationships(HeadingRef headingRef, AuthorityDto target) {
     if (isNotEmpty(headingRef.getRelationshipType())) {
       headingRef.getRelationshipType().forEach(
-          relationshipType -> {
-            switch (relationshipType) {
-              case BROADER_TERM -> target.getSaftBroaderTerm()
-                  .add(new RelatedHeading(headingRef.getHeading(), headingRef.getHeadingType()));
-              case NARROWER_TERM -> target.getSaftNarrowerTerm()
-                  .add(new RelatedHeading(headingRef.getHeading(), headingRef.getHeadingType()));
-              case EARLIER_HEADING -> target.getSaftEarlierHeading()
-                  .add(new RelatedHeading(headingRef.getHeading(), headingRef.getHeadingType()));
-              case LATER_HEADING -> target.getSaftLaterHeading()
-                  .add(new RelatedHeading(headingRef.getHeading(), headingRef.getHeadingType()));
-              default -> log.warn("Invalid saft relationship type - {} cannot be mapped", relationshipType);
-            }
+        relationshipType -> {
+          switch (relationshipType) {
+            case BROADER_TERM -> target.getSaftBroaderTerm()
+              .add(new RelatedHeading(headingRef.getHeading(), headingRef.getHeadingType()));
+            case NARROWER_TERM -> target.getSaftNarrowerTerm()
+              .add(new RelatedHeading(headingRef.getHeading(), headingRef.getHeadingType()));
+            case EARLIER_HEADING -> target.getSaftEarlierHeading()
+              .add(new RelatedHeading(headingRef.getHeading(), headingRef.getHeadingType()));
+            case LATER_HEADING -> target.getSaftLaterHeading()
+              .add(new RelatedHeading(headingRef.getHeading(), headingRef.getHeadingType()));
+            default -> log.warn("Invalid saft relationship type - {} cannot be mapped", relationshipType);
           }
+        }
       );
     }
   }
 
   private static List<HeadingRef> asSftHeadings(List<String> headingValues, String headingType) {
     return headingValues.stream()
-        .map(headingValue -> new HeadingRef(headingType, headingValue))
-        .toList();
+      .map(headingValue -> new HeadingRef(headingType, headingValue))
+      .toList();
   }
 
   private static Set<RelationshipType> getOrCreateRelationshipTypeSet(HeadingRef heading) {

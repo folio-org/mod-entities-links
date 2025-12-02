@@ -40,7 +40,7 @@ import org.springframework.http.HttpHeaders;
 
 @IntegrationTest
 @DatabaseCleanup(tables = {AUTHORITY_DATA_STAT_TABLE, AUTHORITY_ARCHIVE_TABLE, AUTHORITY_TABLE,
-  AUTHORITY_SOURCE_FILE_CODE_TABLE, AUTHORITY_SOURCE_FILE_TABLE, AUTHORITY_NOTE_TYPE_TABLE},
+                           AUTHORITY_SOURCE_FILE_CODE_TABLE, AUTHORITY_SOURCE_FILE_TABLE, AUTHORITY_NOTE_TYPE_TABLE},
                  tenants = {CENTRAL_TENANT_ID, COLLEGE_TENANT_ID, UNIVERSITY_TENANT_ID})
 class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
 
@@ -57,12 +57,7 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void testAuthorityCreatePropagation() {
-    var dto = new AuthorityDto()
-      .id(AUTHORITY_ID)
-      .version(0)
-      .source("MARC")
-      .naturalId("ns12345")
-      .personalName("Nikola Tesla");
+    var dto = getAuthorityDto();
     doPost(authorityEndpoint(), dto, tenantHeaders(CENTRAL_TENANT_ID));
     var centralAuthority = requestAuthority(CENTRAL_TENANT_ID);
     assertThat(centralAuthority)
@@ -77,7 +72,7 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
       .containsExactly(dto.getId(), CONSORTIUM_SOURCE_PREFIX + dto.getSource(), dto.getNaturalId(),
-          dto.getPersonalName());
+        dto.getPersonalName());
 
     awaitUntilAsserted(() ->
       assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID)));
@@ -86,25 +81,20 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
       .containsExactly(dto.getId(), CONSORTIUM_SOURCE_PREFIX + dto.getSource(), dto.getNaturalId(),
-          dto.getPersonalName());
+        dto.getPersonalName());
   }
 
   @Test
   @SneakyThrows
   void testAuthorityDeletePropagation() {
-    var dto = new AuthorityDto()
-      .id(AUTHORITY_ID)
-      .version(0)
-      .source("MARC")
-      .naturalId("ns12345")
-      .personalName("Nikola Tesla");
+    var dto = getAuthorityDto();
     doPost(authorityEndpoint(), dto, tenantHeaders(CENTRAL_TENANT_ID));
     assertThat(requestAuthority(CENTRAL_TENANT_ID)).isNotNull();
     doDelete(authorityEndpoint(AUTHORITY_ID), tenantHeaders(CENTRAL_TENANT_ID));
     tryGet(authorityEndpoint(AUTHORITY_ID), tenantHeaders(CENTRAL_TENANT_ID)).andExpect(status().isNotFound());
 
     awaitUntilAsserted(() ->
-        assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID)));
+      assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID)));
     awaitUntilAsserted(() ->
       assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, COLLEGE_TENANT_ID)));
     awaitUntilAsserted(() ->
@@ -114,12 +104,7 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void testAuthorityUpdatePropagation() {
-    var dto = new AuthorityDto()
-      .id(AUTHORITY_ID)
-      .version(0)
-      .source("MARC")
-      .naturalId("ns12345")
-      .personalName("Nikola Tesla");
+    var dto = getAuthorityDto();
     doPost(authorityEndpoint(), dto, tenantHeaders(CENTRAL_TENANT_ID));
     assertThat(requestAuthority(CENTRAL_TENANT_ID)).isNotNull();
     awaitUntilAsserted(() -> assertNotNull(requestAuthority(COLLEGE_TENANT_ID)));
@@ -139,7 +124,7 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
       .containsExactly(dto.getId(), CONSORTIUM_SOURCE_PREFIX + dto.getSource(), dto.getNaturalId(),
-          dto.getPersonalName());
+        dto.getPersonalName());
 
     awaitUntilAsserted(() ->
       assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID, "heading = 'updated'")));
@@ -148,38 +133,27 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
       .containsExactly(dto.getId(), CONSORTIUM_SOURCE_PREFIX + dto.getSource(), dto.getNaturalId(),
-          dto.getPersonalName());
+        dto.getPersonalName());
   }
 
   @Test
   @SneakyThrows
   void testAuthorityArchivePropagation() {
     mockSuccessfulSettingsRequest();
-    var dto = new AuthorityDto()
-        .id(AUTHORITY_ID)
-        .version(0)
-        .source("MARC")
-        .naturalId("ns12345")
-        .personalName("Nikola Tesla");
+    var dto = getAuthorityDto();
     doPost(authorityEndpoint(), dto, tenantHeaders(CENTRAL_TENANT_ID));
     assertThat(requestAuthority(CENTRAL_TENANT_ID)).isNotNull();
 
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID)));
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, COLLEGE_TENANT_ID)));
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, COLLEGE_TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID)));
 
     doDelete(authorityEndpoint(AUTHORITY_ID), tenantHeaders(CENTRAL_TENANT_ID));
     tryGet(authorityEndpoint(AUTHORITY_ID), tenantHeaders(CENTRAL_TENANT_ID)).andExpect(status().isNotFound());
 
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, CENTRAL_TENANT_ID)));
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, COLLEGE_TENANT_ID)));
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, UNIVERSITY_TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(1, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, CENTRAL_TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(1, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, COLLEGE_TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(1, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, UNIVERSITY_TENANT_ID)));
 
     var dateInPast = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS));
     databaseHelper.updateAuthorityArchiveUpdateDate(CENTRAL_TENANT_ID, AUTHORITY_ID, dateInPast);
@@ -188,22 +162,28 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
 
     doPost(authorityExpireEndpoint(), null, tenantHeaders(CENTRAL_TENANT_ID));
 
-    awaitUntilAsserted(() ->
-        assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, CENTRAL_TENANT_ID)));
-    awaitUntilAsserted(() ->
-        assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, COLLEGE_TENANT_ID)));
-    awaitUntilAsserted(() ->
-        assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, UNIVERSITY_TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, CENTRAL_TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, COLLEGE_TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, UNIVERSITY_TENANT_ID)));
+  }
+
+  private AuthorityDto getAuthorityDto() {
+    return new AuthorityDto()
+      .id(AUTHORITY_ID)
+      .version(0)
+      .source("MARC")
+      .naturalId("ns12345")
+      .personalName("Nikola Tesla");
   }
 
   private void mockSuccessfulSettingsRequest() {
     okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-        .withQueryParam("query", equalTo("(scope=authority-storage AND key=authority-archives-expiration)"))
-        .withQueryParam("limit", equalTo("10000"))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-            .withBody("""
+      .withQueryParam("query", equalTo("(scope=authority-storage AND key=authority-archives-expiration)"))
+      .withQueryParam("limit", equalTo("10000"))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+        .withBody("""
           {
               "items": [
                   {

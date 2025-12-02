@@ -22,6 +22,8 @@ import org.folio.entlinks.utils.ConsortiumUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 @Getter
 @Setter
@@ -95,27 +97,16 @@ public class AuthorityBase extends MetadataEntity {
     super(other);
     this.id = other.id;
     this.naturalId = other.naturalId;
-    this.authoritySourceFile = Optional.ofNullable(other.authoritySourceFile)
-        .map(sourceFile -> Hibernate.unproxy(sourceFile, AuthoritySourceFile.class))
-        .map(AuthoritySourceFile::new)
-        .orElse(null);
+    this.authoritySourceFile = getAuthoritySourceFile(other);
     this.source = other.source;
     this.heading = other.heading;
     this.headingType = other.headingType;
     this.version = other.version;
     this.subjectHeadingCode = other.subjectHeadingCode;
-    this.sftHeadings = Optional.ofNullable(other.getSftHeadings()).orElse(List.of()).stream()
-        .map(HeadingRef::new)
-        .toList();
-    this.saftHeadings = Optional.ofNullable(other.getSaftHeadings()).orElse(List.of()).stream()
-        .map(HeadingRef::new)
-        .toList();
-    this.identifiers = Optional.ofNullable(other.getIdentifiers()).orElse(List.of()).stream()
-        .map(AuthorityIdentifier::new)
-        .toList();
-    this.notes = Optional.ofNullable(other.getNotes()).orElse(List.of()).stream()
-        .map(AuthorityNote::new)
-        .toList();
+    this.sftHeadings = getHeadings(other.getSftHeadings());
+    this.saftHeadings = getHeadings(other.getSaftHeadings());
+    this.identifiers = getIdentifiers(other);
+    this.notes = getNotes(other);
     this.deleted = other.deleted;
   }
 
@@ -125,5 +116,30 @@ public class AuthorityBase extends MetadataEntity {
 
   public boolean isConsortiumShadowCopy() {
     return ConsortiumUtils.isConsortiumShadowCopy(this.getSource());
+  }
+
+  private @NonNull List<AuthorityNote> getNotes(AuthorityBase other) {
+    return Optional.ofNullable(other.getNotes()).orElse(List.of()).stream()
+      .map(AuthorityNote::new)
+      .toList();
+  }
+
+  private @NonNull List<AuthorityIdentifier> getIdentifiers(AuthorityBase other) {
+    return Optional.ofNullable(other.getIdentifiers()).orElse(List.of()).stream()
+      .map(AuthorityIdentifier::new)
+      .toList();
+  }
+
+  private @NonNull List<HeadingRef> getHeadings(List<HeadingRef> other) {
+    return Optional.ofNullable(other).orElse(List.of()).stream()
+      .map(HeadingRef::new)
+      .toList();
+  }
+
+  private @Nullable AuthoritySourceFile getAuthoritySourceFile(AuthorityBase other) {
+    return Optional.ofNullable(other.authoritySourceFile)
+      .map(sourceFile -> Hibernate.unproxy(sourceFile, AuthoritySourceFile.class))
+      .map(AuthoritySourceFile::new)
+      .orElse(null);
   }
 }

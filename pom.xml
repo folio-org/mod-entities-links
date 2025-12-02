@@ -443,7 +443,7 @@
           <configLocation>folio-checkstyle/checkstyle.xml</configLocation>
           <cacheFile>${basedir}/target/cachefile</cacheFile>
           <propertyExpansion>
-            checkstyle.method-length.max=150
+            checkstyle.method-length.max=50
           </propertyExpansion>
         </configuration>
       </plugin>

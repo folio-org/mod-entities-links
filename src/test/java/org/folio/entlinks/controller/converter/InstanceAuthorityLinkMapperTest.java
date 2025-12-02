@@ -5,9 +5,7 @@ import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUA
 import static org.folio.support.base.TestConstants.TEST_ID;
 import static org.folio.support.base.TestConstants.TEST_PROPERTY_VALUE;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
 import org.folio.entlinks.domain.entity.Authority;
@@ -69,19 +67,6 @@ class InstanceAuthorityLinkMapperTest {
     assertThat(actual.getId().intValue()).isEqualTo(expected.getId());
     assertThat(actual.getInstanceId()).isEqualTo(expected.getInstanceId());
     assertThat(actual.getStatus().name()).isEqualTo(expected.getStatus());
-  }
-
-  @Test
-  void testConvert_Map() {
-    var sourceMap = new HashMap<UUID, Integer>();
-    var uuidKey = UUID.fromString("38d3a441-c100-5e8d-bd12-71bde492b723");
-    var expectedTotal = 1;
-    sourceMap.put(uuidKey, expectedTotal);
-
-    var actual = mapper.convert(sourceMap);
-    assertThat(actual).hasSize(1);
-    assertThat(actual.getFirst().getId()).isEqualTo(uuidKey);
-    assertThat(actual.getFirst().getTotalLinks()).isEqualTo(expectedTotal);
   }
 
   @NotNull

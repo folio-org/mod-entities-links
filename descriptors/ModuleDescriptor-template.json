@@ -52,7 +52,7 @@
   "provides": [
     {
       "id": "instance-authority-links",
-      "version": "2.1",
+      "version": "2.2",
       "handlers": [
         {
           "methods": [
@@ -77,15 +77,6 @@
             "inventory-storage.instances.item.get",
             "inventory-storage.instances.item.put",
             "user-tenants.collection.get"
-          ]
-        },
-        {
-          "methods": [
-            "POST"
-          ],
-          "pathPattern": "/links/authorities/bulk/count",
-          "permissionsRequired": [
-            "instance-authority-links.authorities.bulk.post"
           ]
         }
       ]
@@ -489,11 +480,6 @@
       "description": "Update instance-authority links collection"
     },
     {
-      "permissionName": "instance-authority-links.authorities.bulk.post",
-      "displayName": "Entities Links - count instance-authority links for each authority",
-      "description": "Count instance-authority links for each authority"
-    },
-    {
       "permissionName": "instance-authority.linking-rules.collection.get",
       "displayName": "Entities Links - get instance-authority linking rules",
       "description": "Get instance-authority linking rules"
@@ -530,7 +516,6 @@
       "subPermissions": [
         "instance-authority-links.instances.collection.get",
         "instance-authority-links.instances.collection.put",
-        "instance-authority-links.authorities.bulk.post",
         "instance-authority.linking-rules.collection.get",
         "instance-authority.linking-rules.item.get",
         "instance-authority.linking-rules.item.patch",

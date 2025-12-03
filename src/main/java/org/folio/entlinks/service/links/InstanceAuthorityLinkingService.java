@@ -67,6 +67,7 @@ public class InstanceAuthorityLinkingService {
         .toList();
   }
 
+  // need to rewrite with JOIN to Authority table to receive naturalId in one query
   public Page<InstanceAuthorityLink> getLinksByAuthorityId(UUID authorityId, Pageable pageable) {
     log.info("Loading links for [authorityId: {}, page size: {}, page num: {}]", authorityId,
       pageable.getPageSize(), pageable.getOffset());
@@ -177,7 +178,7 @@ public class InstanceAuthorityLinkingService {
     var linkToDate = toDate == null ? null : toTimestamp(toDate);
     var pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc(SEEK_FIELD)));
     var tenantId = folioExecutionContext.getTenantId();
-    return instanceLinkJdbcRepository.findAllWithNaturalId(linkStatus, linkFromDate, linkToDate, tenantId, pageable);
+    return instanceLinkJdbcRepository.findAll(linkStatus, linkFromDate, linkToDate, tenantId, pageable);
   }
 
   public void setNaturalIdForSharedAuthority(List<InstanceAuthorityLink> links) {

@@ -42,11 +42,11 @@ public class InstanceLinkJdbcRepository {
     return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(LinkCountViewImpl.class));
   }
 
-  public List<InstanceAuthorityLink> findAllWithNaturalId(InstanceAuthorityLinkStatus status,
-                                                          Timestamp fromDate,
-                                                          Timestamp toDate,
-                                                          String tenant,
-                                                          Pageable pageable) {
+  public List<InstanceAuthorityLink> findAll(InstanceAuthorityLinkStatus status,
+                                             Timestamp fromDate,
+                                             Timestamp toDate,
+                                             String tenant,
+                                             Pageable pageable) {
 
     List<Object> params = new ArrayList<>();
     List<String> conditions = new ArrayList<>();

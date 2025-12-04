@@ -4,9 +4,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,10 @@ import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.utils.DateUtils;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.client.UsersClient;
 import org.folio.spring.model.ResultList;
 import org.springframework.stereotype.Component;
@@ -37,11 +40,29 @@ public class InstanceAuthorityStatServiceDelegate {
   private final UsersClient usersClient;
   private final AuthoritySourceFileRepository sourceFileRepository;
   private final ConsortiumTenantsService tenantsService;
+  private final FolioExecutionContext context;
+  private final UserTenantsService userTenantsService;
 
   public AuthorityStatsDtoCollection fetchAuthorityLinksStats(OffsetDateTime fromDate, OffsetDateTime toDate,
                                                               LinkAction action, Integer limit) {
     var authorityStatsCollection = new AuthorityStatsDtoCollection();
     var dataStatList = dataStatService.fetchDataStats(fromDate, toDate, action, limit + 1);
+    var centralTenant = userTenantsService.getCentralTenant(context.getTenantId());
+    var isMemberTenant = centralTenant.isPresent() && !centralTenant.get().equals(context.getTenantId());
+    Set<UUID> sharedAuthorityIds = new HashSet<>();
+    if (isMemberTenant) {
+      var centralTenantStats = dataStatService.findActualByActionAndDate(fromDate, toDate, action, limit + 1,
+          centralTenant.get());
+      if (!centralTenantStats.isEmpty()) {
+        // collect shared authority ids
+        sharedAuthorityIds.addAll(centralTenantStats.stream()
+            .map(AuthorityDataStat::getAuthority)
+            .map(AuthorityBase::getId)
+            .collect(Collectors.toSet()));
+        removeDuplications(dataStatList, centralTenantStats);
+      }
+    }
+
     log.debug("Retrieved data stat count {}", dataStatList.size());
 
     if (dataStatList.size() > limit) {
@@ -59,16 +80,38 @@ public class InstanceAuthorityStatServiceDelegate {
         if (authorityDataStatDto != null) {
           fillSourceFiles(authorityDataStatDto);
           authorityDataStatDto.setMetadata(getMetadata(users, source));
-          var shared = isCentralTenant || Optional.ofNullable(source.getAuthority())
-            .map(AuthorityBase::isConsortiumShadowCopy)
-            .orElse(false);
+          var shared = isCentralTenant || isMemberTenant
+              && !sharedAuthorityIds.isEmpty()
+              && sharedAuthorityIds.contains(source.getAuthority().getId());
           authorityDataStatDto.setShared(shared);
         }
         return authorityDataStatDto;
       })
-      .toList();
+        .toList();
 
     return authorityStatsCollection.stats(stats);
+  }
+
+  private void removeDuplications(List<AuthorityDataStat> authorityDataStats,
+                                  List<AuthorityDataStat> centralTenantStats) {
+
+    for (AuthorityDataStat centralStat : centralTenantStats) {
+      boolean isDuplicate = authorityDataStats.stream().anyMatch(stat ->
+          Objects.equals(stat.getAuthority().getId(), centralStat.getAuthority().getId())
+              && Objects.equals(stat.getAction(), centralStat.getAction())
+              && Objects.equals(stat.getHeadingOld(), centralStat.getHeadingOld())
+              && Objects.equals(stat.getHeadingNew(), centralStat.getHeadingNew())
+              && Objects.equals(stat.getHeadingTypeOld(), centralStat.getHeadingTypeOld())
+              && Objects.equals(stat.getHeadingTypeNew(), centralStat.getHeadingTypeNew())
+              && Objects.equals(stat.getAuthorityNaturalIdOld(), centralStat.getAuthorityNaturalIdOld())
+              && Objects.equals(stat.getAuthorityNaturalIdNew(), centralStat.getAuthorityNaturalIdNew())
+              && Objects.equals(stat.getAuthoritySourceFileOld(), centralStat.getAuthoritySourceFileOld())
+              && Objects.equals(stat.getAuthoritySourceFileNew(), centralStat.getAuthoritySourceFileNew())
+      );
+      if (!isDuplicate) {
+        authorityDataStats.add(centralStat);
+      }
+    }
   }
 
   private AuthorityControlMetadata getMetadata(ResultList<UsersClient.User> userResultList, AuthorityDataStat source) {

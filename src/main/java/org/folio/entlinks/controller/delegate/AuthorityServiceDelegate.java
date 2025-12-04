@@ -1,6 +1,5 @@
 package org.folio.entlinks.controller.delegate;
 
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.CREATE;
 import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.DELETE;
 import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.UPDATE;
 
@@ -136,10 +135,7 @@ public class AuthorityServiceDelegate {
 
   @NotNull
   private Consumer<Authority> createConsumer() {
-    return authority -> {
-      eventPublisher.publishCreateEvent(mapper.toDto(authority));
-      propagationService.propagate(authority, CREATE, context.getTenantId());
-    };
+    return authority -> eventPublisher.publishCreateEvent(mapper.toDto(authority));
   }
 
   @NotNull

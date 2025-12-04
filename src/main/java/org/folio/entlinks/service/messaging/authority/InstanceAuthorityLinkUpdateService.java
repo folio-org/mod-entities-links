@@ -3,6 +3,7 @@ package org.folio.entlinks.service.messaging.authority;
 import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType.UPDATE;
 import static org.folio.entlinks.utils.AuthorityChangeUtils.getAuthorityChanges;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -69,12 +70,13 @@ public class InstanceAuthorityLinkUpdateService {
       .map(AuthorityDomainEvent::getId)
       .collect(Collectors.toSet());
     var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(incomingAuthorityIds);
-
+    log.info("handleAuthoritiesChanges:: incomingAuthorityIds {}, tenantId: {}", incomingAuthorityIds,
+        folioExecutionContext.getTenantId());
     var fieldTagRelation = mappingRulesProcessingService.getFieldTagRelations();
     var changeHolders = events.stream()
-      .map(event -> toAuthorityChangeHolder(event, fieldTagRelation, linksNumberByAuthorityId))
-      .filter(AuthorityChangeHolder::changesExist)
-      .toList();
+        .map(event -> toAuthorityChangeHolder(event, fieldTagRelation, linksNumberByAuthorityId))
+        .filter(AuthorityChangeHolder::changesExist)
+        .toList();
     fillChangeHoldersWithSourceRecord(changeHolders);
 
     prepareAndSaveAuthorityDataStats(changeHolders);
@@ -129,8 +131,8 @@ public class InstanceAuthorityLinkUpdateService {
 
   private void prepareAndSaveAuthorityDataStats(List<AuthorityChangeHolder> changeHolders) {
     var authorityDataStats = changeHolders.stream()
-      .map(AuthorityChangeHolder::toAuthorityDataStat)
-      .toList();
+        .map(AuthorityChangeHolder::toAuthorityDataStat)
+        .toList();
 
     var dataStats = authorityDataStatService.createInBatch(authorityDataStats);
     for (AuthorityChangeHolder changeHolder : changeHolders) {
@@ -157,9 +159,18 @@ public class InstanceAuthorityLinkUpdateService {
         folioExecutionContext.getTenantId());
 
     consortiumTenants.forEach(memberTenant -> {
-      var changeHolderCopies = changeHolders.stream().map(AuthorityChangeHolder::copy).toList();
+      var changeHolderCopies = new ArrayList<>(changeHolders.stream().map(AuthorityChangeHolder::copy).toList());
       executionService.executeSystemUserScoped(memberTenant, userId, () -> {
         var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(authorityIds);
+        if (linksNumberByAuthorityId.isEmpty()) {
+          log.info("Skip processing shadow authority changes for member tenant [{}]. "
+              + "No links found for authorities: [{}]", memberTenant, authorityIds);
+          return null;
+        }
+        linksNumberByAuthorityId.entrySet().removeIf(entry -> entry.getValue() == 0);
+        changeHolderCopies.removeIf(changeHolder ->
+            !linksNumberByAuthorityId.containsKey(changeHolder.getAuthorityId()));
+
         if (!countLinksFromCentralTenant.isEmpty()) {
           for (var entry : countLinksFromCentralTenant.entrySet()) {
             linksNumberByAuthorityId.merge(entry.getKey(), entry.getValue(), Integer::sum);

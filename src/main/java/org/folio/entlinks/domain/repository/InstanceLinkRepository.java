@@ -39,4 +39,17 @@ public interface InstanceLinkRepository extends JpaRepository<InstanceAuthorityL
   @Modifying
   @Query("delete from InstanceAuthorityLink i where i.authority.id in :authorityIds")
   void deleteByAuthorityIds(@Param("authorityIds") Collection<UUID> authorityIds);
+
+  @Query("""
+          SELECT a.id
+          FROM Authority a
+          WHERE a.id IN :authorityIds
+            AND a.source LIKE 'CONSORTIUM-%'
+            AND NOT EXISTS (
+              SELECT 1
+              FROM InstanceAuthorityLink l
+              WHERE l.authority = a
+            )
+      """)
+  Set<UUID> findShadowAuthorityIdsWithoutLinks(Set<UUID> authorityIds);
 }

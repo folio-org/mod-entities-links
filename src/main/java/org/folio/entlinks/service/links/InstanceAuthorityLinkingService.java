@@ -23,9 +23,12 @@ import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
+import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
 import org.folio.entlinks.domain.repository.InstanceLinkJdbcRepository;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.service.authority.AuthorityService;
+import org.folio.entlinks.service.consortium.UserTenantsService;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +47,9 @@ public class InstanceAuthorityLinkingService {
   private final InstanceLinkRepository instanceLinkRepository;
   private final AuthorityService authorityService;
   private final InstanceLinkJdbcRepository instanceLinkJdbcRepository;
+  private final UserTenantsService userTenantsService;
+  private final FolioExecutionContext context;
+  private final AuthorityJdbcRepository authorityJdbcRepository;
 
   public List<InstanceAuthorityLink> getLinksByInstanceId(UUID instanceId) {
     log.info("Loading links for [instanceId: {}]", instanceId);
@@ -81,6 +87,26 @@ public class InstanceAuthorityLinkingService {
 
     var existingAuthorities = authorityService.getAllByIds(authorityIds);
 
+    var centralTenant = userTenantsService.getCentralTenant(context.getTenantId());
+    var isMemberTenant = centralTenant.isPresent() && !centralTenant.get().equals(context.getTenantId());
+    if (existingAuthorities.isEmpty() || existingAuthorities.size() < authorityIds.size() && isMemberTenant) {
+      var potentialSharedAuthorities = authorityIds.stream()
+          .filter(id -> !existingAuthorities.containsKey(id))
+          .collect(Collectors.toSet());
+      if (!potentialSharedAuthorities.isEmpty()) {
+        var sharedAuthorities = authorityJdbcRepository.findAllByIdInAndDeletedFalse(potentialSharedAuthorities,
+            centralTenant.get());
+        sharedAuthorities.forEach(authority -> {
+          authority.makeAsConsortiumShadowCopy();
+          authorityService.create(authority);
+        });
+        if (!sharedAuthorities.isEmpty()) {
+          existingAuthorities.putAll(
+              sharedAuthorities.stream().collect(Collectors.toMap(Authority::getId, authority -> authority))
+          );
+        }
+      }
+    }
     for (InstanceAuthorityLink incomingLink : incomingLinks) {
       var linkAuthorityData = incomingLink.getAuthority();
       var authorityData = existingAuthorities.get(linkAuthorityData.getId());
@@ -92,6 +118,20 @@ public class InstanceAuthorityLinkingService {
     var linksToSave = getLinksToSave(incomingLinks, existedLinks, linksToDelete);
     instanceLinkRepository.deleteAllInBatch(linksToDelete);
     instanceLinkRepository.saveAll(linksToSave);
+    if (isMemberTenant) {
+      deleteShadowAuthoritiesWithoutLinks(linksToDelete);
+    }
+  }
+
+  private void deleteShadowAuthoritiesWithoutLinks(List<InstanceAuthorityLink> linksToDelete) {
+    var potentialAuthoritiesToDelete = linksToDelete.stream()
+        .map(InstanceAuthorityLink::getAuthority)
+        .filter(Authority::isConsortiumShadowCopy)
+        .map(Authority::getId)
+        .collect(Collectors.toSet());
+    var shadowAuthoritiesWithoutLinks =
+        instanceLinkRepository.findShadowAuthorityIdsWithoutLinks(potentialAuthoritiesToDelete);
+    authorityService.deleteByIds(shadowAuthoritiesWithoutLinks);
   }
 
   public Map<UUID, Integer> countLinksByAuthorityIds(Set<UUID> authorityIds) {

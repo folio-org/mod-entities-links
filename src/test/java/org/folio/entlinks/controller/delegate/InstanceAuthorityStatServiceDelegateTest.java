@@ -28,7 +28,9 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.client.UsersClient;
 import org.folio.spring.model.ResultList;
 import org.folio.spring.testing.type.UnitTest;
@@ -58,6 +60,8 @@ class InstanceAuthorityStatServiceDelegateTest {
   private @Mock DataStatsMapper mapper;
   private @Mock UsersClient usersClient;
   private @Mock ConsortiumTenantsService tenantsService;
+  private @Mock FolioExecutionContext context;
+  private @Mock UserTenantsService userTenantsService;
   private @InjectMocks InstanceAuthorityStatServiceDelegate delegate;
 
   private AuthoritySourceFile sourceFile;
@@ -65,7 +69,7 @@ class InstanceAuthorityStatServiceDelegateTest {
   @BeforeEach
   void setUp() {
     delegate = new InstanceAuthorityStatServiceDelegate(
-      statService, mapper, usersClient, sourceFileRepository, tenantsService);
+        statService, mapper, usersClient, sourceFileRepository, tenantsService, context, userTenantsService);
     sourceFile = new AuthoritySourceFile();
     sourceFile.setId(TEST_ID);
     sourceFile.setBaseUrl(INPUT_BASE_URL);

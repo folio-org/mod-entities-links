@@ -19,6 +19,7 @@ import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
+import org.folio.entlinks.domain.repository.AuthorityDataStatJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityDataStatRepository;
 import org.folio.entlinks.utils.DateUtils;
 import org.springframework.data.domain.PageRequest;
@@ -33,8 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthorityDataStatService {
 
   private final AuthorityDataStatRepository statRepository;
-
   private final InstanceAuthorityLinkingService linkingService;
+  private final AuthorityDataStatJdbcRepository dataStatJdbcRepository;
 
   public List<AuthorityDataStat> createInBatch(List<AuthorityDataStat> stats) {
     for (AuthorityDataStat stat : stats) {
@@ -50,6 +51,13 @@ public class AuthorityDataStatService {
     Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("startedAt")));
     return statRepository.findActualByActionAndDate(AuthorityDataStatAction.valueOf(action.getValue()),
       DateUtils.toTimestamp(fromDate), DateUtils.toTimestamp(toDate), pageable);
+  }
+
+  public List<AuthorityDataStat> findActualByActionAndDate(OffsetDateTime fromDate, OffsetDateTime toDate,
+                                                           LinkAction action, int limit, String tenant) {
+    Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("startedAt")));
+    return dataStatJdbcRepository.findActualByActionAndDate(AuthorityDataStatAction.valueOf(action.getValue()),
+        DateUtils.toTimestamp(fromDate), DateUtils.toTimestamp(toDate), pageable, tenant);
   }
 
   @Transactional

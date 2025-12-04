@@ -75,8 +75,8 @@ class InstanceAuthorityLinkUpdateServiceTest {
     when(deleteHandler.supportedAuthorityChangeType()).thenReturn(AuthorityChangeType.DELETE);
 
     service = new InstanceAuthorityLinkUpdateService(authorityDataStatService,
-      mappingRulesProcessingService, linkingService, eventProducer, List.of(updateHandler, deleteHandler),
-      sourceRecordService, consortiumTenantsService, folioExecutionContext, executionService);
+        mappingRulesProcessingService, linkingService, eventProducer, List.of(updateHandler, deleteHandler),
+        sourceRecordService, consortiumTenantsService, folioExecutionContext, executionService);
   }
 
   @Test

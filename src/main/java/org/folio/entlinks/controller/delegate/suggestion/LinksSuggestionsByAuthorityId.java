@@ -3,8 +3,11 @@ package org.folio.entlinks.controller.delegate.suggestion;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -13,13 +16,16 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.controller.converter.SourceContentMapper;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.ParsedSubfield;
 import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionsService;
 import org.folio.entlinks.utils.FieldUtils;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -29,15 +35,24 @@ public class LinksSuggestionsByAuthorityId extends LinksSuggestionsServiceDelega
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
   private final AuthorityRepository authorityRepository;
+  private final UserTenantsService userTenantsService;
+  private final FolioExecutionContext context;
+  private final AuthorityJdbcRepository authorityJdbcRepository;
 
   public LinksSuggestionsByAuthorityId(InstanceAuthorityLinkingRulesService linkingRulesService,
                                        LinksSuggestionsService suggestionService,
                                        AuthorityRepository repository,
                                        SourceStorageClient sourceStorageClient,
                                        SourceContentMapper contentMapper,
-                                       ConsortiumTenantExecutor executor) {
+                                       ConsortiumTenantExecutor executor,
+                                       UserTenantsService userTenantsService,
+                                       FolioExecutionContext context,
+                                       AuthorityJdbcRepository authorityJdbcRepository) {
     super(linkingRulesService, suggestionService, sourceStorageClient, contentMapper, executor);
     this.authorityRepository = repository;
+    this.userTenantsService = userTenantsService;
+    this.context = context;
+    this.authorityJdbcRepository = authorityJdbcRepository;
   }
 
   @Override
@@ -63,8 +78,41 @@ public class LinksSuggestionsByAuthorityId extends LinksSuggestionsServiceDelega
   }
 
   @Override
-  protected List<Authority> findExistingAuthorities(Set<UUID> ids) {
-    return authorityRepository.findAllByIdInAndDeletedFalse(ids);
+  protected Map<String, List<Authority>> findExistingAuthorities(Set<UUID> ids) {
+    Map<String, List<Authority>> authoritiesMap = new HashMap<>();
+    var authorities = authorityRepository.findAllByIdInAndDeletedFalse(ids);
+    if (!authorities.isEmpty() && authorities.size() == ids.size()) {
+      authoritiesMap.put("local", authorities);
+      authoritiesMap.put("shared", Collections.emptyList());
+      return authoritiesMap;
+    }
+    var centralTenant = userTenantsService.getCentralTenant(context.getTenantId());
+    if (centralTenant.isEmpty() || centralTenant.get().equals(context.getTenantId())) {
+      authoritiesMap.put("local", authorities);
+      authoritiesMap.put("shared", Collections.emptyList());
+      return authoritiesMap;
+    }
+    // logic to fetch authorities from central tenant as current tenant is member of consortium
+    if (authorities.isEmpty()) {
+      var sharedAuthorities = authorityJdbcRepository.findAllByIdInAndDeletedFalse(ids, centralTenant.get());
+      authoritiesMap.put("local", Collections.emptyList());
+      authoritiesMap.put("shared", sharedAuthorities);
+      return authoritiesMap;
+    }
+    authoritiesMap.put("local", authorities);
+    var authoritiesIds = authorities.stream()
+        .map(Authority::getId)
+        .collect(Collectors.toSet());
+    var potentialSharedAuthorities = ids.stream()
+        .filter(id -> !authoritiesIds.contains(id))
+        .collect(Collectors.toSet());
+
+    if (!potentialSharedAuthorities.isEmpty()) {
+      var sharedAuthorities = authorityJdbcRepository.findAllByIdInAndDeletedFalse(potentialSharedAuthorities,
+          centralTenant.get());
+      authoritiesMap.put("shared", sharedAuthorities);
+    }
+    return authoritiesMap;
   }
 
   @Override

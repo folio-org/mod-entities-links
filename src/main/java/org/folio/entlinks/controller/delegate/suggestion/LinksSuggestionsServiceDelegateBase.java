@@ -3,7 +3,6 @@ package org.folio.entlinks.controller.delegate.suggestion;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,11 +55,11 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
     var authoritySearchIds = extractIdsOfLinkableFields(marcBibsContent, rules, ignoreAutoLinkingEnabled);
     log.info("{} authority search ids was extracted", authoritySearchIds.size());
 
-    var authorities = findExistingAuthorities(authoritySearchIds);
-    log.info("{} authorities to suggest found", authorities.size());
+    var authoritiesMap = findExistingAuthorities(authoritySearchIds);
+    log.info("{} authorities to suggest found", authoritiesMap.size());
 
-    if (isNotEmpty(authorities)) {
-      var marcAuthoritiesContent = getAuthoritiesParsedContent(authorities);
+    if (!authoritiesMap.isEmpty()) {
+      var marcAuthoritiesContent = getAuthoritiesParsedContent(authoritiesMap);
       suggestionService.fillLinkDetailsWithSuggestedAuthorities(marcBibsContent, marcAuthoritiesContent, rules,
         getSearchSubfield(), ignoreAutoLinkingEnabled);
     } else {
@@ -72,16 +71,13 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
 
   protected abstract char getSearchSubfield();
 
-  protected abstract List<Authority> findExistingAuthorities(Set<T> ids);
+  protected abstract Map<String, List<Authority>> findExistingAuthorities(Set<T> ids);
 
   protected abstract T extractId(Authority authorityData);
 
-  private List<AuthorityParsedContent> getAuthoritiesParsedContent(List<Authority> authorities) {
-    var authoritiesBySource = authorities.stream()
-        .collect(groupingBy(Authority::isConsortiumShadowCopy));
-
-    var shadowCopyAuthorities = authoritiesBySource.get(Boolean.TRUE);
-    var localCopyAuthorities = authoritiesBySource.get(Boolean.FALSE);
+  private List<AuthorityParsedContent> getAuthoritiesParsedContent(Map<String, List<Authority>> authorities) {
+    var shadowCopyAuthorities = authorities.get("shared");
+    var localCopyAuthorities = authorities.get("local");
     var marcRecordsForShadowCopyAuthorities = isEmpty(shadowCopyAuthorities) ? new StrippedParsedRecordCollection() :
         executor.executeAsCentralTenant(() -> fetchAuthorityParsedRecords(shadowCopyAuthorities));
     var marcRecordsForLocalCopyAuthorities = fetchAuthorityParsedRecords(localCopyAuthorities);

@@ -16,6 +16,7 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.controller.converter.SourceContentMapper;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
@@ -79,37 +80,47 @@ public class LinksSuggestionsByAuthorityId extends LinksSuggestionsServiceDelega
 
   @Override
   protected Map<String, List<Authority>> findExistingAuthorities(Set<UUID> ids) {
-    Map<String, List<Authority>> authoritiesMap = new HashMap<>();
     var authorities = authorityRepository.findAllByIdInAndDeletedFalse(ids);
-    if (!authorities.isEmpty() && authorities.size() == ids.size()) {
-      authoritiesMap.put("local", authorities);
-      authoritiesMap.put("shared", Collections.emptyList());
+    var localAuthorities = authorities.stream()
+        .filter(a -> !a.isConsortiumShadowCopy())
+        .toList();
+    var shadowAuthorities = authorities.stream()
+        .filter(AuthorityBase::isConsortiumShadowCopy)
+        .toList();
+
+    var authoritiesMap = new HashMap<String, List<Authority>>();
+    authoritiesMap.put("local", localAuthorities);
+    authoritiesMap.put("shared", shadowAuthorities);
+
+    if (authorities.size() == ids.size()) {
       return authoritiesMap;
     }
+
     var centralTenant = userTenantsService.getCentralTenant(context.getTenantId());
     if (centralTenant.isEmpty() || centralTenant.get().equals(context.getTenantId())) {
-      authoritiesMap.put("local", authorities);
-      authoritiesMap.put("shared", Collections.emptyList());
       return authoritiesMap;
     }
-    // logic to fetch authorities from central tenant as current tenant is member of consortium
+
     if (authorities.isEmpty()) {
-      var sharedAuthorities = authorityJdbcRepository.findAllByIdInAndDeletedFalse(ids, centralTenant.get());
+      authoritiesMap.put("shared", authorityJdbcRepository.findAllByIdInAndDeletedFalse(ids, centralTenant.get()));
       authoritiesMap.put("local", Collections.emptyList());
-      authoritiesMap.put("shared", sharedAuthorities);
       return authoritiesMap;
     }
-    authoritiesMap.put("local", authorities);
-    var authoritiesIds = authorities.stream()
+
+    var existingIds = authorities.stream()
         .map(Authority::getId)
         .collect(Collectors.toSet());
-    var potentialSharedAuthorities = ids.stream()
-        .filter(id -> !authoritiesIds.contains(id))
+    var missingIds = ids.stream()
+        .filter(id -> !existingIds.contains(id))
         .collect(Collectors.toSet());
 
-    if (!potentialSharedAuthorities.isEmpty()) {
-      var sharedAuthorities = authorityJdbcRepository.findAllByIdInAndDeletedFalse(potentialSharedAuthorities,
-          centralTenant.get());
+    if (!missingIds.isEmpty()) {
+      var sharedAuthorities = authorityJdbcRepository.findAllByIdInAndDeletedFalse(missingIds, centralTenant.get());
+      if (sharedAuthorities.isEmpty()) {
+        authoritiesMap.put("shared", shadowAuthorities);
+        return authoritiesMap;
+      }
+      sharedAuthorities.addAll(shadowAuthorities);
       authoritiesMap.put("shared", sharedAuthorities);
     }
     return authoritiesMap;

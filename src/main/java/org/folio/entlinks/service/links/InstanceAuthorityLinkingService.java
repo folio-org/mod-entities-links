@@ -129,9 +129,9 @@ public class InstanceAuthorityLinkingService {
         .filter(Authority::isConsortiumShadowCopy)
         .map(Authority::getId)
         .collect(Collectors.toSet());
-    var shadowAuthoritiesWithoutLinks =
-        instanceLinkRepository.findShadowAuthorityIdsWithoutLinks(potentialAuthoritiesToDelete);
-    authorityService.deleteByIds(shadowAuthoritiesWithoutLinks);
+    if (!potentialAuthoritiesToDelete.isEmpty()) {
+      instanceLinkRepository.deleteShadowAuthoritiesWithoutLinks(potentialAuthoritiesToDelete);
+    }
   }
 
   public Map<UUID, Integer> countLinksByAuthorityIds(Set<UUID> authorityIds) {

@@ -83,12 +83,9 @@ public class LinksSuggestionsByAuthorityNaturalId extends LinksSuggestionsServic
       return authoritiesMap;
     }
     var sharedAuthorities = authorityJdbcRepository.findByNaturalIdInAndDeletedFalse(ids, centralTenant.get());
-    if (sharedAuthorities.isEmpty()) {
-      return authoritiesMap;
+    if (!sharedAuthorities.isEmpty()) {
+      authoritiesMap.put("shared", sharedAuthorities);
     }
-    sharedAuthorities.addAll(shadowAuthorities);
-    authoritiesMap.put("shared", sharedAuthorities);
-
     return authoritiesMap;
   }
 

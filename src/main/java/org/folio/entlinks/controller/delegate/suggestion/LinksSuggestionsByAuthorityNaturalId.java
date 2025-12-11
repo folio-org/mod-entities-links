@@ -72,10 +72,6 @@ public class LinksSuggestionsByAuthorityNaturalId extends LinksSuggestionsServic
     authoritiesMap.put("local", localAuthorities);
     authoritiesMap.put("shared", shadowAuthorities);
 
-    if (authorities.size() == ids.size()) {
-      return authoritiesMap;
-    }
-
     var centralTenant = userTenantsService.getCentralTenant(context.getTenantId());
     if (centralTenant.isEmpty() || centralTenant.get().equals(context.getTenantId())) {
       return authoritiesMap;
@@ -86,23 +82,13 @@ public class LinksSuggestionsByAuthorityNaturalId extends LinksSuggestionsServic
       authoritiesMap.put("local", Collections.emptyList());
       return authoritiesMap;
     }
-
-    var existingIds = authorities.stream()
-        .map(authority -> authority.getId().toString())
-        .collect(Collectors.toSet());
-    var missingIds = ids.stream()
-        .filter(id -> !existingIds.contains(id))
-        .collect(Collectors.toSet());
-
-    if (!missingIds.isEmpty()) {
-      var sharedAuthorities = authorityJdbcRepository.findByNaturalIdInAndDeletedFalse(missingIds, centralTenant.get());
-      if (sharedAuthorities.isEmpty()) {
-        authoritiesMap.put("shared", shadowAuthorities);
-        return authoritiesMap;
-      }
-      sharedAuthorities.addAll(shadowAuthorities);
-      authoritiesMap.put("shared", sharedAuthorities);
+    var sharedAuthorities = authorityJdbcRepository.findByNaturalIdInAndDeletedFalse(ids, centralTenant.get());
+    if (sharedAuthorities.isEmpty()) {
+      return authoritiesMap;
     }
+    sharedAuthorities.addAll(shadowAuthorities);
+    authoritiesMap.put("shared", sharedAuthorities);
+
     return authoritiesMap;
   }
 

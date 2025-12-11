@@ -65,11 +65,6 @@ public class LinksSuggestionsByAuthorityNaturalId extends LinksSuggestionsServic
       authoritiesMap.put("local", List.of());
     } else {
       authoritiesMap.put("local", authorities);
-      if (authorities.size() == ids.size()) {
-        log.info("All authorities found in local tenant for natural ids: {}", ids);
-        authoritiesMap.put("shared", List.of());
-        return authoritiesMap;
-      }
     }
     var tenant = folioExecutionContext.getTenantId();
     var centralTenant = userTenantsService.getCentralTenant(tenant);

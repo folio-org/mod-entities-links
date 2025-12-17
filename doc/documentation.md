@@ -612,7 +612,7 @@ If no setting is provided by a tenant the retention period value would be taken 
 To make a post call to mod-settings, user should have below permissions.
 ```
   mod-settings.entries.item.post
-  mod-settings.global.mod-entities-links.manage
+  mod-settings.global.write.mod-entities-links.manage
 ```
 
 **Example request**
@@ -620,7 +620,7 @@ To make a post call to mod-settings, user should have below permissions.
 POST https://{okapi-location}/settings/entries
 {
     "id":"1e01066d-4bee-4cf7-926c-ba2c9c6c0001",
-    "scope": "authority-storage",
+    "scope": "authority-storage.manage",
     "key": "authority-archives-expiration",
     "value": {
       "expirationEnabled":true,
@@ -632,7 +632,7 @@ POST https://{okapi-location}/settings/entries
 | Field   | Type        | Description                                                                                                           |
 |---------|-------------|-----------------------------------------------------------------------------------------------------------------------|
 | `id`    | UUID        | id of type UUID should be provided.                                                                                   |
-| `scope` | String      | Scope should be the module name. Here, it will be "authority-storage"                                                 |
+| `scope` | String      | Scope should be the module name. Here, it will be "authority-storage.manage"                                          |
 | `key`   | String      | Feature or Identifier name matching the setting we are enabling for. Here, it will be "authority-archives-expiration" |
 | `value` | Json Object | Value object for this setting.                                                                                        |
 

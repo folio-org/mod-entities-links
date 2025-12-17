@@ -612,7 +612,7 @@ If no setting is provided by a tenant the retention period value would be taken 
 To make a post call to mod-settings, user should have below permissions.
 ```
   mod-settings.entries.item.post
-  mod-settings.global.write.mod-entities-links
+  mod-settings.global.write.mod-entities-links.manage
 ```
 
 **Example request**

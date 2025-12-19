@@ -461,11 +461,13 @@
   "permissionSets": [
     {
       "permissionName": "mod-settings.global.write.authority-storage.manage",
+      "replaces": [ "mod-settings.global.write.authority-storage" ],
       "displayName": "Entities links settings - Create configuration",
       "description": "To create new configuration in mod settings"
     },
     {
       "permissionName": "mod-settings.global.read.authority-storage.manage",
+      "replaces": [ "mod-settings.global.read.authority-storage" ],
       "displayName": "Entities links settings - Read configuration",
       "description": "To read the configuration from mod settings."
     },

@@ -23,6 +23,7 @@
 ### Tech Dept
 * Re-work all s3 related envs var and standardization ([MODELINKS-324](https://folio-org.atlassian.net/browse/MODELINKS-324))
 * Refactor code to comply with Checkstyle method length limit (max 50 lines) ([MODELINKS-356](https://folio-org.atlassian.net/browse/MODELINKS-356))
+* Refactor ModuleDescriptor for eureka ([MODELINKS-251](https://folio-org.atlassian.net/browse/MODELINKS-251))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

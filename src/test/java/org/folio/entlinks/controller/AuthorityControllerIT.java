@@ -777,7 +777,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
   private void mockSuccessfulSettingsRequest() {
     okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-      .withQueryParam("query", equalTo("(scope=authority-storage AND key=authority-archives-expiration)"))
+      .withQueryParam("query", equalTo("(scope=authority-storage.manage AND key=authority-archives-expiration)"))
       .withQueryParam("limit", equalTo("10000"))
       .willReturn(aResponse()
         .withStatus(200)
@@ -787,7 +787,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
               "items": [
                   {
                       "id": "1e01066d-4bee-4cf7-926c-ba2c9c6c0001",
-                      "scope": "authority-storage",
+                      "scope": "authority-storage.manage",
                       "key": "authority-archives-expiration",
                       "value": {
                           "expirationEnabled":true,
@@ -801,7 +801,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
   private void mockFailedSettingsRequest() {
     okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-      .withQueryParam("query", equalTo("(scope=authority-storage AND key=authority-archives-expiration)"))
+      .withQueryParam("query", equalTo("(scope=authority-storage.manage AND key=authority-archives-expiration)"))
       .withQueryParam("limit", equalTo("10000"))
       .willReturn(aResponse().withStatus(500)));
   }

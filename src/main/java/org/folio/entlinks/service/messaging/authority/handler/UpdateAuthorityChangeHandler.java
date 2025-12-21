@@ -142,18 +142,18 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
                                                         AuthoritySourceRecord authoritySourceRecord,
                                                         String changedTag,
                                                         List<InstanceAuthorityLinkingRule> linkingRuleForField)
-    throws AuthorityBatchProcessingException {
+      throws AuthorityBatchProcessingException {
     var sourceRecord = Optional.ofNullable(authoritySourceRecord)
-      .orElseThrow(() -> new AuthorityBatchProcessingException(authorityId,
-        "Source record not found for [authorityId: " + authorityId + "]"));
+        .orElseThrow(() -> new AuthorityBatchProcessingException(authorityId,
+            "Source record not found for [authorityId: " + authorityId + "]"));
     var dataField = sourceRecord.content().getDataFields().stream()
-      .filter(field -> field.getTag().equals(changedTag))
-      .findFirst()
-      .orElseThrow(() -> new AuthorityBatchProcessingException(authorityId,
-        "Source record don't contains [authorityId: " + authorityId + ", tag: " + changedTag + "]"));
-
+        .filter(field -> field.getTag().equals(changedTag))
+        .findFirst()
+        .orElseThrow(() -> new AuthorityBatchProcessingException(authorityId,
+            "Source record don't contains [authorityId: " + authorityId + ", tag: " + changedTag + "]"));
+    log.info("Data field found for authorityId {}: {}", authorityId, dataField.getSubfields());
     return linkingRuleForField.stream()
-      .map(linkingRule -> new FieldChangeHolder(dataField, linkingRule))
+        .map(linkingRule -> new FieldChangeHolder(dataField, linkingRule))
       .toList();
   }
 

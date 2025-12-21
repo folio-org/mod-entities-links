@@ -27,7 +27,11 @@ public class AuthoritySourceRecordService {
   public AuthoritySourceRecord getAuthoritySourceRecordById(UUID authorityId) {
     log.info("Fetching source record [authorityId: {}]", authorityId);
     SourceRecord sourceRecord = fetchSourceRecord(authorityId);
+    log.info("Source record fetched [authorityId: {}], SnapshotId {}",
+        authorityId, sourceRecord.getParsedRecord().getContent());
     var content = extractMarcRecord(sourceRecord.getParsedRecord());
+    log.info("Fetched source record [authorityId: {}], SnapshotId {}, content {}",
+        authorityId, sourceRecord.getSnapshotId(), content);
     return new AuthoritySourceRecord(authorityId, sourceRecord.getSnapshotId(), content);
   }
 

@@ -16,7 +16,7 @@ spring:
       minimumIdle: ${DB_MINIMUM_IDLE:10}
       initializationFailTimeout: ${DB_INITIALIZATION_FAIL_TIMEOUT:30000}
       leakDetectionThreshold: ${DB_LEAK_DETECTION_THRESHOLD:60000}
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:okapi_modules}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:modules}
     password: ${DB_PASSWORD:folio_admin}
     username: ${DB_USERNAME:folio_admin}
   liquibase:
@@ -71,7 +71,7 @@ folio:
   environment: ${ENV:folio}
   okapi-url: ${OKAPI_URL:http://localhost:9130}
   system-user:
-    enabled: ${SYSTEM_USER_ENABLED:true}
+    enabled: ${SYSTEM_USER_ENABLED:false}
     username: ${SYSTEM_USER_USERNAME:mod-entities-links}
     password: ${SYSTEM_USER_PASSWORD}
     lastname: Automated linking update
@@ -104,6 +104,10 @@ folio:
         topic-pattern: (${folio.environment}\.)(.*\.)specification-storage\.specification\.updated
         group-id: ${folio.environment}-mod-entities-specification-storage-group
         auto-offset-reset: EARLIEST
+      data-import:
+        concurrency: 1
+        topic-pattern: (${folio.environment}\.)[A-Za-z0-9-]+\.\w+\.DI_SRS_MARC_AUTHORITY_RECORD_(CREATED|MODIFIED_READY_FOR_POST_PROCESSING|DELETED|NOT_MATCHED)
+        group-id: ${folio.environment}-mod-entities-links-data-import-group
   instance-authority:
     change:
       numPartitions: ${KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS:100}

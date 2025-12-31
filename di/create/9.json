@@ -1,0 +1,316 @@
+{
+    "id": "9c2ba1a6-cb97-4c6c-a062-67e8247b950a",
+    "eventType": "DI_JOB_COMPLETED",
+    "eventMetadata": {
+        "tenantId": "diku",
+        "eventTTL": 1,
+        "publishedBy": "mod-source-record-manager-4.0.0-SNAPSHOT"
+    },
+    "eventPayload": {
+        "id": "3d6b1c8d-ceaf-4e22-8951-3ff178e58412",
+        "hrId": 31,
+        "parentJobId": "3d6b1c8d-ceaf-4e22-8951-3ff178e58412",
+        "subordinationType": "COMPOSITE_PARENT",
+        "jobProfileInfo": {
+            "id": "6eefa4c6-bbf7-4845-ad82-de7fc5abd0e3",
+            "name": "Default - Create SRS MARC Authority",
+            "dataType": "MARC",
+            "hidden": false
+        },
+        "jobProfileSnapshotWrapper": {
+            "id": "6666ddb2-85cf-4b52-bcdc-5633a5368d21",
+            "profileId": "6eefa4c6-bbf7-4845-ad82-de7fc5abd0e3",
+            "profileWrapperId": "790f2fce-b2b7-4033-ac92-7b683d30bede",
+            "contentType": "JOB_PROFILE",
+            "content": {
+                "id": "6eefa4c6-bbf7-4845-ad82-de7fc5abd0e3",
+                "name": "Default - Create SRS MARC Authority",
+                "tags": {
+                    "tagList": []
+                },
+                "hidden": false,
+                "dataType": "MARC",
+                "metadata": {
+                    "createdDate": "2021-03-16T15:00:00.000+00:00",
+                    "updatedDate": "2021-03-16T15:00:00.000+00:00",
+                    "createdByUserId": "00000000-0000-0000-0000-000000000000",
+                    "updatedByUserId": "00000000-0000-0000-0000-000000000000"
+                },
+                "userInfo": {
+                    "lastName": "System",
+                    "userName": "System",
+                    "firstName": "System"
+                },
+                "description": "Default job profile for creating MARC authority records. These records are stored in source record storage (SRS). Profile cannot be deleted.",
+                "childProfiles": [],
+                "parentProfiles": []
+            },
+            "order": 0,
+            "childSnapshotWrappers": [
+                {
+                    "id": "d75506c9-e3ca-4fba-84dd-91ec3a1780bc",
+                    "profileId": "7915c72e-c6af-4962-969d-403c7238b051",
+                    "profileWrapperId": "570476c2-2309-4a66-be93-eef158882f66",
+                    "contentType": "ACTION_PROFILE",
+                    "content": {
+                        "id": "7915c72e-c6af-4962-969d-403c7238b051",
+                        "name": "Default - Create MARC Authority",
+                        "action": "CREATE",
+                        "hidden": false,
+                        "metadata": {
+                            "createdDate": "2021-10-08T14:00:00.000+00:00",
+                            "updatedDate": "2021-10-08T15:00:00.462+00:00",
+                            "createdByUserId": "00000000-0000-0000-0000-000000000000",
+                            "updatedByUserId": "00000000-0000-0000-0000-000000000000"
+                        },
+                        "userInfo": {
+                            "lastName": "System",
+                            "userName": "System",
+                            "firstName": "System"
+                        },
+                        "description": "This action profile is used with FOLIO's default job profile for creating a MARC authority record in source-record-storage. It cannot be edited, duplicated, or deleted.",
+                        "folioRecord": "AUTHORITY",
+                        "childProfiles": [],
+                        "parentProfiles": [],
+                        "remove9Subfields": false
+                    },
+                    "order": 0,
+                    "childSnapshotWrappers": [
+                        {
+                            "id": "e78d0cb8-d408-4987-9b24-0004d8689163",
+                            "profileId": "6a0ec1de-68eb-4833-bdbf-0741db25c314",
+                            "profileWrapperId": "b5befbad-caac-4f05-8e94-6a292a1fbe17",
+                            "contentType": "MAPPING_PROFILE",
+                            "content": {
+                                "id": "6a0ec1de-68eb-4833-bdbf-0741db25c314",
+                                "name": "Default - Create MARC Authority",
+                                "hidden": false,
+                                "metadata": {
+                                    "createdDate": "2021-10-08T14:00:00.000+00:00",
+                                    "updatedDate": "2021-10-08T15:00:00.462+00:00",
+                                    "createdByUserId": "00000000-0000-0000-0000-000000000000",
+                                    "updatedByUserId": "00000000-0000-0000-0000-000000000000"
+                                },
+                                "userInfo": {
+                                    "lastName": "System",
+                                    "userName": "System",
+                                    "firstName": "System"
+                                },
+                                "description": "This field mapping profile is used with FOLIO's default job profile for creating MARC Authority records. It cannot be edited, duplicated, deleted, or linked to additional action profiles.",
+                                "childProfiles": [],
+                                "mappingDetails": {
+                                    "name": "authority",
+                                    "recordType": "AUTHORITY",
+                                    "mappingFields": [
+                                        {
+                                            "name": "personalName",
+                                            "path": "authority.personalName",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "sftPersonalName",
+                                            "path": "authority.sftPersonalName[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "saftPersonalName",
+                                            "path": "authority.saftPersonalName[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "corporateName",
+                                            "path": "authority.corporateName",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "sftCorporateName",
+                                            "path": "authority.sftCorporateName[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "saftCorporateName",
+                                            "path": "authority.saftCorporateName[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "meetingName",
+                                            "path": "authority.meetingName[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "sftMeetingName",
+                                            "path": "authority.sftMeetingName[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "saftMeetingName",
+                                            "path": "authority.saftMeetingName[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "uniformTitle",
+                                            "path": "authority.uniformTitle",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "sftUniformTitle",
+                                            "path": "authority.sftUniformTitle[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "saftUniformTitle",
+                                            "path": "authority.saftUniformTitle[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "topicalTerm",
+                                            "path": "authority.topicalTerm",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "sftTopicalTerm",
+                                            "path": "authority.sftTopicalTerm[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "saftTopicalTerm",
+                                            "path": "authority.saftTopicalTerm[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "subjectHeadings",
+                                            "path": "authority.subjectHeadings",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "geographicName",
+                                            "path": "authority.geographicName",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "sftGeographicTerm",
+                                            "path": "authority.sftGeographicTerm[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "saftGeographicTerm",
+                                            "path": "authority.saftGeographicTerm[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "genre",
+                                            "path": "authority.genre",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "identifiers",
+                                            "path": "authority.identifiers[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        },
+                                        {
+                                            "name": "notes",
+                                            "path": "authority.notes[]",
+                                            "value": "",
+                                            "enabled": "false",
+                                            "required": false,
+                                            "subfields": []
+                                        }
+                                    ],
+                                    "marcMappingDetails": []
+                                },
+                                "parentProfiles": [],
+                                "existingRecordType": "AUTHORITY",
+                                "incomingRecordType": "MARC_AUTHORITY",
+                                "marcFieldProtectionSettings": []
+                            },
+                            "order": 0,
+                            "childSnapshotWrappers": []
+                        }
+                    ]
+                }
+            ]
+        },
+        "sourcePath": "data-import/diku/1761821705165-meeting_name.mrc",
+        "fileName": "1761821705165-meeting_name.mrc",
+        "runBy": {
+            "firstName": "Diku_admin",
+            "lastName": "ADMINISTRATOR"
+        },
+        "progress": {
+            "jobExecutionId": "3d6b1c8d-ceaf-4e22-8951-3ff178e58412",
+            "current": 0,
+            "total": 100
+        },
+        "startedDate": 1761821723758,
+        "completedDate": 1761821884166,
+        "status": "COMMITTED",
+        "uiStatus": "RUNNING_COMPLETE",
+        "userId": "fb218675-93c5-4843-b406-8f5a8a427bf4",
+        "jobPartNumber": 1,
+        "totalJobParts": 1,
+        "totalRecordsInFile": 2
+    }
+}

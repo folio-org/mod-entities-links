@@ -1,0 +1,28 @@
+{
+    "id": "1c120eff-fc38-4b43-ac5d-ff239b2ab44f",
+    "eventType": "DI_RAW_RECORDS_CHUNK_READ",
+    "eventMetadata": {
+        "tenantId": "diku",
+        "eventTTL": 1,
+        "publishedBy": "mod-data-import-3.4.0-SNAPSHOT"
+    },
+    "eventPayload": {
+        "id": "1c120eff-fc38-4b43-ac5d-ff239b2ab44f",
+        "initialRecords": [
+            {
+                "record": "01055cz  a2200169n  4500001000800000005001700008008004100025010001700066035002300083040003300106111005900139411006100198511007100259667009500330670012200425675033800547\u001e8979089\u001e20120828074806.0\u001e120502n| acannaabn          |a ana     c\u001e  \u001fano2012061368\u001e  \u001fa(OCoLC)oca09186965\u001e  \u001faOkS\u001fbeng\u001fcOkS\u001fdOkS\u001fdDLC\u001fdOkS\u001e2 \u001faWestern Region Agricultural Education Research Meeting\u001e2 \u001faWestern Regional Agricultural Education Research Meeting\u001e2 \u001fwb\u001faWestern Region Agricultural Education Research Seminar (1983- )\u001e  \u001faTHIS 1XX FIELD CANNOT BE USED UNDER RDA UNTIL THIS RECORD HAS BEEN REVIEWED AND/OR UPDATED\u001e  \u001faFirst annual Western Region Agricultural Education Research Meeting, 1982:\u001fbt.p. (held April 26, 1982, Austin, Texas)\u001e  \u001faSecond annual Western Region Agricultural Education Research Seminar, 1983: t.p. (held April 19, 1983, Rio Rico, Arizona) p. [3] (2nd Western Regional Research Meeting)\u001faResearch in agricultural education, 1993: cover (Twelfth annual Western Regional Agricultural Education Research Meeting; held in Bozeman, Montana, April 14, 1993)\u001e\u001d",
+                "order": 0
+            },
+            {
+                "record": "01023cz  a2200169n  4500001000800000005001700008008004100025010001700066035002300083040002300106111006500129511007100194511006200265667009500327670012900422675030200551\u001e9009345\u001e20120820081718.0\u001e120605n| acannaabn          |a ana     c\u001e  \u001fano2012077746\u001e  \u001fa(OCoLC)oca09217880\u001e  \u001faOkS\u001fbeng\u001fcOkS\u001fdDLC\u001e2 \u001faWestern Region Research Conference in Agricultural Education\u001e2 \u001fwa\u001faWestern Region Agricultural Education Research Seminar (1983- )\u001e2 \u001fwb\u001faWestern Region Agricultural Education Research Meeting\u001e  \u001faTHIS 1XX FIELD CANNOT BE USED UNDER RDA UNTIL THIS RECORD HAS BEEN REVIEWED AND/OR UPDATED\u001e  \u001faWestern Region Research Conference in Agricultural Education, 1984:\u001fbcover (held Oklahoma City, Oklahoma, April 23-24, 1984)\u001e  \u001faSecond annual Western Region Agricultural Education Research Seminar, 1983: t.p (held April 19, 1983, Rio Rico, Arizona)\u001faEducational excellence for the no. 1 industry \"agriculture,\" 1985: cover (Western Region 4th Annual Agricultural Education Research Meeting; held April 17, 1985, Boise, Idaho)\u001e\u001d",
+                "order": 1
+            }
+        ],
+        "recordsMetadata": {
+            "last": false,
+            "counter": 2,
+            "total": 2,
+            "contentType": "MARC_RAW"
+        }
+    }
+}

@@ -15,37 +15,45 @@ import org.junit.jupiter.api.Test;
 class JdbcUtilsTest {
 
   private FolioExecutionContext context;
+  private FolioModuleMetadata metadata;
 
   @BeforeEach
   void setUp() {
-    var metadata = mock(FolioModuleMetadata.class);
+    metadata = mock(FolioModuleMetadata.class);
     context = mock(FolioExecutionContext.class);
     when(context.getFolioModuleMetadata()).thenReturn(metadata);
     when(context.getTenantId()).thenReturn("testTenant");
     when(metadata.getDBSchemaName("testTenant")).thenReturn("testSchema");
+    when(metadata.getDBSchemaName("anotherTenant")).thenReturn("anotherSchema");
   }
 
   @Test
   void testGetSchemaName() {
-    String schemaName = JdbcUtils.getSchemaName(context);
+    var schemaName = JdbcUtils.getSchemaName(context);
     assertEquals("testSchema", schemaName);
   }
 
   @Test
   void testGetFullPath() {
-    String fullPath = JdbcUtils.getFullPath(context, "testTable");
+    var fullPath = JdbcUtils.getFullPath(context, "testTable");
     assertEquals("testSchema.testTable", fullPath);
   }
 
   @Test
+  void testGetFullPathWithTenant() {
+    var fullPath = JdbcUtils.getFullPath(metadata, "anotherTenant", "testTable");
+    assertEquals("anotherSchema.testTable", fullPath);
+  }
+
+  @Test
   void testGetParamPlaceholderSingle() {
-    String placeholder = JdbcUtils.getParamPlaceholder(3);
+    var placeholder = JdbcUtils.getParamPlaceholder(3);
     assertEquals("?,?,?", placeholder);
   }
 
   @Test
   void testGetParamPlaceholderMultiple() {
-    String placeholder = JdbcUtils.getParamPlaceholder(2, 3);
+    var placeholder = JdbcUtils.getParamPlaceholder(2, 3);
     assertEquals("(?,?,?),(?,?,?)", placeholder);
   }
 

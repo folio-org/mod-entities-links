@@ -52,7 +52,7 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
   AUTHORITY_TABLE,
   AUTHORITY_ARCHIVE_TABLE,
   AUTHORITY_SOURCE_FILE_TABLE},
-    tenants = {CENTRAL_TENANT_ID, TENANT_ID})
+                 tenants = {CENTRAL_TENANT_ID, TENANT_ID})
 class AuthorityControllerEcsIT extends IntegrationTestBase {
   private KafkaMessageListenerContainer<String, AuthorityDomainEvent> container;
   private BlockingQueue<ConsumerRecord<String, AuthorityDomainEvent>> consumerRecords;
@@ -66,7 +66,7 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(
-        authorityTopic(), consumerRecords, kafkaProperties, AuthorityDomainEvent.class);
+      authorityTopic(), consumerRecords, kafkaProperties, AuthorityDomainEvent.class);
   }
 
   @AfterEach
@@ -78,13 +78,11 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
   @ParameterizedTest
   @CsvSource({"consortium, 0", "test, 1"})
   @DisplayName("DELETE: Should delete existing authority archives by retention in settings "
-      + "for Consortium and Member tenants")
-  void expireAuthorityArchives_positive_shouldExpireExistingArchivesForConsortiumAndMemberTenant(
-      String tenant, int expectedCount) {
-
+               + "for Consortium and Member tenants")
+  void expireAuthorityArchives_positive_shouldExpireExistingArchivesForConsortiumAndMemberTenant(String tenant,
+                                                                                                 int expectedCount) {
     //mock retention period
     mockFailedSettingsRequest();
-
     //create authority records for consortium tenant
     var authority = createAuthorityForConsortium();
 
@@ -99,10 +97,9 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
     getConsumedEvent();
 
     // wait for the archive to be created
-    var count1 = 1;
     awaitUntilAsserted(() -> {
-      assertEquals(count1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, CENTRAL_TENANT_ID, "deleted = true"));
-      assertEquals(count1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID, "deleted = true"));
+      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, CENTRAL_TENANT_ID, "deleted = true"));
+      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID, "deleted = true"));
     });
 
     awaitUntilAsserted(() -> assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID)));
@@ -118,7 +115,7 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
     //check the archive records count in Central and Member tenants
     awaitUntilAsserted(() -> {
       assertEquals(expectedCount, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, CENTRAL_TENANT_ID,
-          "deleted = true"));
+        "deleted = true"));
       assertEquals(expectedCount, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID, "deleted = true"));
     });
   }
@@ -126,9 +123,9 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
   @ParameterizedTest
   @CsvSource({"consortium, 0, 1", "test, 1, 1"})
   @DisplayName("DELETE: Should not delete existing local record in Member tenant from the authority archives "
-      + "by retention in settings")
+               + "by retention in settings")
   void expireAuthorityArchives_positive_shouldExpireExistingArchivesWithLocalRecordForMemberTenant(
-      String tenant, int expectedConsortiumCount, int expectedMemberCount) {
+    String tenant, int expectedConsortiumCount, int expectedMemberCount) {
 
     //mock retention period
     mockFailedSettingsRequest();
@@ -167,17 +164,17 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
     //check the archive records count in Central and Member tenants
     awaitUntilAsserted(() -> {
       assertEquals(expectedConsortiumCount, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, CENTRAL_TENANT_ID,
-          "deleted = true"));
+        "deleted = true"));
       assertEquals(expectedMemberCount, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID,
-          "deleted = true"));
+        "deleted = true"));
     });
   }
 
   private void mockFailedSettingsRequest() {
     okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-        .withQueryParam("query", equalTo("(scope=authority-storage AND key=authority-archives-expiration)"))
-        .withQueryParam("limit", equalTo("10000"))
-        .willReturn(aResponse().withStatus(500)));
+      .withQueryParam("query", equalTo("(scope=authority-storage.manage AND key=authority-archives-expiration)"))
+      .withQueryParam("limit", equalTo("10000"))
+      .willReturn(aResponse().withStatus(500)));
   }
 
   private Authority createAuthority() {
@@ -188,11 +185,11 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
 
   private AuthorityDto createAuthorityForConsortium() {
     var dto = new AuthorityDto()
-        .id(AUTHORITY_IDS[0])
-        .version(0)
-        .source("MARC")
-        .naturalId("ns123456")
-        .personalName("Nikola Tesla1");
+      .id(AUTHORITY_IDS[0])
+      .version(0)
+      .source("MARC")
+      .naturalId("ns123456")
+      .personalName("Nikola Tesla1");
     doPost(authorityEndpoint(), dto, tenantHeaders(CENTRAL_TENANT_ID));
     return dto;
   }
@@ -202,7 +199,7 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, entity);
 
     entity.getAuthoritySourceFileCodes().forEach(code ->
-        databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, entity.getId(), code));
+      databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, entity.getId(), code));
   }
 
   @SneakyThrows

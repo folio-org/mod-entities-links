@@ -4,8 +4,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.folio.entlinks.controller.delegate.LinkingServiceDelegate;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
-import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
-import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.rest.resource.InstanceLinksApi;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,12 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class InstanceLinksController implements InstanceLinksApi {
 
   private final LinkingServiceDelegate linkingServiceDelegate;
-
-  @Override
-  public ResponseEntity<LinksCountDtoCollection> countLinksByAuthorityIds(UuidCollection authorityIdCollection) {
-    var counts = linkingServiceDelegate.countLinksByAuthorityIds(authorityIdCollection);
-    return ResponseEntity.ok(counts);
-  }
 
   @Override
   public ResponseEntity<InstanceLinkDtoCollection> getInstanceLinks(UUID instanceId) {

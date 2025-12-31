@@ -52,7 +52,7 @@
   "provides": [
     {
       "id": "instance-authority-links",
-      "version": "2.1",
+      "version": "2.2",
       "handlers": [
         {
           "methods": [
@@ -77,15 +77,6 @@
             "inventory-storage.instances.item.get",
             "inventory-storage.instances.item.put",
             "user-tenants.collection.get"
-          ]
-        },
-        {
-          "methods": [
-            "POST"
-          ],
-          "pathPattern": "/links/authorities/bulk/count",
-          "permissionsRequired": [
-            "instance-authority-links.authorities.bulk.post"
           ]
         }
       ]
@@ -460,7 +451,7 @@
           "delay": "1",
           "modulePermissions": [
             "mod-settings.entries.collection.get",
-            "mod-settings.global.read.authority-storage",
+            "mod-settings.global.read.authority-storage.manage",
             "user-tenants.collection.get"
           ]
         }
@@ -469,12 +460,14 @@
   ],
   "permissionSets": [
     {
-      "permissionName": "mod-settings.global.write.authority-storage",
+      "permissionName": "mod-settings.global.write.authority-storage.manage",
+      "replaces": [ "mod-settings.global.write.authority-storage" ],
       "displayName": "Entities links settings - Create configuration",
       "description": "To create new configuration in mod settings"
     },
     {
-      "permissionName": "mod-settings.global.read.authority-storage",
+      "permissionName": "mod-settings.global.read.authority-storage.manage",
+      "replaces": [ "mod-settings.global.read.authority-storage" ],
       "displayName": "Entities links settings - Read configuration",
       "description": "To read the configuration from mod settings."
     },
@@ -487,11 +480,6 @@
       "permissionName": "instance-authority-links.instances.collection.put",
       "displayName": "Entities Links - update instance-authority links",
       "description": "Update instance-authority links collection"
-    },
-    {
-      "permissionName": "instance-authority-links.authorities.bulk.post",
-      "displayName": "Entities Links - count instance-authority links for each authority",
-      "description": "Count instance-authority links for each authority"
     },
     {
       "permissionName": "instance-authority.linking-rules.collection.get",
@@ -530,7 +518,6 @@
       "subPermissions": [
         "instance-authority-links.instances.collection.get",
         "instance-authority-links.instances.collection.put",
-        "instance-authority-links.authorities.bulk.post",
         "instance-authority.linking-rules.collection.get",
         "instance-authority.linking-rules.item.get",
         "instance-authority.linking-rules.item.patch",

@@ -4,23 +4,26 @@
 
 ### New APIs versions
 * Provides `instance-authority-links-statistics v2.1`
+* Provides `instance-authority-links v2.2`
 * Requires `API_NAME vX.Y`
 
 ### Features
 * Pass userId from authority kafka event to link update events ([MODELINKS-322](https://folio-org.atlassian.net/browse/MODELINKS-322))
 * Allow updating controlled subfields ([MODELINKS-326](https://folio-org.atlassian.net/browse/MODELINKS-326))
 * Extend Authority Statistics model with shared flag. Filter out shared records from bib report ([MODELINKS-312](https://folio-org.atlassian.net/browse/MODELINKS-312))
+* Pass userId to folioExecutionContext on authority update propagation ([MODELINKS-364](https://folio-org.atlassian.net/browse/MODELINKS-364))
 
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))
 * Fix instance-authority link record propagation to member tenants ([MODELINKS-319](https://folio-org.atlassian.net/browse/MODELINKS-319))
 * Fix outdated linking rules by removing the cache for linking rules ([MODELINKS-333](https://folio-org.atlassian.net/browse/MODELINKS-333))
 * Remove unused search.authorities.collection.get permission ([MODELINKS-336](https://folio-org.atlassian.net/browse/MODELINKS-336))
-* Update Authority source file name FROM LC Demographic Group Terms (LCFGT) TO LC Demographic Group Terms (LCDGT)
-  ([MODELINKS-342](https://folio-org.atlassian.net/browse/MODELINKS-342))
+* Update Authority source file name FROM LC Demographic Group Terms (LCFGT) TO LC Demographic Group Terms (LCDGT) ([MODELINKS-342](https://folio-org.atlassian.net/browse/MODELINKS-342))
 
 ### Tech Dept
 * Re-work all s3 related envs var and standardization ([MODELINKS-324](https://folio-org.atlassian.net/browse/MODELINKS-324))
+* Refactor code to comply with Checkstyle method length limit (max 50 lines) ([MODELINKS-356](https://folio-org.atlassian.net/browse/MODELINKS-356))
+* Refactor ModuleDescriptor for eureka ([MODELINKS-251](https://folio-org.atlassian.net/browse/MODELINKS-251))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

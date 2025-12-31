@@ -79,7 +79,7 @@ public class AuthoritySourceFileJdbcRepository {
 
   public void createSequence(String sequenceName, int startNumber) {
     var command = String.format("""
-        CREATE SEQUENCE %s MINVALUE %d INCREMENT BY 1 OWNED BY %s.authority_source_file.sequence_name;
+        CREATE SEQUENCE IF NOT EXISTS %s MINVALUE %d INCREMENT BY 1 OWNED BY %s.authority_source_file.sequence_name;
         """,
       sequenceName, startNumber, getSchemaName(folioExecutionContext));
     jdbcTemplate.execute(command);

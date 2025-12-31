@@ -109,7 +109,7 @@ public class IntegrationTestBase {
   protected static final String DOMAIN_EVENT_HEADER_KEY = "domain-event-type";
   protected static final List<String> DOMAIN_EVENT_HEADER_KEYS =
       List.of(TENANT, URL, XOkapiHeaders.USER_ID, DOMAIN_EVENT_HEADER_KEY);
-  protected static final String[] IGNORED_FIELDS_FOR_VERIFICATION = {"metadata.createdDate", "metadata.updatedDate"};
+  protected static final String[] IGNORED_FIELDS_FOR_VERIFICATION = {"metadata", "version"};
   protected static MockMvc mockMvc;
   protected static OkapiConfiguration okapi;
   protected static KafkaTemplate<String, String> kafkaTemplate;

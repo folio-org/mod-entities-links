@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.7</version>
+    <version>4.0.1</version>
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
 
@@ -29,22 +29,22 @@
     <folio-service-tools.version>5.1.0-SNAPSHOT</folio-service-tools.version>
     <folio-s3-client.version>2.4.0-SNAPSHOT</folio-s3-client.version>
     <mod-record-specifications-dto.version>2.1.0-SNAPSHOT</mod-record-specifications-dto.version>
-    <aws-sdk-java.version>2.38.7</aws-sdk-java.version>
+    <aws-sdk-java.version>2.41.2</aws-sdk-java.version>
     <mapstruct.version>1.6.3</mapstruct.version>
     <lombok.mapstruct-binding.version>0.2.0</lombok.mapstruct-binding.version>
     <marc4j.version>2.9.6</marc4j.version>
     <awaitility.version>4.3.0</awaitility.version>
 
-    <folio-module-descriptor-validator.version>1.0.0</folio-module-descriptor-validator.version>
-    <maven-openapi-generator-plugin.version>7.17.0</maven-openapi-generator-plugin.version>
+    <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
+    <maven-openapi-generator-plugin.version>7.18.0</maven-openapi-generator-plugin.version>
     <maven-copy-rename-plugin.version>1.0.1</maven-copy-rename-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <folio-java-checkstyle.version>1.2.0</folio-java-checkstyle.version>
-    <checkstyle.version>12.1.2</checkstyle.version>
+    <checkstyle.version>13.0.0</checkstyle.version>
     <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
     <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
     <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
-    <maven-release-plugin.version>3.2.0</maven-release-plugin.version>
+    <maven-release-plugin.version>3.3.1</maven-release-plugin.version>
   </properties>
 
   <dependencies>

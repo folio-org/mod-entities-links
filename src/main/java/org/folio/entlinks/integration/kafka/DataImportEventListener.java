@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Log4j2
 @Component
 @RequiredArgsConstructor
-@Profile("dev")
+@Profile("dev") //todo: remove
 public class DataImportEventListener {
 
   private final FolioExecutionContextService executionService;

@@ -2,6 +2,7 @@ package org.folio.entlinks.config;
 
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -78,6 +79,10 @@ public class KafkaConfiguration {
     Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties(null));
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
+
+    // Data Import specific configurations to match mod-inventory behavior
+    config.put(MAX_POLL_INTERVAL_MS_CONFIG, "600000"); // 10 minutes for long-running data import processing
+
     return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
   }
 

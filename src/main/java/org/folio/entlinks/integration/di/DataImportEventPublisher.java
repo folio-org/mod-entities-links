@@ -51,7 +51,7 @@ public class DataImportEventPublisher implements EventPublisher {
 
   @Override
   public CompletableFuture<Event> publish(DataImportEventPayload payload) {
-    long startTime = System.currentTimeMillis();
+    final long startTime = System.currentTimeMillis();
     var eventName = payload.getEventType();
     var tenant = payload.getTenant();
     var jobExecutionId = payload.getJobExecutionId();
@@ -60,15 +60,18 @@ public class DataImportEventPublisher implements EventPublisher {
       tenant,
       DEFAULT_NAMESPACE);
 
-    log.info("=== DataImportEventPublisher.publish() START === [eventType: {}, tenant: {}, jobExecutionId: {}, topic: {}]",
+    log.info("=== DataImportEventPublisher.publish() START === [eventType: {}, tenant: {}, jobExecutionId: {}, "
+        + "topic: {}]",
       eventName, tenant, jobExecutionId, topicName);
 
     var event = prepareEvent(payload);
-    log.info("Event prepared [eventId: {}, eventType: {}, jobExecutionId: {}]", event.getId(), eventName, jobExecutionId);
+    log.info("Event prepared [eventId: {}, eventType: {}, jobExecutionId: {}]", event.getId(), eventName,
+      jobExecutionId);
 
     var producerRecord = new ProducerRecord<String, Event>(topicName, event);
     prepareHeaders(payload, producerRecord);
-    log.info("Headers prepared, about to call kafkaTemplate.send() [topic: {}, jobExecutionId: {}]", topicName, jobExecutionId);
+    log.info("Headers prepared, about to call kafkaTemplate.send() [topic: {}, jobExecutionId: {}]",
+      topicName, jobExecutionId);
 
     long beforeSendTime = System.currentTimeMillis();
     return kafkaTemplate.send(producerRecord)
@@ -77,12 +80,14 @@ public class DataImportEventPublisher implements EventPublisher {
         long sendDuration = System.currentTimeMillis() - beforeSendTime;
 
         if (ex != null) {
-          log.error("=== DataImportEventPublisher.publish() FAILED === [eventType: {}, topic: {}, jobExecutionId: {}, totalDuration: {}ms, sendDuration: {}ms, error: {}]",
+          log.error("=== DataImportEventPublisher.publish() FAILED === [eventType: {}, topic: {}, "
+              + "jobExecutionId: {}, totalDuration: {}ms, sendDuration: {}ms, error: {}]",
             eventName, topicName, jobExecutionId, duration, sendDuration, ex.getMessage(), ex);
           return null;
         }
 
-        log.info("=== DataImportEventPublisher.publish() SUCCESS === [eventType: {}, topic: {}, jobExecutionId: {}, partition: {}, offset: {}, totalDuration: {}ms, sendDuration: {}ms]",
+        log.info("=== DataImportEventPublisher.publish() SUCCESS === [eventType: {}, topic: {}, "
+            + "jobExecutionId: {}, partition: {}, offset: {}, totalDuration: {}ms, sendDuration: {}ms]",
           eventName, topicName, jobExecutionId,
           recordMetadata.getRecordMetadata().partition(),
           recordMetadata.getRecordMetadata().offset(),

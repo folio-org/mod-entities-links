@@ -49,7 +49,8 @@ public class DataImportEventService {
     var jobExecutionId = payload.getJobExecutionId();
     var tenant = payload.getTenant();
 
-    logDataImport(log, Level.INFO, ">>> DataImportEventService.processEvent() START [eventType: %s, jobExecutionId: %s, tenant: %s]"
+    logDataImport(log, Level.INFO, (">>> DataImportEventService.processEvent() START [eventType: %s, "
+      + "jobExecutionId: %s, tenant: %s]")
       .formatted(eventType, jobExecutionId, tenant), payload);
 
     log.info("About to call EventManager.handleEvent() [eventType: {}, jobExecutionId: {}]", eventType, jobExecutionId);
@@ -61,10 +62,12 @@ public class DataImportEventService {
         long handleEventDuration = System.currentTimeMillis() - beforeHandleEvent;
 
         if (throwable != null) {
-          logDataImport(log, "<<< DataImportEventService.processEvent() FAILED [eventType: %s, totalDuration: %dms, handleEventDuration: %dms]"
+          logDataImport(log, ("<<< DataImportEventService.processEvent() FAILED [eventType: %s, totalDuration: %dms, "
+            + "handleEventDuration: %dms]")
             .formatted(eventType, totalDuration, handleEventDuration), diPayload, throwable);
         } else {
-          logDataImport(log, Level.INFO, "<<< DataImportEventService.processEvent() SUCCESS [eventType: %s, totalDuration: %dms, handleEventDuration: %dms]"
+          logDataImport(log, Level.INFO, ("<<< DataImportEventService.processEvent() SUCCESS [eventType: %s, "
+            + "totalDuration: %dms, handleEventDuration: %dms]")
             .formatted(eventType, totalDuration, handleEventDuration), diPayload);
         }
         return null;

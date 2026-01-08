@@ -28,7 +28,7 @@ public class DataImportEventListener {
                  groupId = "#{folioKafkaProperties.listener['data-import'].groupId}",
                  concurrency = "#{folioKafkaProperties.listener['data-import'].concurrency}")
   public void handleEvents(List<DataImportEventWrapper> consumerRecords) {
-    long startTime = System.currentTimeMillis();
+    final long startTime = System.currentTimeMillis();
     int recordCount = consumerRecords.size();
 
     log.info("====== DataImportEventListener.handleEvents() START ====== [records: {}]", recordCount);
@@ -67,7 +67,8 @@ public class DataImportEventListener {
     long joinDuration = System.currentTimeMillis() - beforeJoin;
     long totalDuration = System.currentTimeMillis() - startTime;
 
-    log.info("====== DataImportEventListener.handleEvents() COMPLETE ====== [records: {}, totalDuration: {}ms, joinDuration: {}ms]",
+    log.info("====== DataImportEventListener.handleEvents() COMPLETE ====== [records: {}, totalDuration: {}ms, "
+        + "joinDuration: {}ms]",
       recordCount, totalDuration, joinDuration);
   }
 }

@@ -83,7 +83,7 @@ public class DataImportEventPublisher implements EventPublisher {
           log.error("=== DataImportEventPublisher.publish() FAILED === [eventType: {}, topic: {}, "
               + "jobExecutionId: {}, totalDuration: {}ms, sendDuration: {}ms, error: {}]",
             eventName, topicName, jobExecutionId, duration, sendDuration, ex.getMessage(), ex);
-          return null;
+          throw new KafkaEventPublishingException(ex);
         }
 
         log.info("=== DataImportEventPublisher.publish() SUCCESS === [eventType: {}, topic: {}, "

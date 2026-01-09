@@ -37,13 +37,8 @@ spring:
       accept-single-value-as-array: true
   kafka:
     bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:29092}
-    admin:
-      properties:
-        metadata.max.age.ms: ${KAFKA_ADMIN_METADATA_MAX_AGE_MS:30000}
     consumer:
       max-poll-records: ${KAFKA_CONSUMER_MAX_POLL_RECORDS:50}
-      properties:
-        metadata.max.age.ms: ${KAFKA_CONSUMER_METADATA_MAX_AGE_MS:30000}
     security:
       protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
     ssl:
@@ -57,7 +52,6 @@ spring:
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
         retries: 5
-        metadata.max.age.ms: ${KAFKA_PRODUCER_METADATA_MAX_AGE_MS:30000}
   cache:
     cache-names:
       - authority-mapping-rules-cache

@@ -44,31 +44,14 @@ public class DataImportEventService {
    * @return a CompletableFuture that completes when event processing is done
    */
   public CompletableFuture<Void> processEvent(DataImportEventPayload payload) {
-    long startTime = System.currentTimeMillis();
-    var eventType = payload.getEventType();
-    var jobExecutionId = payload.getJobExecutionId();
-    var tenant = payload.getTenant();
-
-    logDataImport(log, Level.INFO, (">>> DataImportEventService.processEvent() START [eventType: %s, "
-      + "jobExecutionId: %s, tenant: %s]")
-      .formatted(eventType, jobExecutionId, tenant), payload);
-
-    log.info("About to call EventManager.handleEvent() [eventType: {}, jobExecutionId: {}]", eventType, jobExecutionId);
-    long beforeHandleEvent = System.currentTimeMillis();
+    logDataImport(log, Level.INFO, "Data import event processing started", payload);
 
     return EventManager.handleEvent(payload, new ProfileSnapshotWrapper())
       .handle((diPayload, throwable) -> {
-        long totalDuration = System.currentTimeMillis() - startTime;
-        long handleEventDuration = System.currentTimeMillis() - beforeHandleEvent;
-
         if (throwable != null) {
-          logDataImport(log, ("<<< DataImportEventService.processEvent() FAILED [eventType: %s, totalDuration: %dms, "
-            + "handleEventDuration: %dms]")
-            .formatted(eventType, totalDuration, handleEventDuration), diPayload, throwable);
+          logDataImport(log, "Data import event processing failed", diPayload, throwable);
         } else {
-          logDataImport(log, Level.INFO, ("<<< DataImportEventService.processEvent() SUCCESS [eventType: %s, "
-            + "totalDuration: %dms, handleEventDuration: %dms]")
-            .formatted(eventType, totalDuration, handleEventDuration), diPayload);
+          logDataImport(log, Level.INFO, "Data import event processing completed", diPayload);
         }
         return null;
       });

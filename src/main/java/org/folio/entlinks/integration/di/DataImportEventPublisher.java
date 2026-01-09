@@ -69,7 +69,7 @@ public class DataImportEventPublisher implements EventPublisher {
     var event = prepareEvent(payload);
 
     // Create ProducerRecord with headers
-    var producerRecord = new ProducerRecord<Object, Object>(topicName, null, event);
+    var producerRecord = new ProducerRecord<Object, Object>(topicName, event);
     prepareHeaders(payload, producerRecord);
 
     return kafkaTemplate.send(producerRecord)

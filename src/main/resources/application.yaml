@@ -57,7 +57,6 @@ spring:
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
         retries: 5
-        max.block.ms: ${KAFKA_PRODUCER_MAX_BLOCK_MS:120000}
         metadata.max.age.ms: ${KAFKA_PRODUCER_METADATA_MAX_AGE_MS:30000}
   cache:
     cache-names:

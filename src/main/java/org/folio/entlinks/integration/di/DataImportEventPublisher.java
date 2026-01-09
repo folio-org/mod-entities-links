@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -44,6 +45,8 @@ import org.springframework.stereotype.Component;
 public class DataImportEventPublisher implements EventPublisher {
 
   private static final String DEFAULT_NAMESPACE = "Default";
+  private static final int MAX_DISTRIBUTION_NUM = 10;
+  private static final AtomicLong KEY_INDEXER = new AtomicLong();
 
   private final ObjectMapper objectMapper;
   private final KafkaTemplate<String, Event> kafkaTemplate;
@@ -51,47 +54,26 @@ public class DataImportEventPublisher implements EventPublisher {
 
   @Override
   public CompletableFuture<Event> publish(DataImportEventPayload payload) {
-    final long startTime = System.currentTimeMillis();
     var eventName = payload.getEventType();
-    var tenant = payload.getTenant();
-    var jobExecutionId = payload.getJobExecutionId();
     var topicName = KafkaUtils.getTenantTopicNameWithNamespace(eventName,
       FolioEnvironment.getFolioEnvName(),
-      tenant,
+      payload.getTenant(),
       DEFAULT_NAMESPACE);
 
-    log.info("=== DataImportEventPublisher.publish() START === [eventType: {}, tenant: {}, jobExecutionId: {}, "
-        + "topic: {}]",
-      eventName, tenant, jobExecutionId, topicName);
-
     var event = prepareEvent(payload);
-    log.info("Event prepared [eventId: {}, eventType: {}, jobExecutionId: {}]", event.getId(), eventName,
-      jobExecutionId);
 
-    var producerRecord = new ProducerRecord<String, Event>(topicName, event);
+    // Generate numeric key for partition distribution like mod-inventory does
+    String key = String.valueOf(KEY_INDEXER.incrementAndGet() % MAX_DISTRIBUTION_NUM);
+    var producerRecord = new ProducerRecord<>(topicName, key, event);
+
     prepareHeaders(payload, producerRecord);
-    log.info("Headers prepared, about to call kafkaTemplate.send() [topic: {}, jobExecutionId: {}]",
-      topicName, jobExecutionId);
 
-    long beforeSendTime = System.currentTimeMillis();
     return kafkaTemplate.send(producerRecord)
       .handle((recordMetadata, ex) -> {
-        long duration = System.currentTimeMillis() - startTime;
-        long sendDuration = System.currentTimeMillis() - beforeSendTime;
-
         if (ex != null) {
-          log.error("=== DataImportEventPublisher.publish() FAILED === [eventType: {}, topic: {}, "
-              + "jobExecutionId: {}, totalDuration: {}ms, sendDuration: {}ms, error: {}]",
-            eventName, topicName, jobExecutionId, duration, sendDuration, ex.getMessage(), ex);
-          throw new KafkaEventPublishingException(ex);
+          log.error("Failed to publish event [event: {}]", event, ex);
+          return null;
         }
-
-        log.info("=== DataImportEventPublisher.publish() SUCCESS === [eventType: {}, topic: {}, "
-            + "jobExecutionId: {}, partition: {}, offset: {}, totalDuration: {}ms, sendDuration: {}ms]",
-          eventName, topicName, jobExecutionId,
-          recordMetadata.getRecordMetadata().partition(),
-          recordMetadata.getRecordMetadata().offset(),
-          duration, sendDuration);
         return event;
       });
   }

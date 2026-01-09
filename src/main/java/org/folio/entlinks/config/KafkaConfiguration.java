@@ -64,11 +64,6 @@ public class KafkaConfiguration {
     listenerFactory.setBatchMessageConverter(
       new BatchMessagingMessageConverter(new ConsumerRecordToWrapperConverter()));
 
-    // Configure error handler to retry on failure instead of stopping the container
-    var errorHandler = new org.springframework.kafka.listener.DefaultErrorHandler(
-      new org.springframework.util.backoff.FixedBackOff(5000L, 3L)); // 5 second interval, 3 retries
-    listenerFactory.setCommonErrorHandler(errorHandler);
-
     return listenerFactory;
   }
 

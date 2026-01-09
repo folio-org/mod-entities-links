@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -33,11 +32,18 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.spring.tools.config.properties.FolioEnvironment;
 import org.folio.spring.tools.kafka.KafkaUtils;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.RoutingKafkaTemplate;
 import org.springframework.stereotype.Component;
 
 /**
  * Spring-managed implementation of EventPublisher for publishing data import events to Kafka.
+ *
+ * <p>Uses {@link RoutingKafkaTemplate} to automatically route sends to different Kafka producers
+ * based on topic patterns. This prevents concurrent metadata fetch interference when Spring Kafka's
+ * producer blocks synchronously to fetch topic metadata for different topics.</p>
+ *
+ * <p>EventManager response events (DI_COMPLETED, DI_ERROR) and handler events
+ * (DI_INVENTORY_AUTHORITY_UPDATED, etc.) are routed to separate producers automatically.</p>
  */
 @Log4j2
 @Component
@@ -45,11 +51,9 @@ import org.springframework.stereotype.Component;
 public class DataImportEventPublisher implements EventPublisher {
 
   private static final String DEFAULT_NAMESPACE = "Default";
-  private static final int MAX_DISTRIBUTION_NUM = 10;
-  private static final AtomicLong KEY_INDEXER = new AtomicLong();
 
   private final ObjectMapper objectMapper;
-  private final KafkaTemplate<String, Event> kafkaTemplate;
+  private final RoutingKafkaTemplate kafkaTemplate;
   private final ApplicationMetadata applicationMetadata;
 
   @Override
@@ -60,20 +64,23 @@ public class DataImportEventPublisher implements EventPublisher {
       payload.getTenant(),
       DEFAULT_NAMESPACE);
 
+    log.debug("Publishing event [eventType: {}, topic: {}]", eventName, topicName);
+
     var event = prepareEvent(payload);
 
-    // Generate numeric key for partition distribution like mod-inventory does
-    String key = String.valueOf(KEY_INDEXER.incrementAndGet() % MAX_DISTRIBUTION_NUM);
-    var producerRecord = new ProducerRecord<>(topicName, key, event);
-
+    // Create ProducerRecord with headers
+    var producerRecord = new ProducerRecord<Object, Object>(topicName, null, event);
     prepareHeaders(payload, producerRecord);
 
     return kafkaTemplate.send(producerRecord)
       .handle((recordMetadata, ex) -> {
         if (ex != null) {
-          log.error("Failed to publish event [event: {}]", event, ex);
+          log.error("Failed to publish event [eventType: {}, topic: {}]", eventName, topicName, ex);
           return null;
         }
+        log.debug("Published event [eventType: {}, topic: {}, partition: {}, offset: {}]",
+          eventName, topicName, recordMetadata.getRecordMetadata().partition(),
+          recordMetadata.getRecordMetadata().offset());
         return event;
       });
   }
@@ -93,7 +100,7 @@ public class DataImportEventPublisher implements EventPublisher {
     }
   }
 
-  private void prepareHeaders(DataImportEventPayload payload, ProducerRecord<String, Event> producerRecord) {
+  private void prepareHeaders(DataImportEventPayload payload, ProducerRecord<Object, Object> producerRecord) {
     var messageHeaders = producerRecord.headers();
     getHeaders(payload).forEach(messageHeaders::add);
   }

@@ -28,17 +28,15 @@ public class DataImportEventListener {
                  groupId = "#{folioKafkaProperties.listener['data-import'].groupId}",
                  concurrency = "#{folioKafkaProperties.listener['data-import'].concurrency}")
   public void handleEvents(List<DataImportEventWrapper> consumerRecords) {
-    log.info("Data import events received [records: {}]", consumerRecords.size());
+    log.info("Processing data-import event [number of records: {}]", consumerRecords.size());
 
     var eventByTenant = consumerRecords.stream()
       .collect(Collectors.groupingBy(DataImportEventWrapper::tenant));
-
-    List<CompletableFuture<Void>> allFutures = new ArrayList<>();
+    var allFutures = new ArrayList<CompletableFuture<Void>>();
     
     for (var entry : eventByTenant.entrySet()) {
       var tenant = entry.getKey();
       var records = entry.getValue();
-
       var futures = executionService.execute(tenant, records.getFirst().getHeadersMap(),
         () -> records.stream()
           .map(diEvent -> eventService.processEvent(diEvent.payload()))

@@ -32,11 +32,18 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.spring.tools.config.properties.FolioEnvironment;
 import org.folio.spring.tools.kafka.KafkaUtils;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.RoutingKafkaTemplate;
 import org.springframework.stereotype.Component;
 
 /**
  * Spring-managed implementation of EventPublisher for publishing data import events to Kafka.
+ *
+ * <p>Uses {@link RoutingKafkaTemplate} to automatically route sends to different Kafka producers
+ * based on topic patterns. This prevents concurrent metadata fetch interference when Spring Kafka's
+ * producer blocks synchronously to fetch topic metadata for different topics.</p>
+ *
+ * <p>EventManager response events (DI_COMPLETED, DI_ERROR) and handler events
+ * (DI_INVENTORY_AUTHORITY_UPDATED, etc.) are routed to separate producers automatically.</p>
  */
 @Log4j2
 @Component
@@ -46,7 +53,7 @@ public class DataImportEventPublisher implements EventPublisher {
   private static final String DEFAULT_NAMESPACE = "Default";
 
   private final ObjectMapper objectMapper;
-  private final KafkaTemplate<String, Event> kafkaTemplate;
+  private final RoutingKafkaTemplate kafkaTemplate;
   private final ApplicationMetadata applicationMetadata;
 
   @Override
@@ -56,15 +63,24 @@ public class DataImportEventPublisher implements EventPublisher {
       FolioEnvironment.getFolioEnvName(),
       payload.getTenant(),
       DEFAULT_NAMESPACE);
+
+    log.debug("Publishing event [eventType: {}, topic: {}]", eventName, topicName);
+
     var event = prepareEvent(payload);
-    var producerRecord = new ProducerRecord<String, Event>(topicName, event);
+
+    // Create ProducerRecord with headers
+    var producerRecord = new ProducerRecord<Object, Object>(topicName, event);
     prepareHeaders(payload, producerRecord);
+
     return kafkaTemplate.send(producerRecord)
       .handle((recordMetadata, ex) -> {
         if (ex != null) {
-          log.error("Failed to publish event [event: {}]", event, ex);
+          log.error("Failed to publish event [eventType: {}, topic: {}]", eventName, topicName, ex);
           return null;
         }
+        log.debug("Published event [eventType: {}, topic: {}, partition: {}, offset: {}]",
+          eventName, topicName, recordMetadata.getRecordMetadata().partition(),
+          recordMetadata.getRecordMetadata().offset());
         return event;
       });
   }
@@ -84,7 +100,7 @@ public class DataImportEventPublisher implements EventPublisher {
     }
   }
 
-  private void prepareHeaders(DataImportEventPayload payload, ProducerRecord<String, Event> producerRecord) {
+  private void prepareHeaders(DataImportEventPayload payload, ProducerRecord<Object, Object> producerRecord) {
     var messageHeaders = producerRecord.headers();
     getHeaders(payload).forEach(messageHeaders::add);
   }

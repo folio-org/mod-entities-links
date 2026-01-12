@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Log4j2
 @Component
 @RequiredArgsConstructor
-@Profile("dev")
+@Profile("dev") //todo: remove
 public class DataImportEventListener {
 
   private final FolioExecutionContextService executionService;
@@ -29,10 +29,10 @@ public class DataImportEventListener {
                  concurrency = "#{folioKafkaProperties.listener['data-import'].concurrency}")
   public void handleEvents(List<DataImportEventWrapper> consumerRecords) {
     log.info("Processing data-import event [number of records: {}]", consumerRecords.size());
-    
+
     var eventByTenant = consumerRecords.stream()
       .collect(Collectors.groupingBy(DataImportEventWrapper::tenant));
-    List<CompletableFuture<Void>> allFutures = new ArrayList<>();
+    var allFutures = new ArrayList<CompletableFuture<Void>>();
     
     for (var entry : eventByTenant.entrySet()) {
       var tenant = entry.getKey();

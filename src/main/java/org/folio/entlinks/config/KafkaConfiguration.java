@@ -2,12 +2,15 @@ package org.folio.entlinks.config;
 
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -62,6 +65,7 @@ public class KafkaConfiguration {
     var listenerFactory = listenerFactory(consumerFactory, true);
     listenerFactory.setBatchMessageConverter(
       new BatchMessagingMessageConverter(new ConsumerRecordToWrapperConverter()));
+
     return listenerFactory;
   }
 
@@ -78,6 +82,10 @@ public class KafkaConfiguration {
     Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties(null));
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
+
+    // Data Import specific configurations to match mod-inventory behavior
+    config.put(MAX_POLL_INTERVAL_MS_CONFIG, "600000"); // 10 minutes for long-running data import processing
+
     return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
   }
 
@@ -188,9 +196,46 @@ public class KafkaConfiguration {
     return getProducerConfigProps(kafkaProperties);
   }
 
+  /**
+   * Separate ProducerFactory for handler events to ensure completely independent producer instance.
+   */
   @Bean
-  public KafkaTemplate<String, Event> diKafkaTemplate(ProducerFactory<String, Event> diProducerFactory) {
-    return new KafkaTemplate<>(diProducerFactory);
+  public ProducerFactory<String, Event> diHandlerProducerFactory(KafkaProperties kafkaProperties) {
+    return getProducerConfigProps(kafkaProperties);
+  }
+
+  /**
+   * RoutingKafkaTemplate that routes sends to different ProducerFactory instances based on topic patterns.
+   * This ensures that EventManager response events (DI_COMPLETED, DI_ERROR) and handler events
+   * (DI_INVENTORY_AUTHORITY_UPDATED, etc.) use separate underlying Kafka producers, preventing
+   * concurrent metadata fetch interference that causes timeouts.
+   *
+   * <p>Topic routing:
+   * <ul>
+   *   <li>.*\.DI_COMPLETED$ → diProducerFactory (EventManager responses)</li>
+   *   <li>.*\.DI_ERROR$ → diProducerFactory (EventManager errors)</li>
+   *   <li>All other topics → diHandlerProducerFactory (handler events)</li>
+   * </ul>
+   */
+  @Bean
+  @SuppressWarnings("unchecked")
+  public org.springframework.kafka.core.RoutingKafkaTemplate routingKafkaTemplate(
+      ProducerFactory<String, Event> diProducerFactory,
+      ProducerFactory<String, Event> diHandlerProducerFactory) {
+
+    Map<Pattern, ProducerFactory<Object, Object>> factoryMap = new LinkedHashMap<>();
+
+    // Route EventManager response events to diProducerFactory
+    factoryMap.put(Pattern.compile(".*\\.DI_COMPLETED$"),
+        (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diProducerFactory);
+    factoryMap.put(Pattern.compile(".*\\.DI_ERROR$"),
+        (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diProducerFactory);
+
+    // Route all other DI events (handler events) to diHandlerProducerFactory (default)
+    factoryMap.put(Pattern.compile(".*"),
+        (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diHandlerProducerFactory);
+
+    return new org.springframework.kafka.core.RoutingKafkaTemplate(factoryMap);
   }
 
   /**

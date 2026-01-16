@@ -21,6 +21,7 @@ public class ExtendedTenantService extends TenantService {
   private final FolioExecutionContext folioExecutionContext;
   private final KafkaAdminService kafkaAdminService;
   private final ReferenceDataLoader referenceDataLoader;
+  private final TempSettingsMigrationService settingsMigrationService;
 
   public ExtendedTenantService(JdbcTemplate jdbcTemplate,
                                FolioExecutionContext context,
@@ -28,12 +29,14 @@ public class ExtendedTenantService extends TenantService {
                                FolioSpringLiquibase folioSpringLiquibase,
                                FolioExecutionContext folioExecutionContext,
                                PrepareSystemUserService prepareSystemUserService,
-                               ReferenceDataLoader referenceDataLoader) {
+                               ReferenceDataLoader referenceDataLoader,
+                               TempSettingsMigrationService settingsMigrationService) {
     super(jdbcTemplate, context, folioSpringLiquibase);
     this.prepareSystemUserService = prepareSystemUserService;
     this.folioExecutionContext = folioExecutionContext;
     this.kafkaAdminService = kafkaAdminService;
     this.referenceDataLoader = referenceDataLoader;
+    this.settingsMigrationService = settingsMigrationService;
   }
 
   @Override
@@ -47,6 +50,7 @@ public class ExtendedTenantService extends TenantService {
     kafkaAdminService.createTopics(folioExecutionContext.getTenantId());
     kafkaAdminService.restartEventListeners();
     prepareSystemUserService.setupSystemUser();
+    settingsMigrationService.migrateSettings();
   }
 
   @Override

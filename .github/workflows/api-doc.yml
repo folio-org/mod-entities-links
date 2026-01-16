@@ -53,6 +53,35 @@ jobs:
           -Dopenapi.generator.maven.plugin.generatorName=openapi-yaml \
           -Dopenapi.generator.maven.plugin.output=target/api \
           -Dopenapi.generator.maven.plugin.additionalProperties=outputFile=openapi/mod-entities-links.yaml
+      - name: Copy and update tenant-settings from dependency
+        run: |
+          mvn dependency:unpack-dependencies -DincludeArtifactIds=folio-spring-tenant-settings -DoutputDirectory=target/dependencies
+          mkdir -p ${{ env.API_DIRECTORIES }}
+          
+          # Extract domain value from application.yaml
+          DOMAIN=$(grep -A 2 "tenant:" src/main/resources/application.yaml | grep "domain:" | sed 's/.*domain: *//' | tr -d ' ')
+          
+          # Copy and update tenant-settings.yaml with domain prefix
+          python3 - <<EOF
+          import yaml
+          import sys
+          
+          domain = "${DOMAIN}"
+          
+          with open('target/dependencies/swagger.api/tenant-settings.yaml', 'r') as f:
+              spec = yaml.safe_load(f)
+          
+          # Prepend domain to all paths
+          if 'paths' in spec:
+              new_paths = {}
+              for path, methods in spec['paths'].items():
+                  new_path = f"/{domain}{path}"
+                  new_paths[new_path] = methods
+              spec['paths'] = new_paths
+          
+          with open('target/api/openapi/tenant-settings.yaml', 'w') as f:
+              yaml.dump(spec, f, default_flow_style=False, sort_keys=False)
+          EOF
       - name: Prepare folio-tools
         run: |
           git clone https://github.com/folio-org/folio-tools

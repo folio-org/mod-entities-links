@@ -125,7 +125,13 @@ folio:
 
   retry:
     enabled: true
+
+  jpa:
+    repository:
+      base-packages: org.folio.entlinks.domain
   tenant:
+    settings:
+      domain: authorities
     validation:
       enabled: true
   logging:

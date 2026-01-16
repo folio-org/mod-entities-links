@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="populate-default-tenant-settings" author="system">
+    <insert tableName="setting_group">
+      <column name="id" value="authorities"/>
+      <column name="name" value="Authorities"/>
+      <column name="description" value="Authorities settings group"/>
+    </insert>
+
+    <insert tableName="setting">
+      <column name="key" value="mapping.extended"/>
+      <column name="value" value='false'/>
+      <column name="type" value="BOOLEAN"/>
+      <column name="description" value="Enable extended mapping for authorities"/>
+      <column name="group_id" value="authorities"/>
+      <column name="created_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="updated_date" valueComputed="CURRENT_TIMESTAMP"/>
+    </insert>
+  </changeSet>
+
+</databaseChangeLog>

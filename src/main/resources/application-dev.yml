@@ -4,8 +4,6 @@
 spring:
   application:
     name: mod-entities-links
-  profiles:
-    default: "dev"
   threads:
     virtual:
       enabled: true
@@ -20,7 +18,7 @@ spring:
       minimumIdle: ${DB_MINIMUM_IDLE:10}
       initializationFailTimeout: ${DB_INITIALIZATION_FAIL_TIMEOUT:30000}
       leakDetectionThreshold: ${DB_LEAK_DETECTION_THRESHOLD:60000}
-    url: jdbc:postgresql://localhost:5432/okapi_modules
+    url: jdbc:postgresql://localhost:5432/modules
     password: folio_admin
     username: folio_admin
   liquibase:
@@ -134,7 +132,13 @@ folio:
     retryDelayMs: ${S3_RETRY_DELAY_MS:500}
   retry:
     enabled: true
+  jpa:
+    repository:
+      base-packages: org.folio.entlinks.domain
   tenant:
+    settings:
+      domain: authorities
+      permission-check-enabled: false
     validation:
       enabled: true
   logging:

@@ -152,6 +152,18 @@ class LinkingServiceDelegateTest {
   }
 
   @Test
+  void getLinkedBibUpdateStats_positive_emptyInstanceData() {
+    var linksMock = links(3, "error");
+    var instanceIds = linksMock.stream()
+      .map(InstanceAuthorityLink::getInstanceId)
+      .map(UUID::toString)
+      .toList();
+    var instanceData = Map.<String, Pair<String, String>>of();
+
+    testGetLinkedBibUpdateStats_positive(linksMock, List.of(), instanceIds, instanceData, null);
+  }
+
+  @Test
   void getLinkedBibUpdateStats_negative_invalidDates() {
     var status = LinkStatus.ACTUAL;
     var fromDate = OffsetDateTime.now();

@@ -2,7 +2,6 @@ package org.folio.entlinks.integration.internal;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -17,7 +16,6 @@ import org.folio.entlinks.client.InstanceStorageClient;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDto;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDtoCollection;
 import org.folio.entlinks.config.properties.InstanceStorageProperties;
-import org.folio.entlinks.exception.FolioIntegrationException;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -106,10 +104,7 @@ class InstanceStorageServiceTest {
     when(client.getInstanceStorageInstances(anyString(), anyInt())).thenThrow(cause);
 
     var instanceIds = singletonList(UUID.randomUUID().toString());
-    assertThatThrownBy(() -> service.getInstanceData(instanceIds))
-      .isInstanceOf(FolioIntegrationException.class)
-      .hasCauseExactlyInstanceOf(cause.getClass())
-      .hasMessage("Failed to fetch instances");
+    assertThat(service.getInstanceData(instanceIds)).isEmpty();
   }
 
   private static MapEntry<String, Pair<String, String>> instanceData(InventoryInstanceDto dto) {

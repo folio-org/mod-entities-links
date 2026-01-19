@@ -5,7 +5,7 @@
 ### New APIs versions
 * Provides `instance-authority-links-statistics v2.1`
 * Provides `instance-authority-links v2.2`
-* Requires `API_NAME vX.Y`
+* Change `instance-storage` from required to optional ([MODELINKS-378](https://folio-org.atlassian.net/browse/MODELINKS-378))
 
 ### Features
 * Pass userId from authority kafka event to link update events ([MODELINKS-322](https://folio-org.atlassian.net/browse/MODELINKS-322))

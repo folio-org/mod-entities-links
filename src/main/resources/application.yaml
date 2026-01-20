@@ -90,6 +90,12 @@ folio:
       - name: links.instance-authority-stats
         numPartitions: ${KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_PARTITIONS:10}
         replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_REPLICATION_FACTOR:}
+      - name: DI_INVENTORY_AUTHORITY_UPDATED
+        numPartitions: ${KAFKA_DI_INVENTORY_AUTHORITY_UPDATED_PARTITIONS:1}
+        replicationFactor: ${KAFKA_DI_INVENTORY_AUTHORITY_UPDATED_REPLICATION_FACTOR:}
+      - name: DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING
+        numPartitions: ${KAFKA_DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING_PARTITIONS:1}
+        replicationFactor: ${KAFKA_DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING_REPLICATION_FACTOR:}
     listener:
       authority:
         concurrency: ${KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY:1}
@@ -104,6 +110,10 @@ folio:
         topic-pattern: (${folio.environment}\.)(.*\.)specification-storage\.specification\.updated
         group-id: ${folio.environment}-mod-entities-specification-storage-group
         auto-offset-reset: EARLIEST
+      data-import:
+        concurrency: 1
+        topic-pattern: (${folio.environment}\.)[A-Za-z0-9-]+\.\w+\.DI_SRS_MARC_AUTHORITY_RECORD_(CREATED|MODIFIED_READY_FOR_POST_PROCESSING|DELETED|NOT_MATCHED)
+        group-id: ${folio.environment}-mod-entities-links-data-import-group
   instance-authority:
     change:
       numPartitions: ${KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS:100}

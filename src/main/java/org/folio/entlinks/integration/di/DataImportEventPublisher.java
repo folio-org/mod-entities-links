@@ -3,6 +3,7 @@ package org.folio.entlinks.integration.di;
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.CHUNK_ID_HEADER;
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.JOB_EXECUTION_ID_HEADER;
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.RECORD_ID_HEADER;
+import static org.folio.processing.events.utils.EventUtils.extractRecordId;
 import static org.folio.rest.util.OkapiConnectionParams.USER_ID_HEADER;
 import static org.folio.spring.integration.XOkapiHeaders.PERMISSIONS;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
@@ -69,7 +70,7 @@ public class DataImportEventPublisher implements EventPublisher {
     var event = prepareEvent(payload);
 
     // Create ProducerRecord with headers
-    var producerRecord = new ProducerRecord<Object, Object>(topicName, event);
+    var producerRecord = new ProducerRecord<Object, Object>(topicName, extractRecordId(payload), event);
     prepareHeaders(payload, producerRecord);
 
     return kafkaTemplate.send(producerRecord)

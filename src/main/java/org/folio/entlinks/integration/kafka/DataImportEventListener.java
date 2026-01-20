@@ -9,14 +9,12 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.integration.di.DataImportEventService;
 import org.folio.entlinks.integration.kafka.model.DataImportEventWrapper;
 import org.folio.spring.scope.FolioExecutionContextService;
-import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Log4j2
 @Component
 @RequiredArgsConstructor
-@Profile("dev") //todo: remove
 public class DataImportEventListener {
 
   private final FolioExecutionContextService executionService;
@@ -33,7 +31,7 @@ public class DataImportEventListener {
     var eventByTenant = consumerRecords.stream()
       .collect(Collectors.groupingBy(DataImportEventWrapper::tenant));
     var allFutures = new ArrayList<CompletableFuture<Void>>();
-    
+
     for (var entry : eventByTenant.entrySet()) {
       var tenant = entry.getKey();
       var records = entry.getValue();

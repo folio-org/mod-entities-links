@@ -417,7 +417,9 @@
             "perms.users.get",
             "perms.users.item.post",
             "perms.users.assign.immutable",
-            "perms.users.assign.mutable"
+            "perms.users.assign.mutable",
+            "mod-settings.entries.collection.get",
+            "mod-settings.global.read.authority-storage.manage"
           ]
         },
         {
@@ -718,6 +720,30 @@
       "permissionName": "authorities.config.groups.settings.authorities.mapping.extended.item.patch",
       "displayName": "Authorities Configuration - update setting for a authorities mapping extended",
       "description": "Update setting for a authorities mapping extended"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.authorities.archives.expiration.enabled.item.patch",
+      "displayName": "Authorities Configuration - update setting for a authorities archives expiration enabled",
+      "description": "Update setting for a authorities archives expiration enabled"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.authorities.archives.expiration.period.item.patch",
+      "displayName": "Authorities Configuration - update setting for a authorities archives expiration period",
+      "description": "Update setting for a authorities archives expiration period"
+    },
+    {
+      "permissionName": "authorities.config.all",
+      "displayName": "all authorities config permissions",
+      "description": "Entire set of permissions needed to use authorities configuration",
+      "subPermissions": [
+        "authorities.config.groups.collection.get",
+        "authorities.config.groups.settings.collection.get",
+        "authorities.config.groups.settings.authorities.collection.get",
+        "authorities.config.groups.settings.item.patch",
+        "authorities.config.groups.settings.authorities.mapping.extended.item.patch",
+        "authorities.config.groups.settings.authorities.archives.expiration.enabled.item.patch",
+        "authorities.config.groups.settings.authorities.archives.expiration.period.item.patch"
+      ]
     }
   ],
   "metadata": {

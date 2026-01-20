@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient("settings")
+@Deprecated(forRemoval = true)
 public interface SettingsClient {
 
   @GetMapping(value = "/entries", produces = APPLICATION_JSON_VALUE)

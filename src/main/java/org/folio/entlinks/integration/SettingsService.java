@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Log4j2
+@Deprecated(forRemoval = true)
 public class SettingsService {
 
   public static final String AUTHORITIES_EXPIRE_SETTING_KEY = "authority-archives-expiration";

@@ -485,8 +485,6 @@
           "unit": "day",
           "delay": "1",
           "modulePermissions": [
-            "mod-settings.entries.collection.get",
-            "mod-settings.global.read.authority-storage.manage",
             "user-tenants.collection.get"
           ]
         }

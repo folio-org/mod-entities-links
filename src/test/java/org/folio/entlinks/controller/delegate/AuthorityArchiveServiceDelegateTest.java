@@ -1,9 +1,8 @@
 package org.folio.entlinks.controller.delegate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.entlinks.client.SettingsClient.AuthoritiesExpirationSettingValue;
-import static org.folio.entlinks.integration.SettingsService.AUTHORITIES_EXPIRE_SETTING_KEY;
-import static org.folio.entlinks.integration.SettingsService.AUTHORITIES_EXPIRE_SETTING_SCOPE;
+import static org.folio.entlinks.service.settings.TenantSetting.ARCHIVES_EXPIRATION_ENABLED;
+import static org.folio.entlinks.service.settings.TenantSetting.ARCHIVES_EXPIRATION_PERIOD;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -18,21 +17,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
-import org.folio.entlinks.client.SettingsClient;
-import org.folio.entlinks.config.properties.AuthorityArchiveProperties;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityIdDto;
 import org.folio.entlinks.domain.dto.AuthorityIdDtoCollection;
 import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
-import org.folio.entlinks.integration.SettingsService;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityArchivePropagationService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
+import org.folio.tenant.domain.dto.Setting;
+import org.folio.tenant.domain.dto.SettingCollection;
+import org.folio.tenant.settings.service.TenantSettingsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -51,13 +50,7 @@ class AuthorityArchiveServiceDelegateTest {
   private AuthorityArchiveService service;
 
   @Mock
-  private SettingsService settingsService;
-
-  @Mock
   private AuthorityArchiveRepository authorityArchiveRepository;
-
-  @Mock
-  private AuthorityArchiveProperties authorityArchiveProperties;
 
   @Mock
   private AuthorityDomainEventPublisher eventPublisher;
@@ -67,6 +60,9 @@ class AuthorityArchiveServiceDelegateTest {
 
   @Mock
   private AuthorityMapper authorityMapper;
+
+  @Mock
+  private TenantSettingsService tenantSettingsService;
 
   @Mock
   private FolioExecutionContext context;
@@ -96,9 +92,16 @@ class AuthorityArchiveServiceDelegateTest {
 
   @Test
   void shouldNotExpireAuthorityArchivesWhenOperationDisabledBySettings() {
-    var setting = new SettingsClient.SettingEntry(UUID.randomUUID(), AUTHORITIES_EXPIRE_SETTING_SCOPE,
-        AUTHORITIES_EXPIRE_SETTING_KEY, new AuthoritiesExpirationSettingValue(false, null));
-    when(settingsService.getAuthorityExpireSetting()).thenReturn(Optional.of(setting));
+    var enabledSetting = new Setting()
+      .key(ARCHIVES_EXPIRATION_ENABLED.getKey())
+      .value(Boolean.FALSE);
+    var periodSetting = new Setting()
+      .key(ARCHIVES_EXPIRATION_PERIOD.getKey())
+      .value(7);
+    var settingCollection = new SettingCollection()
+      .settings(List.of(enabledSetting, periodSetting));
+    when(tenantSettingsService.getGroupSettings(ARCHIVES_EXPIRATION_ENABLED.getGroup()))
+      .thenReturn(Optional.of(settingCollection));
 
     delegate.expire();
 
@@ -107,34 +110,33 @@ class AuthorityArchiveServiceDelegateTest {
   }
 
   @Test
-  void shouldExpireAuthorityArchivesWithDefaultRetentionPeriod() {
-    var archive = new AuthorityArchive();
-    var dto = new AuthorityDto();
-    archive.setUpdatedDate(Timestamp.from(Instant.now().minus(10, ChronoUnit.DAYS)));
-    when(authorityMapper.toDto(archive)).thenReturn(dto);
-    when(settingsService.getAuthorityExpireSetting()).thenReturn(Optional.empty());
-    when(authorityArchiveProperties.getRetentionPeriodInDays()).thenReturn(7);
-    when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class), anyString()))
-        .thenReturn(Stream.of(archive));
-    when(context.getTenantId()).thenReturn(TENANT_ID);
+  void shouldNotExpireAuthorityArchivesWhenNoSettingsFound() {
+    when(tenantSettingsService.getGroupSettings(ARCHIVES_EXPIRATION_ENABLED.getGroup()))
+      .thenReturn(Optional.empty());
 
     delegate.expire();
 
-    verify(service).delete(archive);
-    verify(eventPublisher).publishHardDeleteEvent(dto);
-    verify(propagationService)
-        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, TENANT_ID);
+    verifyNoInteractions(service);
+    verifyNoInteractions(authorityArchiveRepository);
   }
 
   @Test
   void shouldExpireAuthorityArchivesWithRetentionPeriodFromSettings() {
     var archive = new AuthorityArchive();
     var dto = new AuthorityDto();
-    var setting = new SettingsClient.SettingEntry(UUID.randomUUID(), AUTHORITIES_EXPIRE_SETTING_SCOPE,
-        AUTHORITIES_EXPIRE_SETTING_KEY, new AuthoritiesExpirationSettingValue(true, 1));
+    var enabledSetting = new Setting()
+      .key(ARCHIVES_EXPIRATION_ENABLED.getKey())
+      .value(Boolean.TRUE);
+    var periodSetting = new Setting()
+      .key(ARCHIVES_EXPIRATION_PERIOD.getKey())
+      .value(1);
+    var settingCollection = new SettingCollection()
+      .settings(List.of(enabledSetting, periodSetting));
+
     archive.setUpdatedDate(Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS)));
     when(authorityMapper.toDto(archive)).thenReturn(dto);
-    when(settingsService.getAuthorityExpireSetting()).thenReturn(Optional.of(setting));
+    when(tenantSettingsService.getGroupSettings(ARCHIVES_EXPIRATION_ENABLED.getGroup()))
+      .thenReturn(Optional.of(settingCollection));
     when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class), anyString()))
         .thenReturn(Stream.of(archive));
     when(context.getTenantId()).thenReturn(TENANT_ID);

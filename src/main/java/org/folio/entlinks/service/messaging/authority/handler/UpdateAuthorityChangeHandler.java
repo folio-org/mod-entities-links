@@ -18,6 +18,7 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityBatchProcessingException;
+import org.folio.entlinks.exception.FolioIntegrationException;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
@@ -121,10 +122,13 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     var authorityId = changeHolder.getAuthorityId();
 
     var changedTag = mappingRulesProcessingService.getTagByAuthorityChangeField(changeHolder.getFieldChange());
-    var linkingRules = linkingRulesService.getLinkingRulesByAuthorityField(changedTag);
+    if (changedTag.isEmpty()) {
+      throw new FolioIntegrationException("Could not find tag for authority field: " + changeHolder.getFieldChange());
+    }
+    var linkingRules = linkingRulesService.getLinkingRulesByAuthorityField(changedTag.get());
     var sourceRecord = changeHolder.getSourceRecord();
 
-    var fieldChangeHolders = getFieldChangeHolders(authorityId, sourceRecord, changedTag, linkingRules);
+    var fieldChangeHolders = getFieldChangeHolders(authorityId, sourceRecord, changedTag.get(), linkingRules);
     getSubfield0Change(changeHolder)
       .ifPresent(subfield0Change -> fieldChangeHolders
         .forEach(fieldChangeHolder -> fieldChangeHolder.addExtraSubfieldChange(subfield0Change)));

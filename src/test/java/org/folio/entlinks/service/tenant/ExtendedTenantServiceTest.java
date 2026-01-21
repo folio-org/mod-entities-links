@@ -7,7 +7,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.service.PrepareSystemUserService;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.spring.tools.kafka.KafkaAdminService;
 import org.folio.tenant.domain.dto.TenantAttributes;
@@ -28,18 +27,18 @@ class ExtendedTenantServiceTest {
   @Mock
   private KafkaAdminService kafkaAdminService;
   @Mock
-  private PrepareSystemUserService prepareSystemUserService;
+  private OkapiSystemUserService prepareSystemUserService;
 
   @Test
   void initializeTenant_positive() {
     when(context.getTenantId()).thenReturn(TENANT_ID);
-    doNothing().when(prepareSystemUserService).setupSystemUser();
+    doNothing().when(prepareSystemUserService).prepareSystemUser();
     doNothing().when(kafkaAdminService).createTopics(TENANT_ID);
     doNothing().when(kafkaAdminService).restartEventListeners();
 
     tenantService.afterTenantUpdate(tenantAttributes());
 
-    verify(prepareSystemUserService).setupSystemUser();
+    verify(prepareSystemUserService).prepareSystemUser();
     verify(kafkaAdminService).createTopics(TENANT_ID);
     verify(kafkaAdminService).restartEventListeners();
   }

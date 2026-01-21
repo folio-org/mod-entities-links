@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.folio.entlinks.service.settings.TempSettingsMigrationService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.spring.tools.kafka.KafkaAdminService;
@@ -28,6 +29,8 @@ class ExtendedTenantServiceTest {
   private KafkaAdminService kafkaAdminService;
   @Mock
   private OkapiSystemUserService prepareSystemUserService;
+  @Mock
+  private TempSettingsMigrationService settingsMigrationService;
 
   @Test
   void initializeTenant_positive() {
@@ -41,6 +44,7 @@ class ExtendedTenantServiceTest {
     verify(prepareSystemUserService).prepareSystemUser();
     verify(kafkaAdminService).createTopics(TENANT_ID);
     verify(kafkaAdminService).restartEventListeners();
+    verify(settingsMigrationService).migrateSettings();
   }
 
   @Test

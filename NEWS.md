@@ -1,6 +1,6 @@
-## v4.1.0 YYYY-mm-DD
+## v5.0.0 YYYY-mm-DD
 ### Breaking changes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Use internal module configuration instead of shared configuration from mod-settings ([MODELINKS-376](https://folio-org.atlassian.net/browse/MODELINKS-376))
 
 ### New APIs versions
 * Provides `instance-authority-links-statistics v2.1`

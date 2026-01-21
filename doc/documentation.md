@@ -633,12 +633,28 @@ PATCH /authorities/config/groups/archives-expiration/settings/{settingId}
 ```
 
 **Permissions**
-To manage authorities configuration settings, users need the following permissions:
-```
-  authorities.config.groups.collection.get
-  authorities.config.groups.settings.collection.get
-  authorities.config.groups.settings.item.patch
-```
+To manage authorities configuration settings, users need both required and desired permissions.
+
+_Required permissions (base access):_
+
+| Permission                                          | Description                |
+|-----------------------------------------------------|----------------------------|
+| `authorities.config.groups.collection.get`          | Get all settings groups    |
+| `authorities.config.groups.settings.collection.get` | Get settings for any group |
+| `authorities.config.groups.settings.item.patch`     | Update any setting         |
+
+_Desired permissions (fine-grained access control):_
+
+The API uses desired permissions to control access to specific groups and individual settings. Users must have both the required permission AND the appropriate desired permission:
+
+| Permission                                                                              | Description                                     |
+|-----------------------------------------------------------------------------------------|-------------------------------------------------|
+| `authorities.config.groups.settings.authorities.collection.get`                         | Get settings for authorities group specifically |
+| `authorities.config.groups.settings.authorities.mapping.extended.item.patch`            | Update mapping.extended setting only            |
+| `authorities.config.groups.settings.authorities.archives.expiration.enabled.item.patch` | Update archives.expiration.enabled setting only |
+| `authorities.config.groups.settings.authorities.archives.expiration.period.item.patch`  | Update archives.expiration.period setting only  |
+
+**Note:** To access or update a specific setting, a user must have BOTH the required permission (e.g., `authorities.config.groups.settings.item.patch`) AND the corresponding desired permission (e.g., `authorities.config.groups.settings.authorities.archives.expiration.period.item.patch`).
 
 **Example: Update retention period**
 ```

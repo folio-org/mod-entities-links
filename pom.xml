@@ -79,10 +79,18 @@
       </exclusions>
     </dependency>
 
-    <dependency>
+<!--    <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-service-tools-spring-dev</artifactId>
       <version>${folio-service-tools.version}</version>
+    </dependency>-->
+
+    <dependency>
+      <groupId>your.group</groupId>
+      <artifactId>your-artifact</artifactId>
+      <version>1.0</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/di/folio-service-tools-spring-dev-6.0.0-SNAPSHOT.jar</systemPath>
     </dependency>
 
     <dependency>

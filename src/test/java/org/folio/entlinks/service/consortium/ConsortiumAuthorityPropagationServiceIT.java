@@ -1,12 +1,9 @@
 package org.folio.entlinks.service.consortium;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.service.consortium.ConsortiumAuthorityPropagationServiceIT.COLLEGE_TENANT_ID;
 import static org.folio.entlinks.service.consortium.ConsortiumAuthorityPropagationServiceIT.UNIVERSITY_TENANT_ID;
+import static org.folio.entlinks.service.settings.TenantSetting.ARCHIVES_EXPIRATION_PERIOD;
 import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_NOTE_TYPE_TABLE;
@@ -15,11 +12,11 @@ import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
 import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
 import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
+import static org.folio.support.base.TestConstants.authorityConfigEndpoint;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authorityExpireEndpoint;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,9 +31,9 @@ import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.base.IntegrationTestBase;
+import org.folio.tenant.domain.dto.SettingUpdateRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
 
 @IntegrationTest
 @DatabaseCleanup(tables = {AUTHORITY_DATA_STAT_TABLE, AUTHORITY_ARCHIVE_TABLE, AUTHORITY_TABLE,
@@ -139,7 +136,10 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void testAuthorityArchivePropagation() {
-    mockSuccessfulSettingsRequest();
+    var body = new SettingUpdateRequest().value(1);
+    doPatch(authorityConfigEndpoint(ARCHIVES_EXPIRATION_PERIOD), body, tenantHeaders(CENTRAL_TENANT_ID));
+    doPatch(authorityConfigEndpoint(ARCHIVES_EXPIRATION_PERIOD), body, tenantHeaders(COLLEGE_TENANT_ID));
+    doPatch(authorityConfigEndpoint(ARCHIVES_EXPIRATION_PERIOD), body, tenantHeaders(UNIVERSITY_TENANT_ID));
     var dto = getAuthorityDto();
     doPost(authorityEndpoint(), dto, tenantHeaders(CENTRAL_TENANT_ID));
     assertThat(requestAuthority(CENTRAL_TENANT_ID)).isNotNull();
@@ -174,30 +174,6 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
       .source("MARC")
       .naturalId("ns12345")
       .personalName("Nikola Tesla");
-  }
-
-  private void mockSuccessfulSettingsRequest() {
-    okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-      .withQueryParam("query", equalTo("(scope=authority-storage.manage AND key=authority-archives-expiration)"))
-      .withQueryParam("limit", equalTo("10000"))
-      .willReturn(aResponse()
-        .withStatus(200)
-        .withHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-        .withBody("""
-          {
-              "items": [
-                  {
-                      "id": "1e01066d-4bee-4cf7-926c-ba2c9c6c0001",
-                      "scope": "authority-storage.manage",
-                      "key": "authority-archives-expiration",
-                      "value": {
-                          "expirationEnabled":true,
-                          "retentionInDays":1
-                      }
-                  }
-              ]
-          }
-          """)));
   }
 
   private AuthorityDto requestAuthority(String tenantId)

@@ -1,15 +1,12 @@
 package org.folio.entlinks.controller;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_ID;
 import static org.folio.entlinks.integration.dto.event.DomainEventType.CREATE;
 import static org.folio.entlinks.integration.dto.event.DomainEventType.DELETE;
 import static org.folio.entlinks.integration.dto.event.DomainEventType.UPDATE;
+import static org.folio.entlinks.service.settings.TenantSetting.ARCHIVES_EXPIRATION_PERIOD;
 import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
@@ -24,6 +21,7 @@ import static org.folio.support.TestDataUtils.modifiedAuthorityDto;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.UPDATER_USER_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
+import static org.folio.support.base.TestConstants.authorityConfigEndpoint;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authorityExpireEndpoint;
 import static org.folio.support.base.TestConstants.authoritySourceFilesEndpoint;
@@ -36,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -73,6 +70,7 @@ import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
 import org.folio.support.base.IntegrationTestBase;
+import org.folio.tenant.domain.dto.SettingUpdateRequest;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
@@ -88,7 +86,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -637,7 +634,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @DisplayName("DELETE: Should delete existing authority archives by retention in settings")
   void expireAuthorityArchives_positive_shouldExpireExistingArchives()
     throws JsonProcessingException, UnsupportedEncodingException {
-    mockSuccessfulSettingsRequest();
+    var body = new SettingUpdateRequest().value(1);
+    doPatch(authorityConfigEndpoint(ARCHIVES_EXPIRATION_PERIOD), body, tenantHeaders(TENANT_ID));
 
     createSourceFile(0);
     var authority1 = createAuthority(0, 0);
@@ -658,26 +656,6 @@ class AuthorityControllerIT extends IntegrationTestBase {
     databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority2.getId(), dateInPast);
 
     verifyExpiredArchivesDeleted(authority1, content1, content2);
-  }
-
-  @Test
-  @DisplayName("DELETE: Should delete existing authority archives by default retention")
-  void expireAuthorityArchives_negative_settingsUnfetchable_shouldUseDefaultRetentionValue() {
-    mockFailedSettingsRequest();
-    createSourceFile(0);
-    var authority1 = createAuthority(0, 0);
-    var authority2 = createAuthority(1, 0);
-
-    doDelete(authorityEndpoint(authority1.getId()));
-    doDelete(authorityEndpoint(authority2.getId()));
-
-    var dateInPast = Timestamp.from(Instant.now().minus(10, ChronoUnit.DAYS));
-    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority1.getId(), dateInPast);
-    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority2.getId(), dateInPast);
-
-    doPost(authorityExpireEndpoint(), null);
-
-    assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, TENANT_ID));
   }
 
   // Tests for DELETE
@@ -773,37 +751,6 @@ class AuthorityControllerIT extends IntegrationTestBase {
       Arguments.of("updatedDate>=2021-10-24T12:00:00.0 and updatedDate<=2021-10-28T12:00:00.0", "corporateName", 1),
       Arguments.of("authoritySourceFile.name=name1 and createdDate>2021-10-28T12:00:00.0", "corporateName", 1)
     );
-  }
-
-  private void mockSuccessfulSettingsRequest() {
-    okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-      .withQueryParam("query", equalTo("(scope=authority-storage.manage AND key=authority-archives-expiration)"))
-      .withQueryParam("limit", equalTo("10000"))
-      .willReturn(aResponse()
-        .withStatus(200)
-        .withHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-        .withBody("""
-          {
-              "items": [
-                  {
-                      "id": "1e01066d-4bee-4cf7-926c-ba2c9c6c0001",
-                      "scope": "authority-storage.manage",
-                      "key": "authority-archives-expiration",
-                      "value": {
-                          "expirationEnabled":true,
-                          "retentionInDays":1
-                      }
-                  }
-              ]
-          }
-          """)));
-  }
-
-  private void mockFailedSettingsRequest() {
-    okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-      .withQueryParam("query", equalTo("(scope=authority-storage.manage AND key=authority-archives-expiration)"))
-      .withQueryParam("limit", equalTo("10000"))
-      .willReturn(aResponse().withStatus(500)));
   }
 
   private List<Authority> createAuthorities() {

@@ -9,6 +9,7 @@ import lombok.experimental.UtilityClass;
 import org.folio.entlinks.domain.dto.AuthoritySearchParameter;
 import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.dto.LinkStatus;
+import org.folio.entlinks.service.settings.TenantSetting;
 
 @UtilityClass
 public class TestConstants {
@@ -49,6 +50,7 @@ public class TestConstants {
   private static final String AUTHORITY_STORAGE_ENDPOINT = "/authority-storage/authorities";
   private static final String AUTHORITY_STORAGE_EXPIRE_ENDPOINT = "/authority-storage/expire/authorities";
   private static final String AUTHORITY_STORAGE_REINDEX_ENDPOINT = "/authority-storage/reindex";
+  private static final String AUTHORITIES_CONFIG_SETTING_ENDPOINT = "/authorities/config/groups/%s/settings/%s";
 
   public static String authorityTopic() {
     return authorityTopic(TENANT_ID);
@@ -143,5 +145,9 @@ public class TestConstants {
 
   public static String authorityReindexEndpoint(UUID id) {
     return AUTHORITY_STORAGE_REINDEX_ENDPOINT + "/" + id;
+  }
+
+  public static String authorityConfigEndpoint(TenantSetting setting) {
+    return AUTHORITIES_CONFIG_SETTING_ENDPOINT.formatted(setting.getGroup(), setting.getKey());
   }
 }

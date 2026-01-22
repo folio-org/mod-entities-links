@@ -26,7 +26,7 @@
     </sonar.exclusions>
 
     <folio-spring-support.version>10.0.0-SNAPSHOT</folio-spring-support.version>
-    <folio-service-tools.version>5.1.0-SNAPSHOT</folio-service-tools.version>
+    <folio-service-tools.version>6.0.0-SNAPSHOT</folio-service-tools.version>
     <folio-s3-client.version>3.0.0-SNAPSHOT</folio-s3-client.version>
     <mod-record-specifications-dto.version>2.1.0-SNAPSHOT</mod-record-specifications-dto.version>
     <aws-sdk-java.version>2.38.7</aws-sdk-java.version>
@@ -79,18 +79,10 @@
       </exclusions>
     </dependency>
 
-<!--    <dependency>
+    <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-service-tools-spring-dev</artifactId>
       <version>${folio-service-tools.version}</version>
-    </dependency>-->
-
-    <dependency>
-      <groupId>your.group</groupId>
-      <artifactId>your-artifact</artifactId>
-      <version>1.0</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/di/folio-service-tools-spring-dev-6.0.0-SNAPSHOT.jar</systemPath>
     </dependency>
 
     <dependency>

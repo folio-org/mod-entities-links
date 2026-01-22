@@ -7,9 +7,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.folio.entlinks.service.settings.TempSettingsMigrationService;
+import org.folio.entlinks.service.kafka.ExtendedKafkaAdminService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
-import org.folio.spring.tools.kafka.KafkaAdminService;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +26,7 @@ class ExtendedTenantServiceTest {
   @Mock
   private FolioExecutionContext context;
   @Mock
-  private KafkaAdminService kafkaAdminService;
+  private ExtendedKafkaAdminService kafkaAdminService;
   @Mock
   private OkapiSystemUserService prepareSystemUserService;
   @Mock

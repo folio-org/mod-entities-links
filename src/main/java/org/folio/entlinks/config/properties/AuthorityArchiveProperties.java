@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Data
 @Component
+@Deprecated(forRemoval = true)
 @ConfigurationProperties(prefix = "folio.authority-archive.expire")
 public class AuthorityArchiveProperties {
 

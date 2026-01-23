@@ -2,6 +2,7 @@ package org.folio.entlinks.service.tenant;
 
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.service.dataloader.ReferenceDataLoader;
+import org.folio.entlinks.service.settings.TempSettingsMigrationService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.liquibase.FolioSpringLiquibase;
 import org.folio.spring.service.TenantService;
@@ -20,6 +21,7 @@ public class ExtendedTenantService extends TenantService {
   private final FolioExecutionContext folioExecutionContext;
   private final KafkaAdminService kafkaAdminService;
   private final ReferenceDataLoader referenceDataLoader;
+  private final TempSettingsMigrationService settingsMigrationService;
 
   public ExtendedTenantService(JdbcTemplate jdbcTemplate,
                                FolioExecutionContext context,
@@ -27,12 +29,14 @@ public class ExtendedTenantService extends TenantService {
                                FolioSpringLiquibase folioSpringLiquibase,
                                FolioExecutionContext folioExecutionContext,
                                OkapiSystemUserService prepareSystemUserService,
-                               ReferenceDataLoader referenceDataLoader) {
+                               ReferenceDataLoader referenceDataLoader,
+                               TempSettingsMigrationService settingsMigrationService) {
     super(jdbcTemplate, context, folioSpringLiquibase);
     this.prepareSystemUserService = prepareSystemUserService;
     this.folioExecutionContext = folioExecutionContext;
     this.kafkaAdminService = kafkaAdminService;
     this.referenceDataLoader = referenceDataLoader;
+    this.settingsMigrationService = settingsMigrationService;
   }
 
   @Override
@@ -46,6 +50,7 @@ public class ExtendedTenantService extends TenantService {
     kafkaAdminService.createTopics(folioExecutionContext.getTenantId());
     kafkaAdminService.restartEventListeners();
     prepareSystemUserService.prepareSystemUser();
+    settingsMigrationService.migrateSettings();
   }
 
   @Override

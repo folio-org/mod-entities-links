@@ -76,7 +76,13 @@ folio:
         auto-offset-reset: EARLIEST
   retry:
     enabled: true
+  jpa:
+    repository:
+      base-packages: org.folio.entlinks.domain
   tenant:
+    settings:
+      domain: authorities
+      permission-check-enabled: false
     validation:
       enabled: true
   logging:

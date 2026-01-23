@@ -288,6 +288,11 @@ public class IntegrationTestBase {
   }
 
   @SneakyThrows
+  protected static ResultActions doPatch(String uri, Object body, HttpHeaders headers, Object... args) {
+    return tryPatch(uri, body, headers, args).andExpect(status().is2xxSuccessful());
+  }
+
+  @SneakyThrows
   protected static ResultActions tryPost(String uri, Object body, Object... args) {
     return tryPost(uri, body, defaultHeaders(), args);
   }

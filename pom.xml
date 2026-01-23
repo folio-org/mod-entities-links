@@ -11,7 +11,7 @@
 
   <groupId>org.folio</groupId>
   <artifactId>mod-entities-links</artifactId>
-  <version>4.1.0-SNAPSHOT</version>
+  <version>5.0.0-SNAPSHOT</version>
   <description>Module for storing and processing links between entities</description>
   <packaging>jar</packaging>
 
@@ -57,6 +57,12 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-spring-cql</artifactId>
+      <version>${folio-spring-support.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-spring-tenant-settings</artifactId>
       <version>${folio-spring-support.version}</version>
     </dependency>
 

@@ -365,6 +365,39 @@
       ]
     },
     {
+      "id": "authorities-config",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authorities/config/groups",
+          "permissionsRequired": [
+            "authorities.config.groups.collection.get"
+          ]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authorities/config/groups/{groupId}/settings",
+          "permissionsRequired": [
+            "authorities.config.groups.settings.collection.get"
+          ],
+          "permissionsDesired": [
+            "authorities.config.groups.settings.*"
+          ]
+        },
+        {
+          "methods": ["PATCH"],
+          "pathPattern": "/authorities/config/groups/{groupId}/settings/{settingId}",
+          "permissionsRequired": [
+            "authorities.config.groups.settings.item.patch"
+          ],
+          "permissionsDesired": [
+            "authorities.config.groups.settings.*"
+          ]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "2.0",
       "interfaceType": "system",
@@ -384,7 +417,9 @@
             "perms.users.get",
             "perms.users.item.post",
             "perms.users.assign.immutable",
-            "perms.users.assign.mutable"
+            "perms.users.assign.mutable",
+            "mod-settings.entries.collection.get",
+            "mod-settings.global.read.authority-storage.manage"
           ]
         },
         {
@@ -450,8 +485,6 @@
           "unit": "day",
           "delay": "1",
           "modulePermissions": [
-            "mod-settings.entries.collection.get",
-            "mod-settings.global.read.authority-storage.manage",
             "user-tenants.collection.get"
           ]
         }
@@ -659,6 +692,55 @@
         "inventory-storage.authority-source-files.item.patch",
         "inventory-storage.authority-source-files.item.delete",
         "inventory-storage.authority-source-files.hrid.post"
+      ]
+    },
+    {
+      "permissionName": "authorities.config.groups.collection.get",
+      "displayName": "Authorities Configuration - get settings groups",
+      "description": "Get settings groups"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.collection.get",
+      "displayName": "Authorities Configuration - get settings for a group",
+      "description": "Get settings for a group"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.authorities.collection.get",
+      "displayName": "Authorities Configuration - get settings for a authorities group",
+      "description": "Get settings for a authorities group"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.item.patch",
+      "displayName": "Authorities Configuration - update setting for a group",
+      "description": "Update setting for a group"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.authorities.mapping.extended.item.patch",
+      "displayName": "Authorities Configuration - update setting for a authorities mapping extended",
+      "description": "Update setting for a authorities mapping extended"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.authorities.archives.expiration.enabled.item.patch",
+      "displayName": "Authorities Configuration - update setting for a authorities archives expiration enabled",
+      "description": "Update setting for a authorities archives expiration enabled"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.authorities.archives.expiration.period.item.patch",
+      "displayName": "Authorities Configuration - update setting for a authorities archives expiration period",
+      "description": "Update setting for a authorities archives expiration period"
+    },
+    {
+      "permissionName": "authorities.config.all",
+      "displayName": "all authorities config permissions",
+      "description": "Entire set of permissions needed to use authorities configuration",
+      "subPermissions": [
+        "authorities.config.groups.collection.get",
+        "authorities.config.groups.settings.collection.get",
+        "authorities.config.groups.settings.authorities.collection.get",
+        "authorities.config.groups.settings.item.patch",
+        "authorities.config.groups.settings.authorities.mapping.extended.item.patch",
+        "authorities.config.groups.settings.authorities.archives.expiration.enabled.item.patch",
+        "authorities.config.groups.settings.authorities.archives.expiration.period.item.patch"
       ]
     }
   ],

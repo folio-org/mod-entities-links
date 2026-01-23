@@ -1,9 +1,5 @@
 package org.folio.entlinks.controller;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
@@ -81,8 +77,6 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
                + "for Consortium and Member tenants")
   void expireAuthorityArchives_positive_shouldExpireExistingArchivesForConsortiumAndMemberTenant(String tenant,
                                                                                                  int expectedCount) {
-    //mock retention period
-    mockFailedSettingsRequest();
     //create authority records for consortium tenant
     var authority = createAuthorityForConsortium();
 
@@ -128,7 +122,6 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
     String tenant, int expectedConsortiumCount, int expectedMemberCount) {
 
     //mock retention period
-    mockFailedSettingsRequest();
     createSourceFile();
     //create authority record for consortium tenant
     var authority1 = createAuthorityForConsortium();
@@ -168,13 +161,6 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
       assertEquals(expectedMemberCount, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID,
         "deleted = true"));
     });
-  }
-
-  private void mockFailedSettingsRequest() {
-    okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-      .withQueryParam("query", equalTo("(scope=authority-storage.manage AND key=authority-archives-expiration)"))
-      .withQueryParam("limit", equalTo("10000"))
-      .willReturn(aResponse().withStatus(500)));
   }
 
   private Authority createAuthority() {

@@ -26,6 +26,7 @@ public class AuthorityJdbcRepository {
     this.folioExecutionContext = folioExecutionContext;
   }
 
+  @SuppressWarnings("java:S2077") //dynamically formatted query is safe here
   public List<Authority> findAllByIdInAndDeletedFalse(Collection<UUID> ids, String tenantId) {
     if (ids == null || ids.isEmpty()) {
       return List.of();
@@ -36,6 +37,7 @@ public class AuthorityJdbcRepository {
     return jdbcTemplate.query(sql, new AuthorityRowMapper());
   }
 
+  @SuppressWarnings("java:S2077") //dynamically formatted query is safe here
   public List<Authority> findByNaturalIdInAndDeletedFalse(Collection<String> ids, String tenantId) {
     if (ids == null || ids.isEmpty()) {
       return List.of();
@@ -46,6 +48,7 @@ public class AuthorityJdbcRepository {
     return jdbcTemplate.query(sql, new AuthorityRowMapper());
   }
 
+  @SuppressWarnings("java:S2077") //dynamically formatted query is safe here
   public List<UUID> findExistingIdsByIdsAndDeletedFalse(Collection<UUID> ids, String tenantId) {
     if (ids == null || ids.isEmpty()) {
       return List.of();
@@ -56,6 +59,7 @@ public class AuthorityJdbcRepository {
     return jdbcTemplate.query(sql, (rs, rowNum) -> UUID.fromString(rs.getString("id")));
   }
 
+  @SuppressWarnings("java:S2077") //dynamically formatted query is safe here
   public Map<UUID, String> findAuthorityNaturalIdsByIdsAndDeletedFalse(Collection<UUID> ids, String tenantId) {
     if (ids == null || ids.isEmpty()) {
       return Collections.emptyMap();

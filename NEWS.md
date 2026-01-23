@@ -26,6 +26,7 @@
 * Refactor code to comply with Checkstyle method length limit (max 50 lines) ([MODELINKS-356](https://folio-org.atlassian.net/browse/MODELINKS-356))
 * Refactor ModuleDescriptor for eureka ([MODELINKS-251](https://folio-org.atlassian.net/browse/MODELINKS-251))
 * Improve Docker Compose setup for local development ([MODELINKS-343](https://folio-org.atlassian.net/browse/MODELINKS-343))
+* Use GitHub Workflow` for build ([MODELINKS-381](https://folio-org.atlassian.net/browse/MODELINKS-381))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Settings migration service that migrate existing settings to the new API contract.
- * This service should be removed in Umbrellalead release. https://folio-org.atlassian.net/browse/MODELINKS-380
+ * This service should be removed in Umbrellaleaf release. https://folio-org.atlassian.net/browse/MODELINKS-380
  */
 @Log4j2
 @Component

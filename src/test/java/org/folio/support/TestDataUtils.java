@@ -6,8 +6,6 @@ import static java.util.UUID.randomUUID;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
-import static org.folio.support.base.TestConstants.AUTHORITY_CONSORTIUM_SOURCE;
-import static org.folio.support.base.TestConstants.AUTHORITY_SOURCE;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 
@@ -116,7 +114,7 @@ public class TestDataUtils {
           .linkingRule(InstanceAuthorityLinkingRule.builder()
             .bibField("100")
             .build())
-          .naturalId(authority.getNaturalId())
+          .authorityNaturalId(authority.getNaturalId())
           .errorCause(error)
           .build();
         link.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
@@ -161,7 +159,7 @@ public class TestDataUtils {
       .map(link -> new BibStatsDto()
         .instanceId(link.getInstanceId())
         .bibRecordTag(link.getLinkingRule().getBibField())
-        .authorityNaturalId(link.getNaturalId())
+        .authorityNaturalId(link.getAuthorityNaturalId())
         .updatedAt(fromTimestamp(link.getUpdatedAt()))
         .errorCause(link.getErrorCause()))
       .toList();
@@ -186,16 +184,12 @@ public class TestDataUtils {
       .next(next);
   }
 
-  public static AuthorityDataStat authorityDataStat(UUID userId, UUID sourceFileId, AuthorityDataStatAction action,
-                                                    boolean shared) {
-    var authority = new Authority();
-    authority.setNaturalId("naturalId");
-    authority.setId(UUID.randomUUID());
-    authority.setSource(shared ? AUTHORITY_CONSORTIUM_SOURCE : AUTHORITY_SOURCE);
+  public static AuthorityDataStat authorityDataStat(UUID userId, UUID sourceFileId, UUID authorityId,
+                                                    AuthorityDataStatAction action) {
     return AuthorityDataStat.builder()
       .id(randomUUID())
       .action(action)
-      .authority(authority)
+      .authorityId(authorityId)
       .authorityNaturalIdOld("naturalIdOld")
       .authorityNaturalIdNew("naturalIdNew")
       .authoritySourceFileNew(sourceFileId)
@@ -237,7 +231,7 @@ public class TestDataUtils {
   public static AuthorityStatsDto getStatDataDto(AuthorityDataStat dataStat, UsersClient.User user) {
     AuthorityStatsDto dto = new AuthorityStatsDto();
     dto.setId(dataStat.getId());
-    dto.setAuthorityId(dataStat.getAuthority().getId());
+    dto.setAuthorityId(dataStat.getAuthorityId());
     dto.setAction(LinkAction.fromValue(dataStat.getAction().name()));
     dto.setHeadingNew(dataStat.getHeadingNew());
     dto.setHeadingOld(dataStat.getHeadingOld());
@@ -432,6 +426,7 @@ public class TestDataUtils {
                      InstanceAuthorityLinkStatus status, String errorCause) {
     public static final String[] TAGS = new String[] {"100", "240", "700", "710"};
     public static final String[] AUTHORITY_TAGS = new String[] {"100", "110"};
+    public static final Integer[] RULE_IDS = new Integer[] {1, 5, 15, 16};
     public static final Map<String, Map<String, Boolean>> SUBFIELD_VALIDATIONS_BY_TAG = Map.of(
       TAGS[0], Map.of("t", false),
       TAGS[1], Map.of("t", true),
@@ -461,6 +456,10 @@ public class TestDataUtils {
 
     public Link(UUID authorityId, String tag) {
       this(authorityId, tag, authorityId.toString(), TAGS_TO_SUBFIELDS.get(tag).toCharArray());
+    }
+
+    public Link(UUID authorityId, String tag, String naturalId) {
+      this(authorityId, tag, naturalId, TAGS_TO_SUBFIELDS.get(tag).toCharArray());
     }
 
     public Link(UUID authorityId, String tag, String naturalId, char[] subfields) {
@@ -498,7 +497,7 @@ public class TestDataUtils {
       return InstanceAuthorityLink.builder()
           .instanceId(instanceId)
           .authorityId(authorityId)
-          .naturalId(naturalId)
+          .authorityNaturalId(naturalId)
         .linkingRule(InstanceAuthorityLinkingRule.builder()
           .id(TAGS_TO_RULE_IDS.get(tag))
           .bibField(tag)

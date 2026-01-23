@@ -11,10 +11,8 @@ import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
 import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
-import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,24 +34,20 @@ import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.LinksCountDto;
 import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
-import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
-import org.folio.entlinks.service.consortium.UserTenantsService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagationService;
-import org.folio.entlinks.service.consortium.propagation.model.LinksPropagationData;
+import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+//todo: update tests
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class LinkingServiceDelegateTest {
@@ -61,20 +55,12 @@ class LinkingServiceDelegateTest {
   private static final UUID INSTANCE_ID = randomUUID();
 
   private @Mock InstanceAuthorityLinkingService linkingService;
-  private @Mock InstanceAuthorityLinkMapper mapper;
   private @Mock InstanceStorageService instanceService;
+  private @Mock InstanceAuthorityLinkMapper mapper;
   private @Mock DataStatsMapper statsMapper;
-  private @Mock ConsortiumLinksPropagationService propagationService;
-  private @Mock FolioExecutionContext context;
-  private @Mock UserTenantsService userTenantsService;
-  private @Mock AuthorityRepository authorityRepository;
+  private @Mock ConsortiumTenantExecutor executor;
 
   private @InjectMocks LinkingServiceDelegate delegate;
-
-  @BeforeEach
-  void setUp() {
-    lenient().when(context.getTenantId()).thenReturn(TENANT_ID);
-  }
 
   @Test
   void getLinks_positive() {
@@ -191,7 +177,6 @@ class LinkingServiceDelegateTest {
       TestDataUtils.Link.of(2, 3),
       TestDataUtils.Link.of(3, 2)
     ));
-    final var propagationData = new LinksPropagationData(INSTANCE_ID, links);
 
     doNothing().when(linkingService).updateLinks(INSTANCE_ID, links);
     when(mapper.convertDto(dtoCollection.getLinks())).thenReturn(links);
@@ -205,7 +190,6 @@ class LinkingServiceDelegateTest {
   void updateLinks_positive_emptyLinks() {
     final var links = links(INSTANCE_ID);
     final var dtoCollection = linksDtoCollection(linksDto(INSTANCE_ID));
-    final var propagationData = new LinksPropagationData(INSTANCE_ID, links);
 
     doNothing().when(linkingService).updateLinks(INSTANCE_ID, links);
 

@@ -4,10 +4,8 @@ import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
@@ -31,9 +29,7 @@ import org.springframework.stereotype.Service;
 public class LinksSuggestionsByAuthorityNaturalId extends LinksSuggestionsServiceDelegateBase<String> {
 
   private final AuthorityRepository authorityRepository;
-  private final UserTenantsService userTenantsService;
-  private final FolioExecutionContext folioExecutionContext;
-  private final AuthorityJdbcRepository authorityJdbcRepository;
+  private final AuthorityJdbcRepository jdbcRepository;
 
   public LinksSuggestionsByAuthorityNaturalId(InstanceAuthorityLinkingRulesService linkingRulesService,
                                               LinksSuggestionsService suggestionService,
@@ -41,14 +37,12 @@ public class LinksSuggestionsByAuthorityNaturalId extends LinksSuggestionsServic
                                               SourceStorageClient sourceStorageClient,
                                               SourceContentMapper contentMapper,
                                               ConsortiumTenantExecutor executor,
-                                              UserTenantsService userTenantsService,
-                                              FolioExecutionContext folioExecutionContext,
-                                              AuthorityJdbcRepository authorityJdbcRepository) {
-    super(linkingRulesService, suggestionService, sourceStorageClient, contentMapper, executor);
+                                              UserTenantsService tenantsService,
+                                              FolioExecutionContext context, AuthorityJdbcRepository jdbcRepository) {
+    super(linkingRulesService, suggestionService, sourceStorageClient,
+      contentMapper, executor, tenantsService, context);
     this.authorityRepository = repository;
-    this.userTenantsService = userTenantsService;
-    this.folioExecutionContext = folioExecutionContext;
-    this.authorityJdbcRepository = authorityJdbcRepository;
+    this.jdbcRepository = jdbcRepository;
   }
 
   @Override
@@ -57,28 +51,13 @@ public class LinksSuggestionsByAuthorityNaturalId extends LinksSuggestionsServic
   }
 
   @Override
-  protected Map<String, List<Authority>> findExistingAuthorities(Set<String> ids) {
-    Map<String, List<Authority>> authoritiesMap = new HashMap<>();
-    var authorities = authorityRepository.findByNaturalIdInAndDeletedFalse(ids);
-    if (authorities.isEmpty()) {
-      log.info("No local authorities found for natural ids: {}", ids);
-      authoritiesMap.put("local", List.of());
-    } else {
-      authoritiesMap.put("local", authorities);
-    }
-    var tenant = folioExecutionContext.getTenantId();
-    var centralTenant = userTenantsService.getCentralTenant(tenant);
-    if (centralTenant.isPresent() && !centralTenant.get().equals(tenant)) {
-      var sharedAuthorities = authorityJdbcRepository.findByNaturalIdInAndDeletedFalse(ids, centralTenant.get());
-      if (!sharedAuthorities.isEmpty()) {
-        log.info("Found {} shared authorities in central tenant {} for NaturalIds: {}",
-            sharedAuthorities.size(), centralTenant.get(), ids);
-        authoritiesMap.put("shared", sharedAuthorities);
-      } else {
-        authoritiesMap.put("shared", List.of());
-      }
-    }
-    return authoritiesMap;
+  protected List<Authority> findExistingAuthorities(Set<String> ids) {
+    return authorityRepository.findByNaturalIdInAndDeletedFalse(ids);
+  }
+
+  @Override
+  protected List<Authority> findExistingAuthoritiesForTenant(String tenantId, Set<String> ids) {
+    return jdbcRepository.findByNaturalIdInAndDeletedFalse(ids, tenantId);
   }
 
   @Override

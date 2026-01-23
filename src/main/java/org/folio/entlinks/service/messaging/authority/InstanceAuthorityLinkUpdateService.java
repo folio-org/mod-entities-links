@@ -5,7 +5,6 @@ import static org.folio.entlinks.utils.AuthorityChangeUtils.getAuthorityChanges;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -13,12 +12,16 @@ import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
+import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityDataStatsPropagationService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
+import org.folio.entlinks.service.consortium.propagation.model.AuthorityDataStatsPropagationData;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHandler;
@@ -42,6 +45,7 @@ public class InstanceAuthorityLinkUpdateService {
   private final ConsortiumTenantsService consortiumTenantsService;
   private final FolioExecutionContext folioExecutionContext;
   private final SystemUserScopedExecutionService executionService;
+  private final ConsortiumAuthorityDataStatsPropagationService statsPropagationService;
 
   public InstanceAuthorityLinkUpdateService(AuthorityDataStatService authorityDataStatService,
                                             AuthorityMappingRulesProcessingService mappingRulesProcessingService,
@@ -51,7 +55,8 @@ public class InstanceAuthorityLinkUpdateService {
                                             AuthoritySourceRecordService sourceRecordService,
                                             ConsortiumTenantsService consortiumTenantsService,
                                             FolioExecutionContext folioExecutionContext,
-                                            SystemUserScopedExecutionService executionService) {
+                                            SystemUserScopedExecutionService executionService,
+                                            ConsortiumAuthorityDataStatsPropagationService statsPropagationService) {
     this.authorityDataStatService = authorityDataStatService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.linkingService = linkingService;
@@ -62,6 +67,7 @@ public class InstanceAuthorityLinkUpdateService {
     this.consortiumTenantsService = consortiumTenantsService;
     this.folioExecutionContext = folioExecutionContext;
     this.executionService = executionService;
+    this.statsPropagationService = statsPropagationService;
   }
 
   public void handleAuthoritiesChanges(List<AuthorityDomainEvent> events) {
@@ -77,9 +83,11 @@ public class InstanceAuthorityLinkUpdateService {
       .toList();
     fillChangeHoldersWithSourceRecord(changeHolders);
 
-    prepareAndSaveAuthorityDataStats(changeHolders);
+    var authorityDataStats = prepareAndSaveAuthorityDataStats(changeHolders);
+    propagateAuthorityDataStats(authorityDataStats);
+
     processEventsByChangeType(changeHolders);
-    processChangesForShadowAuthorities(incomingAuthorityIds, changeHolders);
+    processChangesForConsortiumMemberTenants(incomingAuthorityIds, changeHolders);
   }
 
   private void fillChangeHoldersWithSourceRecord(List<AuthorityChangeHolder> changeHolders) {
@@ -127,23 +135,30 @@ public class InstanceAuthorityLinkUpdateService {
     return false;
   }
 
-  private void prepareAndSaveAuthorityDataStats(List<AuthorityChangeHolder> changeHolders) {
+  /**
+   * Prepares and saves AuthorityDataStats for updated authorities.
+   * No need to create data stats for authority deletion since they're deleted after authority is soft-deleted.
+   * */
+  private List<AuthorityDataStat> prepareAndSaveAuthorityDataStats(List<AuthorityChangeHolder> changeHolders) {
     var authorityDataStats = changeHolders.stream()
       .map(AuthorityChangeHolder::toAuthorityDataStat)
+      .filter(dataStat -> dataStat.getAction() != null
+        && !dataStat.getAction().equals(AuthorityDataStatAction.DELETE))
       .toList();
-
-    var dataStats = authorityDataStatService.createInBatch(authorityDataStats);
-    for (AuthorityChangeHolder changeHolder : changeHolders) {
-      for (AuthorityDataStat authorityDataStat : dataStats) {
-        if (Objects.equals(authorityDataStat.getAuthorityId(), changeHolder.getAuthorityId())) {
-          changeHolder.setAuthorityDataStatId(authorityDataStat.getId());
-          break;
-        }
-      }
+    if (authorityDataStats.isEmpty()) {
+      return authorityDataStats;
     }
+
+    return authorityDataStatService.createInBatch(authorityDataStats);
   }
 
-  private void processChangesForShadowAuthorities(Set<UUID> authorityIds, List<AuthorityChangeHolder> changeHolders) {
+  /**
+   * This method handles consortium central tenant authority changes for all members so member tenants can reflect those
+   * changes in their local bibs in case they're linked to a shared authority.
+   * Links count is recalculated for each member tenant to reflect central count + local count.
+  * */
+  private void processChangesForConsortiumMemberTenants(Set<UUID> authorityIds,
+                                                        List<AuthorityChangeHolder> changeHolders) {
     var consortiumTenants = consortiumTenantsService.getConsortiumTenants(folioExecutionContext.getTenantId());
     if (consortiumTenants.isEmpty()) {
       return;
@@ -151,22 +166,18 @@ public class InstanceAuthorityLinkUpdateService {
     var userId = Optional.ofNullable(folioExecutionContext.getUserId())
         .map(UUID::toString)
         .orElse(null);
-    log.debug("Processing authority changes for shadow copies of authorities: [{}]", authorityIds);
-    var countLinksFromCentralTenant = linkingService.countLinksByAuthorityIds(authorityIds,
-        folioExecutionContext.getTenantId());
-
+    log.debug("processChangesForConsortiumMemberTenants:: for authorities [{}]", authorityIds);
     consortiumTenants.forEach(memberTenant -> {
       var changeHolderCopies = changeHolders.stream().map(AuthorityChangeHolder::copy).toList();
+
       executionService.executeSystemUserScoped(memberTenant, userId, () -> {
         var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(authorityIds);
-        if (!countLinksFromCentralTenant.isEmpty()) {
-          for (Map.Entry<UUID, Integer> entry : countLinksFromCentralTenant.entrySet()) {
-            linksNumberByAuthorityId.merge(entry.getKey(), entry.getValue(), Integer::sum);
-          }
-        }
-        changeHolderCopies.forEach(changeHolder ->
-            changeHolder.setNumberOfLinks(linksNumberByAuthorityId.getOrDefault(changeHolder.getAuthorityId(), 0)));
-        prepareAndSaveAuthorityDataStats(changeHolderCopies);
+
+        changeHolderCopies.forEach(changeHolder -> {
+          var linksCount = linksNumberByAuthorityId.getOrDefault(
+            changeHolder.getAuthorityId(), 0) + changeHolder.getNumberOfLinks();
+          changeHolder.setNumberOfLinks(linksCount);
+        });
         processEventsByChangeType(changeHolderCopies);
         return null;
       });
@@ -186,5 +197,18 @@ public class InstanceAuthorityLinkUpdateService {
     log.info("Sending {} {} events to Kafka for tenant {}", events.size(), type,
         folioExecutionContext.getTenantId());
     eventProducer.sendMessages(events);
+  }
+
+  /**
+   * Propagate stats created on central tenant to member tenants.
+   * Links count is recalculated for each member in propagation service.
+   * */
+  private void propagateAuthorityDataStats(List<AuthorityDataStat> authorityDataStats) {
+    if (authorityDataStats.isEmpty()) {
+      return;
+    }
+    var propagationData = AuthorityDataStatsPropagationData.forCreate(authorityDataStats);
+    statsPropagationService.propagate(propagationData, ConsortiumPropagationService.PropagationType.CREATE,
+      folioExecutionContext.getTenantId());
   }
 }

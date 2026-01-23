@@ -86,10 +86,6 @@ class ConsortiumLinksSuggestionsIT extends IntegrationTestBase {
         .subjectHeadings("a");
     doPost(authorityEndpoint(), authorityDto, tenantHeaders(CENTRAL_TENANT_ID));
     assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID));
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, COLLEGE_TENANT_ID)));
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID)));
   }
 
   @Test

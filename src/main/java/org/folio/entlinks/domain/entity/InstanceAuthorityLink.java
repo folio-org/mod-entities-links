@@ -44,6 +44,7 @@ public class InstanceAuthorityLink extends AuditableEntity {
   private Long id;
 
   @NotNull
+  @ToString.Exclude
   @Column(name = "authority_id", nullable = false)
   private UUID authorityId;
 
@@ -67,15 +68,7 @@ public class InstanceAuthorityLink extends AuditableEntity {
 
   @ToString.Exclude
   @Transient
-  private String naturalId;
-
-  public InstanceAuthorityLink(InstanceAuthorityLink other) {
-    this.authorityId = other.authorityId;
-    this.instanceId = other.instanceId;
-    this.linkingRule = other.linkingRule;
-    this.status = other.status;
-    this.errorCause = other.errorCause;
-  }
+  private String authorityNaturalId;
 
   @Override
   public int hashCode() {

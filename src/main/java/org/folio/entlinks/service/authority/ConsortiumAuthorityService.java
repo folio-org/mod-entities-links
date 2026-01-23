@@ -7,6 +7,8 @@ import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.ConsortiumIllegalActionException;
+import org.folio.entlinks.service.consortium.UserTenantsService;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
 @Service("consortiumAuthorityService")
@@ -16,8 +18,10 @@ public class ConsortiumAuthorityService extends AuthorityService {
 
   public ConsortiumAuthorityService(AuthorityRepository repository,
                                     AuthorityJdbcRepository jdbcRepository,
-                                    AuthoritySourceFileRepository sourceFileRepository) {
-    super(repository, jdbcRepository, sourceFileRepository);
+                                    AuthoritySourceFileRepository sourceFileRepository,
+                                    UserTenantsService tenantsService,
+                                    FolioExecutionContext context) {
+    super(repository, jdbcRepository, sourceFileRepository, tenantsService, context);
     this.repository = repository;
   }
 

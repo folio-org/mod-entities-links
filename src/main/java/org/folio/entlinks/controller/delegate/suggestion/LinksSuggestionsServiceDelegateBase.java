@@ -3,6 +3,7 @@ package org.folio.entlinks.controller.delegate.suggestion;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,9 +24,11 @@ import org.folio.entlinks.integration.dto.AuthorityParsedContent;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
 import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionsService;
 import org.folio.entlinks.service.links.model.AuthorityFieldConstants;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
 /**
@@ -44,52 +47,61 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
   private final SourceStorageClient sourceStorageClient;
   private final SourceContentMapper contentMapper;
   private final ConsortiumTenantExecutor executor;
+  private final UserTenantsService userTenantsService;
+  private final FolioExecutionContext folioExecutionContext;
 
   public ParsedRecordContentCollection suggestLinksForMarcRecords(
       ParsedRecordContentCollection contentCollection, Boolean ignoreAutoLinkingEnabled) {
-    log.info("{}: Links suggestion started for {} bibs",
-      this.getClass().getSimpleName(), contentCollection.getRecords().size());
+    log.info("suggestLinksForMarcRecords:: {}: started for [{} bibs, ignoreAutoLinkingEnabled: {}]",
+      this.getClass().getSimpleName(), contentCollection.getRecords().size(), ignoreAutoLinkingEnabled);
     var rules = rulesToBibFieldMap(linkingRulesService.getLinkingRules());
     var marcBibsContent = contentMapper.convertToParsedContent(contentCollection);
 
     var authoritySearchIds = extractIdsOfLinkableFields(marcBibsContent, rules, ignoreAutoLinkingEnabled);
-    log.info("{} authority search ids was extracted", authoritySearchIds.size());
+    log.info("suggestLinksForMarcRecords:: extracted [{} authority search ids]", authoritySearchIds.size());
 
-    var authoritiesMap = findExistingAuthorities(authoritySearchIds);
+    var localAuthorities = findExistingAuthorities(authoritySearchIds);
+    var sharedAuthorities = findExistingAuthoritiesForCentralIfOnMember(authoritySearchIds);
+    log.info("suggestLinksForMarcRecords:: authorities found [local: {}, shared: {}]",
+      localAuthorities.size(), sharedAuthorities == null ? 0 : sharedAuthorities.size());
 
-    if (!authoritiesMap.isEmpty()) {
-      var marcAuthoritiesContent = getAuthoritiesParsedContent(authoritiesMap);
+    if (isNotEmpty(localAuthorities) || isNotEmpty(sharedAuthorities)) {
+      var marcAuthoritiesContent = getAuthoritiesParsedContent(localAuthorities, sharedAuthorities);
       suggestionService.fillLinkDetailsWithSuggestedAuthorities(marcBibsContent, marcAuthoritiesContent, rules,
           getSearchSubfield(), ignoreAutoLinkingEnabled);
     } else {
       suggestionService.fillErrorDetailsWithNoSuggestions(marcBibsContent, getSearchSubfield());
     }
-    log.info("suggestLinksForMarcRecords: Links suggestion finished for {} bibs : {}",
-        marcBibsContent.size(), marcBibsContent);
+
     return contentMapper.convertToParsedContentCollection(marcBibsContent);
   }
 
   protected abstract char getSearchSubfield();
 
-  protected abstract Map<String, List<Authority>> findExistingAuthorities(Set<T> ids);
+  protected abstract List<Authority> findExistingAuthorities(Set<T> ids);
+
+  protected abstract List<Authority> findExistingAuthoritiesForTenant(String tenantId, Set<T> ids);
 
   protected abstract T extractId(Authority authorityData);
 
-  private List<AuthorityParsedContent> getAuthoritiesParsedContent(Map<String, List<Authority>> authorities) {
-    var shadowCopyAuthorities = authorities.get("shared");
-    var localCopyAuthorities = authorities.get("local");
-    var marcRecordsForShadowCopyAuthorities = isEmpty(shadowCopyAuthorities) ? new StrippedParsedRecordCollection() :
-        executor.executeAsCentralTenant(() -> fetchAuthorityParsedRecords(shadowCopyAuthorities));
-    var marcRecordsForLocalCopyAuthorities = fetchAuthorityParsedRecords(localCopyAuthorities);
-    log.info("getAuthoritiesParsedContent:: fetched {} marc records for {} shadow copy authorities and {}"
-            + " marc records for {} local copy authorities",
-        marcRecordsForShadowCopyAuthorities.getRecords().size(),
-        isEmpty(shadowCopyAuthorities) ? 0 : shadowCopyAuthorities.size(),
-        marcRecordsForLocalCopyAuthorities.getRecords().size(),
-        isEmpty(localCopyAuthorities) ? 0 : localCopyAuthorities.size());
+  private List<Authority> findExistingAuthoritiesForCentralIfOnMember(Set<T> ids) {
+    var tenant = folioExecutionContext.getTenantId();
+    var centralTenant = userTenantsService.getCentralTenant(tenant);
+    if (centralTenant.isEmpty() || centralTenant.get().equals(tenant)) {
+      return Collections.emptyList();
+    }
+    return findExistingAuthoritiesForTenant(centralTenant.get(), ids);
+  }
+
+  private List<AuthorityParsedContent> getAuthoritiesParsedContent(List<Authority> localAuthorities,
+                                                                   List<Authority> sharedAuthorities) {
+    var marcRecordsForShadowCopyAuthorities = isEmpty(sharedAuthorities) ? new StrippedParsedRecordCollection() :
+        executor.executeAsCentralTenant(() -> fetchAuthorityParsedRecords(sharedAuthorities));
+    var marcRecordsForLocalCopyAuthorities = isEmpty(localAuthorities) ? new StrippedParsedRecordCollection() :
+      fetchAuthorityParsedRecords(localAuthorities);
     return Stream.of(
-        contentMapper.convertToAuthorityParsedContent(marcRecordsForShadowCopyAuthorities, shadowCopyAuthorities),
-        contentMapper.convertToAuthorityParsedContent(marcRecordsForLocalCopyAuthorities, localCopyAuthorities)
+        contentMapper.convertToAuthorityParsedContent(marcRecordsForShadowCopyAuthorities, sharedAuthorities),
+        contentMapper.convertToAuthorityParsedContent(marcRecordsForLocalCopyAuthorities, localAuthorities)
     )
         .flatMap(List::stream)
         .toList();

@@ -1,4 +1,4 @@
-package org.folio.entlinks.domain.entity;
+package org.folio.entlinks.domain.mapper;
 
 import static org.folio.entlinks.domain.entity.AuthorityBase.DELETED_COLUMN;
 import static org.folio.entlinks.domain.entity.AuthorityBase.HEADING_COLUMN;
@@ -22,12 +22,18 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
+import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthorityIdentifier;
+import org.folio.entlinks.domain.entity.AuthorityNote;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.entity.HeadingRef;
+import org.folio.entlinks.domain.entity.MetadataEntity;
 import org.springframework.jdbc.core.RowMapper;
 
 public class AuthorityRowMapper implements RowMapper<Authority> {
 
   private static final ObjectMapper MAPPER = new ObjectMapper()
-      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
   @Override
   public Authority mapRow(ResultSet rs, int rowNum) throws SQLException {

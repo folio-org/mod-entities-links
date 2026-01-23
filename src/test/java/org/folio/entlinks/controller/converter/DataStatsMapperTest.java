@@ -9,9 +9,6 @@ import static org.folio.support.base.TestConstants.TEST_ID;
 
 import java.util.List;
 import java.util.UUID;
-import org.folio.entlinks.domain.dto.AuthorityStatsDto;
-import org.folio.entlinks.domain.dto.BibStatsDto;
-import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
@@ -26,12 +23,12 @@ class DataStatsMapperTest {
 
   @Test
   void testToDtoAuthorityDataStat() {
-    AuthorityDataStat source = createAuthorityDataStat();
+    var source = createAuthorityDataStat();
 
-    AuthorityStatsDto dto = mapper.convertToDto(source);
+    var dto = mapper.convertToDto(source);
 
     assertThat(dto).isNotNull();
-    assertThat(dto.getAuthorityId()).isEqualTo(source.getAuthority().getId());
+    assertThat(dto.getAuthorityId()).isEqualTo(source.getAuthorityId());
     assertThat(dto.getNaturalIdOld()).isEqualTo(source.getAuthorityNaturalIdOld());
     assertThat(dto.getNaturalIdNew()).isEqualTo(source.getAuthorityNaturalIdNew());
     assertThat(UUID.fromString(dto.getSourceFileOld())).isEqualTo(source.getAuthoritySourceFileOld());
@@ -47,11 +44,11 @@ class DataStatsMapperTest {
 
   @Test
   void testToDtoInstanceAuthorityLink() {
-    InstanceAuthorityLink source = createInstanceAuthorityLink();
+    var source = createInstanceAuthorityLink();
 
-    BibStatsDto dto = mapper.convertToDto(source);
+    var dto = mapper.convertToDto(source);
 
-    assertThat(source.getNaturalId()).isEqualTo(dto.getAuthorityNaturalId());
+    assertThat(source.getAuthorityNaturalId()).isEqualTo(dto.getAuthorityNaturalId());
     assertThat(source.getLinkingRule().getBibField()).isEqualTo(dto.getBibRecordTag());
     assertThat(source.getInstanceId()).isEqualTo(dto.getInstanceId());
     assertThat(source.getErrorCause()).isEqualTo(dto.getErrorCause());
@@ -62,12 +59,12 @@ class DataStatsMapperTest {
   void testConvertToDtoList_InstanceAuthorityLink() {
     var sourceList = List.of(createInstanceAuthorityLink(), createInstanceAuthorityLink());
 
-    List<BibStatsDto> dtoList = mapper.convertToDto(sourceList);
+    var dtoList = mapper.convertToDto(sourceList);
     assertThat(sourceList).hasSize(dtoList.size());
 
-    InstanceAuthorityLink source = sourceList.getFirst();
-    BibStatsDto dto = dtoList.getFirst();
-    assertThat(source.getNaturalId()).isEqualTo(dto.getAuthorityNaturalId());
+    var source = sourceList.getFirst();
+    var dto = dtoList.getFirst();
+    assertThat(source.getAuthorityNaturalId()).isEqualTo(dto.getAuthorityNaturalId());
     assertThat(source.getLinkingRule().getBibField()).isEqualTo(dto.getBibRecordTag());
     assertThat(source.getInstanceId()).isEqualTo(dto.getInstanceId());
     assertThat(source.getErrorCause()).isEqualTo(dto.getErrorCause());
@@ -76,7 +73,7 @@ class DataStatsMapperTest {
 
   @NotNull
   private static InstanceAuthorityLink createInstanceAuthorityLink() {
-    InstanceAuthorityLink source = new InstanceAuthorityLink();
+    var source = new InstanceAuthorityLink();
     source.setAuthorityId(UUID.randomUUID());
     source.setInstanceId(TEST_ID);
     source.setUpdatedAt(TEST_DATE);
@@ -88,8 +85,8 @@ class DataStatsMapperTest {
 
   @NotNull
   private static AuthorityDataStat createAuthorityDataStat() {
-    AuthorityDataStat source = new AuthorityDataStat();
-    source.setAuthority(Authority.builder().id(TEST_ID).build());
+    var source = new AuthorityDataStat();
+    source.setAuthorityId(TEST_ID);
     source.setAuthorityNaturalIdOld("OldNaturalId");
     source.setAuthorityNaturalIdNew("NewNaturalId");
     source.setAuthoritySourceFileOld(TEST_ID);

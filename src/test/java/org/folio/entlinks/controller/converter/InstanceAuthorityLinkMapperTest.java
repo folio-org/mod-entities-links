@@ -30,7 +30,7 @@ class InstanceAuthorityLinkMapperTest {
     InstanceLinkDto dto = mapper.convertToDto(source);
 
     assertThat(dto.getAuthorityId()).isEqualTo(source.getAuthorityId());
-    assertThat(dto.getAuthorityNaturalId()).isEqualTo(source.getNaturalId());
+    assertThat(dto.getAuthorityNaturalId()).isEqualTo(source.getAuthorityNaturalId());
     assertThat(dto.getLinkingRuleId()).isEqualTo(source.getLinkingRule().getId());
     assertThat(dto.getId()).isEqualTo(source.getId().intValue());
     assertThat(dto.getInstanceId()).isEqualTo(source.getInstanceId());
@@ -45,7 +45,7 @@ class InstanceAuthorityLinkMapperTest {
     InstanceAuthorityLink link = mapper.convertDto(source);
 
     assertThat(link.getAuthorityId()).isEqualTo(source.getAuthorityId());
-    assertThat(link.getNaturalId()).isEqualTo(source.getAuthorityNaturalId());
+    assertThat(link.getAuthorityNaturalId()).isEqualTo(source.getAuthorityNaturalId());
     assertThat(link.getLinkingRule().getId()).isEqualTo(source.getLinkingRuleId());
     assertThat(link.getId().intValue()).isEqualTo(source.getId());
     assertThat(link.getInstanceId()).isEqualTo(source.getInstanceId());
@@ -63,7 +63,7 @@ class InstanceAuthorityLinkMapperTest {
     var expected = sourceList.getFirst();
     var actual = linkList.getFirst();
     assertThat(actual.getAuthorityId()).isEqualTo(expected.getAuthorityId());
-    assertThat(actual.getNaturalId()).isEqualTo(expected.getAuthorityNaturalId());
+    assertThat(actual.getAuthorityNaturalId()).isEqualTo(expected.getAuthorityNaturalId());
     assertThat(actual.getLinkingRule().getId()).isEqualTo(expected.getLinkingRuleId());
     assertThat(actual.getId().intValue()).isEqualTo(expected.getId());
     assertThat(actual.getInstanceId()).isEqualTo(expected.getInstanceId());
@@ -99,7 +99,7 @@ class InstanceAuthorityLinkMapperTest {
   private static InstanceAuthorityLink createInstanceAuthorityLink() {
     InstanceAuthorityLink source = new InstanceAuthorityLink();
     source.setAuthorityId(UUID.randomUUID());
-    source.setNaturalId(TEST_PROPERTY_VALUE);
+    source.setAuthorityNaturalId(TEST_PROPERTY_VALUE);
     source.setLinkingRule(new InstanceAuthorityLinkingRule());
     source.setId(TEST_LONG_ID);
     source.setInstanceId(TEST_ID);

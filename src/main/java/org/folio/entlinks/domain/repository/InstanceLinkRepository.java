@@ -1,11 +1,13 @@
 package org.folio.entlinks.domain.repository;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
+import org.folio.entlinks.domain.entity.projection.InstanceLinkView;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,13 +20,33 @@ import org.springframework.data.repository.query.Param;
 public interface InstanceLinkRepository extends JpaRepository<InstanceAuthorityLink, Long>,
   JpaSpecificationExecutor<InstanceAuthorityLink> {
 
-  @Query("""
-          select l, auth.naturalId
+  @Query(value = """
+          select l as link, auth.naturalId as authorityNaturalId
           from InstanceAuthorityLink l
           left join Authority auth on l.authorityId = auth.id
           where l.instanceId = :instanceId
       """)
-  List<Object[]> findByInstanceId(@Param("instanceId") UUID instanceId);
+  List<InstanceLinkView> findByInstanceId(@Param("instanceId") UUID instanceId);
+
+  @Query(value = """
+          select l as link, auth.naturalId as authorityNaturalId
+          from InstanceAuthorityLink l
+          left join Authority auth on l.authorityId = auth.id
+          where l.status = coalesce(:status, l.status)
+            and l.updatedAt >= coalesce(:fromDate, l.updatedAt)
+            and l.updatedAt <= coalesce(:toDate, l.updatedAt)
+      """,
+    countQuery = """
+          select count(l)
+          from InstanceAuthorityLink l
+          where l.status = coalesce(:status, l.status)
+            and l.updatedAt >= coalesce(:fromDate, l.updatedAt)
+            and l.updatedAt <= coalesce(:toDate, l.updatedAt)
+      """)
+  Page<InstanceLinkView> findLinksWithAuthorityNaturalId(@Param("status") InstanceAuthorityLinkStatus status,
+                                                         @Param("fromDate") Timestamp fromDate,
+                                                         @Param("toDate") Timestamp toDate,
+                                                         Pageable pageable);
 
   @Query("select l from InstanceAuthorityLink l where l.authorityId = :id order by l.id")
   Page<InstanceAuthorityLink> findByAuthorityId(@Param("id") UUID id, Pageable pageable);

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.MapUtils;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.controller.converter.InstanceAuthorityLinkMapper;
 import org.folio.entlinks.domain.dto.BibStatsDto;
@@ -23,10 +24,9 @@ import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
 import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
-import org.folio.entlinks.service.consortium.UserTenantsService;
+import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.utils.ConsortiumUtils;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -39,9 +39,8 @@ public class LinkingServiceDelegate {
   private final InstanceAuthorityLinkingService linkingService;
   private final InstanceStorageService instanceService;
   private final InstanceAuthorityLinkMapper mapper;
-  private final FolioExecutionContext context;
   private final DataStatsMapper statsMapper;
-  private final UserTenantsService userTenantsService;
+  private final ConsortiumTenantExecutor executor;
 
   public InstanceLinkDtoCollection getLinks(UUID instanceId) {
     var links = linkingService.getLinksByInstanceId(instanceId);
@@ -81,14 +80,12 @@ public class LinkingServiceDelegate {
   public LinksCountDtoCollection countLinksByAuthorityIds(UuidCollection authorityIdCollection) {
     var ids = new HashSet<>(authorityIdCollection.getIds());
     var countLinks = linkingService.countLinksByAuthorityIds(ids);
-    var centralTenant = userTenantsService.getCentralTenant(context.getTenantId());
+    var countLinksForConsortiumCentral = executor.executeAsCentralTenantForMember(
+      () -> linkingService.countLinksByAuthorityIds(ids));
 
-    // if the current tenant is a CONSORTIUM member tenant
-    if (centralTenant.isPresent() && !centralTenant.get().equals(context.getTenantId())) {
-      var countLinksFromCentralTenant = linkingService.countLinksByAuthorityIds(ids, centralTenant.get());
-      for (Map.Entry<UUID, Integer> entry : countLinksFromCentralTenant.entrySet()) {
-        countLinks.merge(entry.getKey(), entry.getValue(), Integer::sum);
-      }
+    if (MapUtils.isNotEmpty(countLinksForConsortiumCentral)) {
+      countLinksForConsortiumCentral.forEach((key, value) ->
+        countLinks.merge(key, value, Integer::sum));
     }
 
     var linkCountMap = fillInMissingIdsWithZeros(countLinks, ids);

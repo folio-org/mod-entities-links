@@ -5,6 +5,7 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
 import org.folio.entlinks.service.consortium.propagation.model.AuthoritySourceFilePropagationData;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,9 @@ public class ConsortiumAuthoritySourceFilePropagationService
   public ConsortiumAuthoritySourceFilePropagationService(
       @Qualifier("propagationAuthoritySourceFileService") AuthoritySourceFileService sourceFileService,
       ConsortiumTenantsService tenantsService,
-      SystemUserScopedExecutionService executionService) {
-    super(tenantsService, executionService);
+      SystemUserScopedExecutionService executionService,
+      FolioExecutionContext folioExecutionContext) {
+    super(tenantsService, executionService, folioExecutionContext);
     this.sourceFileService = sourceFileService;
   }
 

@@ -18,10 +18,10 @@ import org.springframework.stereotype.Repository;
 public interface AuthorityArchiveRepository extends JpaRepository<AuthorityArchive, UUID>,
   AuthorityArchiveCqlRepository {
 
-  @Query("select aa from AuthorityArchive aa where aa.updatedDate <= :tillDate and aa.source not like :sourcePrefix%")
+  @Query("select aa from AuthorityArchive aa where aa.updatedDate <= :tillDate")
   @QueryHints(@QueryHint(name = HibernateHints.HINT_FETCH_SIZE, value = "25"))
   Stream<AuthorityArchive> streamByUpdatedTillDateAndSourcePrefix(
-      @Param("tillDate") LocalDateTime tillDate, @Param("sourcePrefix") String sourcePrefix);
+      @Param("tillDate") LocalDateTime tillDate);
 
   @Query("select a.id as id from AuthorityArchive a")
   Page<UUID> findAllIds(Pageable pageable);

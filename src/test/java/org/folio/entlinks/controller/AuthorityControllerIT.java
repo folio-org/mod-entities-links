@@ -643,8 +643,6 @@ class AuthorityControllerIT extends IntegrationTestBase {
     verifyConsumedAuthorityEvent(event, DELETE, expectedDto.version(1));
 
     awaitUntilAsserted(() ->
-      assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
-    awaitUntilAsserted(() ->
       assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID,
         String.format("id = '%s' AND deleted = true", authority.getId()))));
     awaitUntilAsserted(() ->

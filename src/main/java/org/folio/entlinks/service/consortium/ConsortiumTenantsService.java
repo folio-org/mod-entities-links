@@ -26,7 +26,7 @@ public class ConsortiumTenantsService {
   /**
    * Get consortium tenants for tenantId.
    *
-   * @return only consortium member tenants
+   * @return only consortium member tenants, only for a central tenantId
   * */
   @Cacheable(cacheNames = CONSORTIUM_TENANTS_CACHE, key = "@folioExecutionContext.tenantId + ':' + #tenantId")
   public List<String> getConsortiumTenants(String tenantId) {

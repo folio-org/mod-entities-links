@@ -29,6 +29,7 @@ import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
 import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
+import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
 import org.folio.entlinks.service.consortium.UserTenantsService;
@@ -44,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+//todo: update tests
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class LinksSuggestionsServiceDelegateTest {
@@ -63,35 +65,32 @@ class LinksSuggestionsServiceDelegateTest {
   private @Mock ConsortiumTenantExecutor executor;
   private @Mock FolioExecutionContext folioExecutionContext;
   private @Mock UserTenantsService userTenantsService;
+  private @Mock AuthorityJdbcRepository jdbcRepository;
   private @InjectMocks LinksSuggestionsByAuthorityNaturalId serviceDelegate;
 
   @Test
   void suggestLinksForMarcRecords_shouldSaveAuthoritiesFromSearch() {
     var authority1 = Authority.builder()
         .id(AUTHORITY_ID).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
-    var authority2 = Authority.builder()
-        .id(UUID.randomUUID()).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
-    authority2.makeAsConsortiumShadowCopy();
     var fetchRequest = getBatchFetchRequestForAuthority(AUTHORITY_ID);
     var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
     var rules = List.of(getRule("100"));
 
-    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID)))
-        .thenReturn(List.of(authority1, authority2));
+        .thenReturn(List.of(authority1));
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
       .thenReturn(fetchRequest);
     var strippedParsedRecords = new StrippedParsedRecordCollection(emptyList(), 1);
     when(sourceStorageClient.fetchParsedRecordsInBatch(fetchRequest)).thenReturn(strippedParsedRecords);
-    when(executor.executeAsCentralTenant(any())).thenReturn(strippedParsedRecords);
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
 
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(sourceStorageClient).fetchParsedRecordsInBatch(fetchRequest);
-    verify(executor).executeAsCentralTenant(any());
+    verifyNoInteractions(executor);
+    verifyNoInteractions(jdbcRepository);
     verify(suggestionService)
         .fillLinkDetailsWithSuggestedAuthorities(any(),
             eq(List.of()), eq(Map.of("100", rules)), eq('0'), eq(false));
@@ -122,7 +121,6 @@ class LinksSuggestionsServiceDelegateTest {
     verify(suggestionService)
       .fillLinkDetailsWithSuggestedAuthorities(any(),
           eq(List.of()), eq(Map.of("100", rules)), eq('0'), eq(false));
-    verifyNoInteractions(executor);
   }
 
   @Test
@@ -147,7 +145,6 @@ class LinksSuggestionsServiceDelegateTest {
 
     verify(authorityRepository).findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID));
     verify(sourceStorageClient).fetchParsedRecordsInBatch(fetchRequest);
-    verifyNoInteractions(executor);
   }
 
   @Test

@@ -15,6 +15,8 @@ public class TestConstants {
 
   public static final String TENANT_ID = "test";
   public static final String CENTRAL_TENANT_ID = "consortium";
+  public static final String COLLEGE_TENANT_ID = "college";
+  public static final String UNIVERSITY_TENANT_ID = "university";
   public static final String CONSORTIUM_SOURCE_PREFIX = "CONSORTIUM-";
   public static final String USER_ID = "38d3a441-c100-5e8d-bd12-71bde492b723";
   public static final String UPDATER_USER_ID = "4df34034-dc86-4364-8d8a-65ab22d44063";
@@ -52,11 +54,7 @@ public class TestConstants {
   private static final String AUTHORITY_STORAGE_REINDEX_ENDPOINT = "/authority-storage/reindex";
 
   public static String authorityTopic() {
-    return authorityTopic(TENANT_ID);
-  }
-
-  public static String authorityTopic(String tenantId) {
-    return fullTopicName(AUTHORITY_TOPIC, tenantId);
+    return fullTopicName(AUTHORITY_TOPIC, TENANT_ID);
   }
 
   public static String linksInstanceAuthorityTopic() {

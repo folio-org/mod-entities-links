@@ -24,6 +24,8 @@ import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.authority.AuthorityUpdateResult;
 import org.folio.entlinks.service.consortium.UserTenantsService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityDataStatsPropagationService;
+import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,21 +38,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+//todo: update tests
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class AuthorityServiceDelegateTest {
 
   private final ArgumentCaptor<AuthorityDto> captor = ArgumentCaptor.forClass(AuthorityDto.class);
-  @Mock
-  private AuthorityService service;
-  @Mock
-  private AuthorityMapper mapper;
-  @Mock
-  private AuthorityDomainEventPublisher eventPublisher;
-  @Mock
-  private FolioExecutionContext context;
-  @Mock
-  private UserTenantsService userTenantsService;
+  @Mock private AuthorityService service;
+  @Mock private AuthorityMapper mapper;
+  @Mock private AuthorityDomainEventPublisher eventPublisher;
+  @Mock private FolioExecutionContext context;
+  @Mock private UserTenantsService userTenantsService;
+  @Mock private AuthorityDataStatService dataStatService;
+  @Mock private ConsortiumAuthorityDataStatsPropagationService dataStatPropagationService;
   @InjectMocks
   private AuthorityServiceDelegate delegate;
 

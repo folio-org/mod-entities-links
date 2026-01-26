@@ -6,7 +6,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -37,8 +36,8 @@ public class AuthorityDataStat extends AuditableEntity implements Identifiable<U
   @Column(name = "id", nullable = false)
   private UUID id;
 
-  @ToString.Exclude
   @NotNull
+  @ToString.Exclude
   @Column(name = "authority_id", nullable = false)
   private UUID authorityId;
 
@@ -98,11 +97,6 @@ public class AuthorityDataStat extends AuditableEntity implements Identifiable<U
   @Column(name = "completed_at")
   private Timestamp completedAt;
 
-  // Non-persistent Authority object for temporary usage
-  @ToString.Exclude
-  @Transient
-  private Authority authority;
-
   @Override
   public int hashCode() {
     return getClass().hashCode();
@@ -118,5 +112,29 @@ public class AuthorityDataStat extends AuditableEntity implements Identifiable<U
     }
     AuthorityDataStat that = (AuthorityDataStat) o;
     return id != null && Objects.equals(id, that.id);
+  }
+
+  public AuthorityDataStat copy() {
+    var copy = new AuthorityDataStat();
+    copy.setId(this.getId());
+    copy.setAuthorityId(this.getAuthorityId());
+    copy.setAction(this.getAction());
+    copy.setAuthorityNaturalIdOld(this.getAuthorityNaturalIdOld());
+    copy.setAuthorityNaturalIdNew(this.getAuthorityNaturalIdNew());
+    copy.setHeadingOld(this.getHeadingOld());
+    copy.setHeadingNew(this.getHeadingNew());
+    copy.setHeadingTypeOld(this.getHeadingTypeOld());
+    copy.setHeadingTypeNew(this.getHeadingTypeNew());
+    copy.setAuthoritySourceFileOld(this.getAuthoritySourceFileOld());
+    copy.setAuthoritySourceFileNew(this.getAuthoritySourceFileNew());
+    copy.setLbTotal(this.getLbTotal());
+    copy.setLbUpdated(this.getLbUpdated());
+    copy.setLbFailed(this.getLbFailed());
+    copy.setStatus(this.getStatus());
+    copy.setFailCause(this.getFailCause());
+    copy.setStartedByUserId(this.getStartedByUserId());
+    copy.setStartedAt(this.getStartedAt());
+    copy.setCompletedAt(this.getCompletedAt());
+    return copy;
   }
 }

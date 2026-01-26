@@ -1,10 +1,7 @@
 package org.folio.entlinks.controller.delegate;
 
-import static org.folio.entlinks.utils.ConsortiumUtils.CONSORTIUM_SOURCE_PREFIX;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.client.SettingsClient;
@@ -20,7 +17,6 @@ import org.folio.entlinks.exception.FolioIntegrationException;
 import org.folio.entlinks.integration.SettingsService;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityArchivePropagationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +30,6 @@ public class AuthorityArchiveServiceDelegate {
   private final AuthorityArchiveRepository authorityArchiveRepository;
   private final AuthorityArchiveProperties authorityArchiveProperties;
   private final AuthorityDomainEventPublisher eventPublisher;
-  private final ConsortiumAuthorityArchivePropagationService propagationService;
   private final AuthorityMapper authorityMapper;
 
   public AuthorityFullDtoCollection retrieveAuthorityArchives(Integer offset, Integer limit, String cqlQuery,
@@ -59,8 +54,7 @@ public class AuthorityArchiveServiceDelegate {
     }
 
     var tillDate = LocalDateTime.now().minusDays(retention.get());
-    try (Stream<AuthorityArchive> archives = authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(
-        tillDate, CONSORTIUM_SOURCE_PREFIX)) {
+    try (var archives = authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(tillDate)) {
       archives.forEach(this::process);
     }
   }

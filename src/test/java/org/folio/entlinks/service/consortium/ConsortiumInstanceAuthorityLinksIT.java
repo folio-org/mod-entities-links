@@ -2,8 +2,6 @@ package org.folio.entlinks.service.consortium;
 
 import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
-import static org.folio.entlinks.service.consortium.ConsortiumAuthorityPropagationServiceIT.COLLEGE_TENANT_ID;
-import static org.folio.entlinks.service.consortium.ConsortiumAuthorityPropagationServiceIT.UNIVERSITY_TENANT_ID;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
@@ -13,6 +11,8 @@ import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceF
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
+import static org.folio.support.base.TestConstants.COLLEGE_TENANT_ID;
+import static org.folio.support.base.TestConstants.UNIVERSITY_TENANT_ID;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -49,9 +49,11 @@ class ConsortiumInstanceAuthorityLinksIT extends IntegrationTestBase {
     setUpConsortium(CENTRAL_TENANT_ID, List.of(COLLEGE_TENANT_ID, UNIVERSITY_TENANT_ID), true);
   }
 
+  //todo: since this fails when not using jdbc -
+  // need to add consortium bib stats case which will require naturalId from central to check if it also would need jdbc
   @Test
   @SneakyThrows
-  void updateInstanceLinks_positive_saveIncomingLinks_whenAnyExist() {
+  void updateInstanceLinks_positive_forMemberTenantAndSharedAuthority() {
     var instanceId = randomUUID();
     var sourceFile = authoritySourceFile(0);
     final var incomingLinks = createLinkDtoCollection(2, instanceId);
@@ -61,7 +63,7 @@ class ConsortiumInstanceAuthorityLinksIT extends IntegrationTestBase {
     createAuthoritiesForLinks(incomingLinks.getLinks());
 
     var httpHeaders = defaultHeaders();
-    httpHeaders.put(XOkapiHeaders.TENANT, singletonList(CENTRAL_TENANT_ID));
+    httpHeaders.put(XOkapiHeaders.TENANT, singletonList(COLLEGE_TENANT_ID));
 
     doPut(linksInstanceEndpoint(), incomingLinks, httpHeaders, instanceId);
 
@@ -69,20 +71,6 @@ class ConsortiumInstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(linksMatch(hasSize(2)))
       .andExpect(linksMatch(incomingLinks))
       .andExpect(totalRecordsMatch(2));
-
-    httpHeaders.put(XOkapiHeaders.TENANT, singletonList(COLLEGE_TENANT_ID));
-    awaitUntilAsserted(() ->
-        doGet(linksInstanceEndpoint(), httpHeaders, instanceId)
-            .andExpect(linksMatch(hasSize(2)))
-            .andExpect(linksMatch(incomingLinks))
-            .andExpect(totalRecordsMatch(2)));
-
-    httpHeaders.put(XOkapiHeaders.TENANT, singletonList(UNIVERSITY_TENANT_ID));
-    awaitUntilAsserted(() ->
-        doGet(linksInstanceEndpoint(), httpHeaders, instanceId)
-            .andExpect(linksMatch(hasSize(2)))
-            .andExpect(linksMatch(incomingLinks))
-            .andExpect(totalRecordsMatch(2)));
   }
 
   private InstanceLinkDtoCollection createLinkDtoCollection(int num, UUID instanceId) {
@@ -98,8 +86,6 @@ class ConsortiumInstanceAuthorityLinksIT extends IntegrationTestBase {
       authority.setId(link.getAuthorityId());
       authority.setNaturalId(link.getAuthorityNaturalId());
       databaseHelper.saveAuthority(CENTRAL_TENANT_ID, authority);
-      databaseHelper.saveAuthority(COLLEGE_TENANT_ID, authority);
-      databaseHelper.saveAuthority(UNIVERSITY_TENANT_ID, authority);
     });
   }
 

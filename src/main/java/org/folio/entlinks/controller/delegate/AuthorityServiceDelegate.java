@@ -23,6 +23,10 @@ import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.authority.AuthorityS3Service;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.consortium.UserTenantsService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityDataStatsPropagationService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
+import org.folio.entlinks.service.consortium.propagation.model.AuthorityDataStatsPropagationData;
+import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
@@ -41,6 +45,8 @@ public class AuthorityServiceDelegate {
   private final AuthorityDomainEventPublisher eventPublisher;
   private final AuthorityS3Service authorityS3Service;
   private final LocalStorageProperties localStorageProperties;
+  private final AuthorityDataStatService dataStatService;
+  private final ConsortiumAuthorityDataStatsPropagationService dataStatPropagationService;
 
   public AuthorityServiceDelegate(@Qualifier("authorityService") AuthorityService service,
                                   @Qualifier("consortiumAuthorityService") AuthorityService consortiumService,
@@ -48,7 +54,11 @@ public class AuthorityServiceDelegate {
                                   AuthorityDomainEventPublisher eventPublisher,
                                   AuthorityS3Service authorityS3Service,
                                   LocalStorageProperties localStorageProperties,
-                                  UserTenantsService userTenantsService) {
+                                  UserTenantsService userTenantsService,
+                                  AuthorityDataStatService dataStatService,
+                                  ConsortiumAuthorityDataStatsPropagationService dataStatPropagationService) {
+    this.dataStatService = dataStatService;
+    this.dataStatPropagationService = dataStatPropagationService;
     this.service = userTenantsService.getCentralTenant(context.getTenantId()).isEmpty()
                    ? service
                    : consortiumService;
@@ -94,8 +104,17 @@ public class AuthorityServiceDelegate {
     updateConsumer().accept(updateResult.newEntity(), updateResult.oldEntity());
   }
 
+  /**
+   * Deletes authority by id.
+   * Deletes and propagates deletion for associated data stats.
+   * */
   public void deleteAuthorityById(UUID id) {
     var authority = service.deleteById(id);
+    dataStatService.deleteByAuthorityId(id);
+    var propagationData = AuthorityDataStatsPropagationData.forDelete(id);
+    dataStatPropagationService.propagate(propagationData, ConsortiumPropagationService.PropagationType.DELETE,
+      context.getTenantId());
+
     eventPublisher.publishSoftDeleteEvent(mapper.toDto(authority));
   }
 

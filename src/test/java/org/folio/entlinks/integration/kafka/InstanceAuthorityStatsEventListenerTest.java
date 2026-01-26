@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityDataStatsPropagationService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.folio.spring.testing.type.UnitTest;
@@ -26,16 +27,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+//todo: update tests
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class InstanceAuthorityStatsEventListenerTest {
 
-  @Mock
-  private SystemUserScopedExecutionService executionService;
-  @Mock
-  private AuthorityDataStatService dataStatService;
-  @Mock
-  private MessageBatchProcessor messageBatchProcessor;
+  @Mock private SystemUserScopedExecutionService executionService;
+  @Mock private MessageBatchProcessor messageBatchProcessor;
+  @Mock private AuthorityDataStatService dataStatService;
+  @Mock private ConsortiumAuthorityDataStatsPropagationService propagationService;
 
   @InjectMocks
   private InstanceAuthorityStatsEventListener listener;

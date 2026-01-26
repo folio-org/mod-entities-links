@@ -5,7 +5,6 @@ import static org.folio.entlinks.client.SettingsClient.AuthoritiesExpirationSett
 import static org.folio.entlinks.integration.SettingsService.AUTHORITIES_EXPIRE_SETTING_KEY;
 import static org.folio.entlinks.integration.SettingsService.AUTHORITIES_EXPIRE_SETTING_SCOPE;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -29,9 +28,6 @@ import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
 import org.folio.entlinks.integration.SettingsService;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityArchivePropagationService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,31 +41,12 @@ import org.springframework.data.domain.Pageable;
 @ExtendWith(MockitoExtension.class)
 class AuthorityArchiveServiceDelegateTest {
 
-  private static final String TENANT_ID = "tenantId";
-
-  @Mock
-  private AuthorityArchiveService service;
-
-  @Mock
-  private SettingsService settingsService;
-
-  @Mock
-  private AuthorityArchiveRepository authorityArchiveRepository;
-
-  @Mock
-  private AuthorityArchiveProperties authorityArchiveProperties;
-
-  @Mock
-  private AuthorityDomainEventPublisher eventPublisher;
-
-  @Mock
-  private ConsortiumAuthorityArchivePropagationService propagationService;
-
-  @Mock
-  private AuthorityMapper authorityMapper;
-
-  @Mock
-  private FolioExecutionContext context;
+  @Mock private AuthorityArchiveService service;
+  @Mock private SettingsService settingsService;
+  @Mock private AuthorityArchiveRepository authorityArchiveRepository;
+  @Mock private AuthorityArchiveProperties authorityArchiveProperties;
+  @Mock private AuthorityDomainEventPublisher eventPublisher;
+  @Mock private AuthorityMapper authorityMapper;
 
   @InjectMocks
   private AuthorityArchiveServiceDelegate delegate;
@@ -114,16 +91,13 @@ class AuthorityArchiveServiceDelegateTest {
     when(authorityMapper.toDto(archive)).thenReturn(dto);
     when(settingsService.getAuthorityExpireSetting()).thenReturn(Optional.empty());
     when(authorityArchiveProperties.getRetentionPeriodInDays()).thenReturn(7);
-    when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class), anyString()))
+    when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class)))
         .thenReturn(Stream.of(archive));
-    when(context.getTenantId()).thenReturn(TENANT_ID);
 
     delegate.expire();
 
     verify(service).delete(archive);
     verify(eventPublisher).publishHardDeleteEvent(dto);
-    verify(propagationService)
-        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, TENANT_ID);
   }
 
   @Test
@@ -135,15 +109,12 @@ class AuthorityArchiveServiceDelegateTest {
     archive.setUpdatedDate(Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS)));
     when(authorityMapper.toDto(archive)).thenReturn(dto);
     when(settingsService.getAuthorityExpireSetting()).thenReturn(Optional.of(setting));
-    when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class), anyString()))
+    when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class)))
         .thenReturn(Stream.of(archive));
-    when(context.getTenantId()).thenReturn(TENANT_ID);
 
     delegate.expire();
 
     verify(service).delete(archive);
     verify(eventPublisher).publishHardDeleteEvent(dto);
-    verify(propagationService)
-        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, TENANT_ID);
   }
 }

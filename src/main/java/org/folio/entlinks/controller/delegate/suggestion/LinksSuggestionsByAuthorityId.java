@@ -3,10 +3,8 @@ package org.folio.entlinks.controller.delegate.suggestion;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -34,9 +32,7 @@ public class LinksSuggestionsByAuthorityId extends LinksSuggestionsServiceDelega
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
   private final AuthorityRepository authorityRepository;
-  private final UserTenantsService userTenantsService;
-  private final FolioExecutionContext folioExecutionContext;
-  private final AuthorityJdbcRepository authorityJdbcRepository;
+  private final AuthorityJdbcRepository jdbcRepository;
 
   public LinksSuggestionsByAuthorityId(InstanceAuthorityLinkingRulesService linkingRulesService,
                                        LinksSuggestionsService suggestionService,
@@ -44,14 +40,12 @@ public class LinksSuggestionsByAuthorityId extends LinksSuggestionsServiceDelega
                                        SourceStorageClient sourceStorageClient,
                                        SourceContentMapper contentMapper,
                                        ConsortiumTenantExecutor executor,
-                                       UserTenantsService userTenantsService,
-                                       FolioExecutionContext folioExecutionContext,
-                                       AuthorityJdbcRepository authorityJdbcRepository) {
-    super(linkingRulesService, suggestionService, sourceStorageClient, contentMapper, executor);
+                                       UserTenantsService tenantsService,
+                                       FolioExecutionContext context, AuthorityJdbcRepository jdbcRepository) {
+    super(linkingRulesService, suggestionService, sourceStorageClient,
+      contentMapper, executor, tenantsService, context);
     this.authorityRepository = repository;
-    this.userTenantsService = userTenantsService;
-    this.folioExecutionContext = folioExecutionContext;
-    this.authorityJdbcRepository = authorityJdbcRepository;
+    this.jdbcRepository = jdbcRepository;
   }
 
   @Override
@@ -77,33 +71,13 @@ public class LinksSuggestionsByAuthorityId extends LinksSuggestionsServiceDelega
   }
 
   @Override
-  protected Map<String, List<Authority>> findExistingAuthorities(Set<UUID> ids) {
-    Map<String, List<Authority>> authoritiesMap = new HashMap<>();
-    var authorities = authorityRepository.findAllByIdInAndDeletedFalse(ids);
-    if (authorities.isEmpty()) {
-      log.info("No local authorities found for ids: {}", ids);
-      authoritiesMap.put("local", List.of());
-    } else {
-      authoritiesMap.put("local", authorities);
-      if (authorities.size() == ids.size()) {
-        log.info("All authorities found in local tenant for ids: {}", ids);
-        authoritiesMap.put("shared", List.of());
-        return authoritiesMap;
-      }
-    }
-    var tenant = folioExecutionContext.getTenantId();
-    var centralTenant = userTenantsService.getCentralTenant(tenant);
-    if (centralTenant.isPresent() && !centralTenant.get().equals(folioExecutionContext.getTenantId())) {
-      var sharedAuthorities = authorityJdbcRepository.findAllByIdInAndDeletedFalse(ids, centralTenant.get());
-      if (!sharedAuthorities.isEmpty()) {
-        log.info("Found {} shared authorities in central tenant {} for Ids: {}",
-            sharedAuthorities.size(), centralTenant.get(), ids);
-        authoritiesMap.put("shared", sharedAuthorities);
-      } else {
-        authoritiesMap.put("shared", List.of());
-      }
-    }
-    return authoritiesMap;
+  protected List<Authority> findExistingAuthorities(Set<UUID> ids) {
+    return authorityRepository.findAllByIdInAndDeletedFalse(ids);
+  }
+
+  @Override
+  protected List<Authority> findExistingAuthoritiesForTenant(String tenantId, Set<UUID> ids) {
+    return jdbcRepository.findAllByIdInAndDeletedFalse(ids, tenantId);
   }
 
   @Override

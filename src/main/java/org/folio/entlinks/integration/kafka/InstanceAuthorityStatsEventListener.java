@@ -9,6 +9,9 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.logging.log4j.message.FormattedMessageFactory;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityDataStatsPropagationService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
+import org.folio.entlinks.service.consortium.propagation.model.AuthorityDataStatsPropagationData;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
@@ -23,6 +26,7 @@ public class InstanceAuthorityStatsEventListener {
   private final SystemUserScopedExecutionService executionService;
   private final MessageBatchProcessor messageBatchProcessor;
   private final AuthorityDataStatService dataStatService;
+  private final ConsortiumAuthorityDataStatsPropagationService propagationService;
 
   @KafkaListener(id = "mod-entities-links-instance-authority-stats-listener",
     containerFactory = "statsListenerFactory",
@@ -42,15 +46,19 @@ public class InstanceAuthorityStatsEventListener {
     executionService.executeSystemUserScoped(tenant, () -> {
       log.info("Triggering updates for stats records [tenant: {}, number of records: {}]", tenant, events.size());
       messageBatchProcessor.consumeBatchWithFallback(events, DEFAULT_KAFKA_RETRY_TEMPLATE_NAME,
-        this::handleReportEventsByJobId, this::logFailedEvent);
+        eventsBatch -> handleReportEventsByJobId(tenant, eventsBatch), this::logFailedEvent);
       return null;
     });
   }
 
-  private void handleReportEventsByJobId(List<LinkUpdateReport> events) {
+  private void handleReportEventsByJobId(String tenantId, List<LinkUpdateReport> events) {
     events.stream()
       .collect(Collectors.groupingBy(LinkUpdateReport::getJobId))
-      .forEach(dataStatService::updateForReports);
+      .forEach((jobId, reports) -> {
+        dataStatService.updateForReports(jobId, reports);
+        var propagationData = AuthorityDataStatsPropagationData.forUpdate(jobId, reports);
+        propagationService.propagate(propagationData, ConsortiumPropagationService.PropagationType.UPDATE, tenantId);
+      });
   }
 
   private void logFailedEvent(LinkUpdateReport event, Exception e) {

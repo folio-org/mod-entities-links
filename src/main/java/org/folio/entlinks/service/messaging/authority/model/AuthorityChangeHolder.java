@@ -9,12 +9,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.collections4.MapUtils;
 import org.folio.entlinks.domain.dto.AuthorityDto;
-import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
-import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,6 +41,7 @@ public class AuthorityChangeHolder {
     this.changes = changes;
     this.fieldTagRelation = fieldTagRelation;
     this.numberOfLinks = numberOfLinks;
+    this.authorityDataStatId = UUID.randomUUID();
   }
 
   public UUID getAuthorityId() {
@@ -124,12 +123,8 @@ public class AuthorityChangeHolder {
       }
     }
 
-    var authority = new Authority();
-    authority.setId(getAuthorityId());
-    authority.setNaturalId(getNewNaturalId() == null ? getOldNaturalId() : getNewNaturalId());
-    authority.setDeleted(event.getType().equals(DomainEventType.DELETE));
-    AuthorityDataStat authorityDataStat = AuthorityDataStat.builder()
-        .authority(authority)
+    var authorityDataStat = AuthorityDataStat.builder()
+        .id(authorityDataStatId)
         .authorityId(getAuthorityId())
         .authorityNaturalIdOld(getOldNaturalId())
         .authorityNaturalIdNew(getNewNaturalId())
@@ -180,6 +175,7 @@ public class AuthorityChangeHolder {
   public AuthorityChangeHolder copy() {
     var copy = new AuthorityChangeHolder(event, changes, fieldTagRelation);
     copy.setSourceRecord(sourceRecord);
+    copy.setNumberOfLinks(numberOfLinks);
     return copy;
   }
 }

@@ -1,7 +1,9 @@
 package org.folio.entlinks.controller.delegate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
 import static org.folio.support.base.TestConstants.INPUT_BASE_URL;
+import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.TEST_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -9,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -16,8 +19,10 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
@@ -27,7 +32,7 @@ import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
-import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
+import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.FolioExecutionContext;
@@ -48,6 +53,8 @@ class InstanceAuthorityStatServiceDelegateTest {
 
   private static final UUID USER_ID_1 = UUID.randomUUID();
   private static final UUID USER_ID_2 = UUID.randomUUID();
+  private static final UUID AUTHORITY_LOCAL_ID = UUID.randomUUID();
+  private static final UUID AUTHORITY_SHARED_ID = UUID.randomUUID();
   private static final String SOURCE_FILE_NAME = "sourceFileName";
   private static final LocalDateTime NOW = LocalDateTime.now();
   private static final OffsetDateTime FROM_DATE = OffsetDateTime.of(NOW.with(LocalTime.MIN), ZoneOffset.UTC);
@@ -59,8 +66,8 @@ class InstanceAuthorityStatServiceDelegateTest {
   private @Mock AuthoritySourceFileRepository sourceFileRepository;
   private @Mock DataStatsMapper mapper;
   private @Mock UsersClient usersClient;
-  private @Mock ConsortiumTenantsService tenantsService;
   private @Mock FolioExecutionContext context;
+  private @Mock AuthorityService authorityService;
   private @Mock UserTenantsService userTenantsService;
   private @InjectMocks InstanceAuthorityStatServiceDelegate delegate;
 
@@ -69,7 +76,7 @@ class InstanceAuthorityStatServiceDelegateTest {
   @BeforeEach
   void setUp() {
     delegate = new InstanceAuthorityStatServiceDelegate(
-        statService, mapper, usersClient, sourceFileRepository, tenantsService, context, userTenantsService);
+        statService, mapper, usersClient, sourceFileRepository, authorityService, userTenantsService, context);
     sourceFile = new AuthoritySourceFile();
     sourceFile.setId(TEST_ID);
     sourceFile.setBaseUrl(INPUT_BASE_URL);
@@ -79,13 +86,14 @@ class InstanceAuthorityStatServiceDelegateTest {
     sourceFile.addCode(sourceFileCode);
 
     var statData = List.of(
-      TestDataUtils.authorityDataStat(USER_ID_1, TEST_ID, AuthorityDataStatAction.UPDATE_HEADING, true),
-      TestDataUtils.authorityDataStat(USER_ID_2, TEST_ID, AuthorityDataStatAction.UPDATE_HEADING, false)
+      TestDataUtils.authorityDataStat(USER_ID_1, TEST_ID, AUTHORITY_LOCAL_ID, AuthorityDataStatAction.UPDATE_HEADING),
+      TestDataUtils.authorityDataStat(USER_ID_2, TEST_ID, AUTHORITY_SHARED_ID, AuthorityDataStatAction.UPDATE_HEADING)
     );
     var users = TestDataUtils.usersList(List.of(USER_ID_1, USER_ID_2));
 
     when(statService.fetchDataStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, 3)).thenReturn(statData);
     when(usersClient.query(anyString())).thenReturn(users);
+    when(context.getTenantId()).thenReturn(TENANT_ID);
 
     var authorityDataStat1 = statData.get(0);
     var authorityDataStat2 = statData.get(1);
@@ -97,12 +105,12 @@ class InstanceAuthorityStatServiceDelegateTest {
   }
 
   @Test
-  void fetchStats() {
-    //  GIVEN
-    when(tenantsService.isCentralTenantContext()).thenReturn(false);
-
+  void fetchStats_consortiumMember() {
     //  WHEN
+    when(userTenantsService.getCentralTenant(TENANT_ID)).thenReturn(Optional.of(CENTRAL_TENANT_ID));
     when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.of(sourceFile));
+    when(authorityService.authoritiesExist(Set.of(AUTHORITY_LOCAL_ID, AUTHORITY_SHARED_ID)))
+      .thenReturn(Map.of(AUTHORITY_LOCAL_ID, true, AUTHORITY_SHARED_ID, false));
     var authorityChangeStatDtoCollection = delegate
       .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);
 
@@ -150,7 +158,7 @@ class InstanceAuthorityStatServiceDelegateTest {
   @Test
   void fetchStats_whenCentralTenantContext() {
     //  GIVEN
-    when(tenantsService.isCentralTenantContext()).thenReturn(true);
+    when(userTenantsService.getCentralTenant(TENANT_ID)).thenReturn(Optional.of(TENANT_ID));
 
     //  WHEN
     when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.of(sourceFile));
@@ -174,13 +182,11 @@ class InstanceAuthorityStatServiceDelegateTest {
       .toList();
     assertNull(authorityChangeStatDtoCollection.getNext());
     assertThat(List.of(USER_ID_1, USER_ID_2)).containsAll(resultUserIds);
+    verifyNoInteractions(authorityService);
   }
 
   @Test
   void fetchStats_whenUpdatedUserIsNull() {
-    //  GIVEN
-    when(tenantsService.isCentralTenantContext()).thenReturn(false);
-
     //  WHEN
     when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.of(sourceFile));
     when(usersClient.query(anyString())).thenReturn(ResultList.of(0, null));
@@ -215,13 +221,11 @@ class InstanceAuthorityStatServiceDelegateTest {
       assertEquals(sourceFile.getName(), statDto.getSourceFileOld());
       assertEquals(sourceFile.getName(), statDto.getSourceFileNew());
     }
+    verifyNoInteractions(authorityService);
   }
 
   @Test
   void fetchStats_withoutSourceFile() {
-    //  GIVEN
-    when(tenantsService.isCentralTenantContext()).thenReturn(false);
-
     //  WHEN
     when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
@@ -245,13 +249,11 @@ class InstanceAuthorityStatServiceDelegateTest {
       .toList();
     assertNull(authorityChangeStatDtoCollection.getNext());
     assertThat(List.of(USER_ID_1, USER_ID_2)).containsAll(resultUserIds);
+    verifyNoInteractions(authorityService);
   }
 
   @Test
   void fetchStats_withoutMetadata() {
-    //  GIVEN
-    when(tenantsService.isCentralTenantContext()).thenReturn(false);
-
     //  WHEN
     when(usersClient.query(anyString())).thenReturn(null);
 
@@ -277,5 +279,6 @@ class InstanceAuthorityStatServiceDelegateTest {
 
     assertNull(authorityChangeStatDtoCollection.getNext());
     assertThat(List.of(USER_ID_1, USER_ID_2)).containsAll(resultUserIds);
+    verifyNoInteractions(authorityService);
   }
 }

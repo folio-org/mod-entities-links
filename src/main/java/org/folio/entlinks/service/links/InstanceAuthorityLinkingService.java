@@ -1,18 +1,18 @@
 package org.folio.entlinks.service.links;
 
+import static org.apache.commons.collections4.MapUtils.isEmpty;
+import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.folio.entlinks.utils.DateUtils.toTimestamp;
 
-import jakarta.persistence.criteria.Predicate;
-import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,18 +22,14 @@ import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
-import org.folio.entlinks.domain.entity.projection.LinkCountViewImpl;
-import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
-import org.folio.entlinks.domain.repository.InstanceLinkJdbcRepository;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
+import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.service.authority.AuthorityService;
-import org.folio.entlinks.service.consortium.UserTenantsService;
-import org.folio.spring.FolioExecutionContext;
+import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,32 +38,24 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class InstanceAuthorityLinkingService {
 
-  private static final String SEEK_FIELD = "updatedAt";
-
   private final InstanceLinkRepository instanceLinkRepository;
   private final AuthorityService authorityService;
-  private final InstanceLinkJdbcRepository instanceLinkJdbcRepository;
-  private final UserTenantsService userTenantsService;
-  private final FolioExecutionContext folioExecutionContext;
-  private final AuthorityJdbcRepository authorityJdbcRepository;
+  private final ConsortiumTenantExecutor executor;
 
   public List<InstanceAuthorityLink> getLinksByInstanceId(UUID instanceId) {
     log.info("Loading links for [instanceId: {}]", instanceId);
     return instanceLinkRepository.findByInstanceId(instanceId).stream()
-        .filter(row -> row != null && row.length >= 2)
-        .map(row -> {
-          var link = row[0] != null ? (InstanceAuthorityLink) row[0] : null;
-          if (link == null) {
-            return null;
-          }
-          link.setNaturalId(row[1] != null ? (String) row[1] : null);
+        .map(view -> {
+          var link = view.getLink();
+          link.setAuthorityNaturalId(view.getAuthorityNaturalId());
           return link;
         })
-        .filter(Objects::nonNull)
         .toList();
   }
 
-  // need to rewrite with JOIN to Authority table to receive naturalId in one query
+  /**
+   * Get paginated links for the given authorityId. Authority naturalId is not populated in the returned links.
+   * */
   public Page<InstanceAuthorityLink> getLinksByAuthorityId(UUID authorityId, Pageable pageable) {
     log.info("Loading links for [authorityId: {}, page size: {}, page num: {}]", authorityId,
       pageable.getPageSize(), pageable.getOffset());
@@ -87,37 +75,18 @@ public class InstanceAuthorityLinkingService {
   @Transactional
   public void updateLinks(UUID instanceId, List<InstanceAuthorityLink> incomingLinks) {
     if (log.isDebugEnabled()) {
-      log.debug("Update links for [instanceId: {}, links: {}]", instanceId, incomingLinks);
+      log.debug("updateLinks:: for [instanceId: {}, links: {}]", instanceId, incomingLinks);
     } else {
-      log.info("Update links for [instanceId: {}, links amount: {}]", instanceId, incomingLinks.size());
+      log.info("updateLinks:: for [instanceId: {}, links amount: {}]", instanceId, incomingLinks.size());
     }
 
     var authorityIds = incomingLinks.stream()
         .map(InstanceAuthorityLink::getAuthorityId)
         .collect(Collectors.toSet());
-    var existingAuthorities = authorityService.getAllByIds(authorityIds);
-    log.debug("updateLinks:: found {} existing authorities in current tenant", existingAuthorities.size());
-    if (existingAuthorities.size() != authorityIds.size()) {
-      var centralTenant = userTenantsService.getCentralTenant(folioExecutionContext.getTenantId());
-      if (centralTenant.isPresent() && !centralTenant.get().equals(folioExecutionContext.getTenantId())) {
-        var existingSharedAuthorities = authorityService.getAllByIds(authorityIds, centralTenant.get());
-        log.debug("updateLinks:: found {} shared authorities in central tenant {}", existingSharedAuthorities.size(),
-            centralTenant.get());
-        if (!existingSharedAuthorities.isEmpty()) {
-          existingSharedAuthorities.forEach(existingAuthorities::putIfAbsent);
-        }
-      }
-    }
 
-    for (InstanceAuthorityLink incomingLink : incomingLinks) {
-      var linkAuthorityId = incomingLink.getAuthorityId();
-      var authorityData = existingAuthorities.get(linkAuthorityId);
-      incomingLink.setNaturalId(authorityData != null ? authorityData.getNaturalId() : null);
-    }
+    verifyAuthoritiesExist(authorityIds);
+
     var existedLinks = getLinksByInstanceId(instanceId);
-    if (!existedLinks.isEmpty()) {
-      setNaturalIdForSharedAuthority(existedLinks);
-    }
     var linksToDelete = subtract(existedLinks, incomingLinks);
     var linksToSave = getLinksToSave(incomingLinks, existedLinks, linksToDelete);
     instanceLinkRepository.deleteAllInBatch(linksToDelete);
@@ -132,16 +101,6 @@ public class InstanceAuthorityLinkingService {
     }
     return instanceLinkRepository.countLinksByAuthorityIds(authorityIds).stream()
       .collect(Collectors.toMap(LinkCountView::getId, LinkCountView::getTotalLinks));
-  }
-
-  public Map<UUID, Integer> countLinksByAuthorityIds(Set<UUID> authorityIds, String tenantId) {
-    if (log.isDebugEnabled()) {
-      log.info("Count links for [authority ids: {}, tenantId: {}]", authorityIds, tenantId);
-    } else {
-      log.info("Count links for [authority ids amount: {}, tenantId: {}]", authorityIds.size(), tenantId);
-    }
-    return instanceLinkJdbcRepository.countLinksByAuthorityIds(authorityIds, tenantId).stream()
-        .collect(Collectors.toMap(LinkCountViewImpl::getId, LinkCountViewImpl::getTotalLinks));
   }
 
   @Transactional
@@ -176,46 +135,78 @@ public class InstanceAuthorityLinkingService {
     var linkStatus = status == null ? null : InstanceAuthorityLinkStatus.valueOf(status.getValue());
     var linkFromDate = fromDate == null ? null : toTimestamp(fromDate);
     var linkToDate = toDate == null ? null : toTimestamp(toDate);
-    var pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc(SEEK_FIELD)));
-    var tenantId = folioExecutionContext.getTenantId();
-    return instanceLinkJdbcRepository.findAll(linkStatus, linkFromDate, linkToDate, tenantId, pageable);
+    var pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("updatedAt")));
+
+    return instanceLinkRepository.findLinksWithAuthorityNaturalId(linkStatus, linkFromDate, linkToDate, pageable)
+        .stream()
+        .map(view -> {
+          var link = view.getLink();
+          link.setAuthorityNaturalId(view.getAuthorityNaturalId());
+          return link;
+        })
+        .toList();
   }
 
+  /**
+   * Authorities are not propagated to member tenants.
+   * So in case some links are for local bib and shared authority - this method is needed to fill in naturalIds
+   * for authorities from consortium central tenant.
+   * */
   public void setNaturalIdForSharedAuthority(List<InstanceAuthorityLink> links) {
-    var centralTenant = userTenantsService.getCentralTenant(folioExecutionContext.getTenantId());
-    if (centralTenant.isPresent() && !centralTenant.get().equals(folioExecutionContext.getTenantId())) {
-      var authorityIdsWithoutNaturalId = links.stream()
-          .filter(link -> link.getNaturalId() == null)
-          .map(InstanceAuthorityLink::getAuthorityId).toList();
-      if (!authorityIdsWithoutNaturalId.isEmpty()) {
-        var naturalIdsData = authorityJdbcRepository.findNaturalIdsByIdInAndDeletedFalse(
-            authorityIdsWithoutNaturalId, centralTenant.get());
-        links.forEach(link -> naturalIdsData.stream()
-            .filter(naturalIdData -> link.getAuthorityId().equals(naturalIdData.getId()))
-            .findFirst()
-            .ifPresent(naturalIdData -> link.setNaturalId(naturalIdData.getNaturalId())));
-      }
+    var authorityIdsWithoutNaturalId = links.stream()
+      .filter(link -> link.getAuthorityNaturalId() == null)
+      .map(InstanceAuthorityLink::getAuthorityId).toList();
+
+    if (authorityIdsWithoutNaturalId.isEmpty()) {
+      return;
+    }
+
+    var naturalIdsData = authorityService.findNaturalIdsByIdInAndDeletedFalseForCentralIfOnMember(
+      authorityIdsWithoutNaturalId);
+
+    if (isEmpty(naturalIdsData)) {
+      return;
+    }
+
+    links.forEach(link ->
+      Optional.ofNullable(naturalIdsData.get(link.getAuthorityId()))
+        .ifPresent(link::setAuthorityNaturalId));
+  }
+
+  /**
+   * Verification of authorities existence on links update needed since there's no foreign key constraint.
+   * */
+  private void verifyAuthoritiesExist(Set<UUID> authorityIds) {
+    var authoritiesExist = authorityService.authoritiesExist(authorityIds);
+    var sharedAuthoritiesExist = authorityService.authoritiesExistForCentralIfOnMember(authorityIds);
+
+    if (isNotEmpty(sharedAuthoritiesExist)) {
+      sharedAuthoritiesExist.forEach((key, value) ->
+        authoritiesExist.merge(key, value, Boolean::logicalOr));
+    }
+
+    var missingIds = authoritiesExist.entrySet().stream()
+      .filter(entry -> !entry.getValue())
+      .map(Map.Entry::getKey)
+      .toList();
+    if (!missingIds.isEmpty()) {
+      log.warn("verifyAuthoritiesExist:: authorities not found for [ids: {}]", missingIds);
+      throw new AuthorityNotFoundException(missingIds);
     }
   }
 
+  /**
+   * Find existing links that need to be updated so existing ids are used.
+   * Add incoming links that need to be created.
+   * */
   private List<InstanceAuthorityLink> getLinksToSave(List<InstanceAuthorityLink> incomingLinks,
                                                      List<InstanceAuthorityLink> existedLinks,
                                                      List<InstanceAuthorityLink> linksToDelete) {
     var linksToCreate = subtract(incomingLinks, existedLinks);
     var linksToUpdate = subtract(existedLinks, linksToDelete);
-    updateLinksData(incomingLinks, linksToUpdate);
     var linksToSave = new ArrayList<>(linksToCreate);
     linksToSave.addAll(linksToUpdate);
     return linksToSave;
-  }
-
-  private void updateLinksData(List<InstanceAuthorityLink> incomingLinks, List<InstanceAuthorityLink> linksToUpdate) {
-    linksToUpdate
-      .forEach(link -> incomingLinks.stream()
-        .filter(l -> l.isSameLink(link)).findFirst()
-        .ifPresent(l ->
-          link.setNaturalId(l.getNaturalId())
-        ));
   }
 
   private List<InstanceAuthorityLink> subtract(Collection<InstanceAuthorityLink> source,
@@ -223,25 +214,5 @@ public class InstanceAuthorityLinkingService {
     return new LinkedHashSet<>(source).stream()
       .filter(t -> target.stream().noneMatch(link -> link.isSameLink(t)))
       .toList();
-  }
-
-  private Specification<InstanceAuthorityLink> getSpecFromStatusAndDates(
-    InstanceAuthorityLinkStatus status, Timestamp from, Timestamp to) {
-
-    return (root, query, builder) -> {
-      var predicates = new LinkedList<Predicate>();
-
-      if (status != null) {
-        predicates.add(builder.equal(root.get("status"), status));
-      }
-      if (from != null) {
-        predicates.add(builder.greaterThanOrEqualTo(root.get(SEEK_FIELD), from));
-      }
-      if (to != null) {
-        predicates.add(builder.lessThanOrEqualTo(root.get(SEEK_FIELD), to));
-      }
-
-      return builder.and(predicates.toArray(new Predicate[0]));
-    };
   }
 }

@@ -51,6 +51,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.core.env.Environment;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 @IntegrationTest
@@ -72,6 +73,11 @@ class DataImportEventListenerIT extends IntegrationTestBase {
   private KafkaMessageListenerContainer<String, Event> container;
   private BlockingQueue<ConsumerRecord<String, Event>> consumerRecords;
 
+  @Autowired
+  private KafkaProperties kafkaProperties;
+  @Autowired
+  private Environment environment;
+
   @BeforeAll
   static void prepare() {
     setUpTenant();
@@ -91,7 +97,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
 
   @SneakyThrows
   @Test
-  void shouldHandleDataImportAuthorityCreatedEvent_positive(@Autowired KafkaProperties kafkaProperties) {
+  void shouldHandleDataImportAuthorityCreatedEvent_positive() {
     startConsumer(kafkaProperties, diAuthorityCreatedPostProcessingTopic());
     // send DI authority created event
     var eventPayload = readFile(DI_CREATE_AUTHORITY_PATH);
@@ -99,7 +105,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
         eventPayload, AUTHORITY_CREATE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityCreatedTopic(), AUTHORITY_CREATE_ID.toString(), event,
         Map.of("folio.tenantId", TENANT_ID,
-            "x-okapi-url", okapi.getOkapiUrl(),
+            "x-okapi-url", okapi.wireMockServer().baseUrl(),
             "recordId", AUTHORITY_CREATE_ID.toString(),
             "jobExecutionId", UUID.randomUUID().toString()));
 
@@ -124,8 +130,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
 
   @SneakyThrows
   @Test
-  void shouldHandleDataImportAuthorityCreatedEvent_negative_duplicateAuthority(
-      @Autowired KafkaProperties kafkaProperties) {
+  void shouldHandleDataImportAuthorityCreatedEvent_negative_duplicateAuthority() {
     startConsumer(kafkaProperties, diAuthorityErrorTopic());
     // create authority
     var authority = authority(0, 0);
@@ -144,7 +149,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
         eventPayload, AUTHORITY_CREATE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityCreatedTopic(), AUTHORITY_CREATE_ID.toString(), event,
         Map.of("folio.tenantId", TENANT_ID,
-            "x-okapi-url", okapi.getOkapiUrl(),
+            "x-okapi-url", okapi.wireMockServer().baseUrl(),
             "recordId", AUTHORITY_CREATE_ID.toString(),
             "jobExecutionId", UUID.randomUUID().toString()));
 
@@ -161,7 +166,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
 
   @SneakyThrows
   @Test
-  void shouldHandleDataImportAuthorityDeletedEvent_positive(@Autowired KafkaProperties kafkaProperties) {
+  void shouldHandleDataImportAuthorityDeletedEvent_positive() {
     startConsumer(kafkaProperties, diAuthorityCompletedTopic());
     // create authority
     var authority = authority(0, 0);
@@ -180,7 +185,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
         eventPayload, AUTHORITY_DELETE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityDeletedTopic(), AUTHORITY_DELETE_ID.toString(), event,
         Map.of("folio.tenantId", TENANT_ID,
-            "x-okapi-url", okapi.getOkapiUrl(),
+            "x-okapi-url", okapi.wireMockServer().baseUrl(),
             "recordId", AUTHORITY_DELETE_ID.toString(),
             "jobExecutionId", UUID.randomUUID().toString()));
 
@@ -195,8 +200,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
 
   @SneakyThrows
   @Test
-  void shouldHandleDataImportAuthorityDeletedEvent_negative_noAuthorityToDelete(
-      @Autowired KafkaProperties kafkaProperties) {
+  void shouldHandleDataImportAuthorityDeletedEvent_negative_noAuthorityToDelete() {
     startConsumer(kafkaProperties, diAuthorityErrorTopic());
     // check authority does not exist
     doGet(authorityEndpoint())
@@ -208,7 +212,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
         eventPayload, AUTHORITY_DELETE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityDeletedTopic(), AUTHORITY_DELETE_ID.toString(), event,
         Map.of("folio.tenantId", TENANT_ID,
-            "x-okapi-url", okapi.getOkapiUrl(),
+            "x-okapi-url", okapi.wireMockServer().baseUrl(),
             "recordId", AUTHORITY_DELETE_ID.toString(),
             "jobExecutionId", UUID.randomUUID().toString()));
 
@@ -223,7 +227,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
 
   @SneakyThrows
   @Test
-  void shouldHandleDataImportAuthorityUpdateEvent_positive(@Autowired KafkaProperties kafkaProperties) {
+  void shouldHandleDataImportAuthorityUpdateEvent_positive() {
     startConsumer(kafkaProperties, diAuthorityUpdateTopic());
     // create authority
     var authority = authority(0, 0);
@@ -245,16 +249,9 @@ class DataImportEventListenerIT extends IntegrationTestBase {
         eventPayload, AUTHORITY_UPDATE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityModifiedTopic(), AUTHORITY_UPDATE_ID.toString(), event,
         Map.of("folio.tenantId", TENANT_ID,
-            "x-okapi-url", okapi.getOkapiUrl(),
+            "x-okapi-url", okapi.wireMockServer().baseUrl(),
             "recordId", AUTHORITY_UPDATE_ID.toString(),
             "jobExecutionId", UUID.randomUUID().toString()));
-
-    // verify updated authority
-    var content = doGet(authorityEndpoint(AUTHORITY_UPDATE_ID)).andReturn().getResponse().getContentAsString();
-    var authorityDto = objectMapper.readValue(content, AuthorityDto.class);
-    assertNotNull(authorityDto);
-    //check identifiers were added
-    assertEquals(3, authorityDto.getIdentifiers().size());
 
     // check sent DI update event
     var received = getReceivedEvent(DI_AUTHORITY_UPDATED_TOPIC, AUTHORITY_UPDATE_ID.toString());
@@ -263,11 +260,18 @@ class DataImportEventListenerIT extends IntegrationTestBase {
     assertions.then(received.key()).as("key").isEqualTo(AUTHORITY_UPDATE_ID.toString());
     assertions.then(received.topic()).as("topic").contains(DI_AUTHORITY_UPDATED_TOPIC);
     assertions.assertAll();
+
+    // verify updated authority
+    var content = doGet(authorityEndpoint(AUTHORITY_UPDATE_ID)).andReturn().getResponse().getContentAsString();
+    var authorityDto = objectMapper.readValue(content, AuthorityDto.class);
+    assertNotNull(authorityDto);
+    //check identifiers were added
+    assertEquals(3, authorityDto.getIdentifiers().size());
   }
 
   @SneakyThrows
   @Test
-  void shouldHandleDataImportAuthorityUpdateEvent_negative_noAuthority(@Autowired KafkaProperties kafkaProperties) {
+  void shouldHandleDataImportAuthorityUpdateEvent_negative_noAuthority() {
     startConsumer(kafkaProperties, diAuthorityErrorTopic());
     // check authority does not exist
     doGet(authorityEndpoint()).andExpect(jsonPath("totalRecords", is(0)));
@@ -278,7 +282,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
         eventPayload, AUTHORITY_UPDATE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityModifiedTopic(), AUTHORITY_UPDATE_ID.toString(), event,
         Map.of("folio.tenantId", TENANT_ID,
-            "x-okapi-url", okapi.getOkapiUrl(),
+            "x-okapi-url", okapi.wireMockServer().baseUrl(),
             "recordId", AUTHORITY_UPDATE_ID.toString(),
             "jobExecutionId", UUID.randomUUID().toString()));
 
@@ -293,7 +297,7 @@ class DataImportEventListenerIT extends IntegrationTestBase {
 
   @SneakyThrows
   private ConsumerRecord<String, Event> getReceivedEvent(String expectedTopic, String expectedKey) {
-    long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10);
+    long deadline = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1);
     while (System.currentTimeMillis() < deadline) {
       var consumerRecord = consumerRecords.poll(500, TimeUnit.MILLISECONDS);
       if (consumerRecord == null) {

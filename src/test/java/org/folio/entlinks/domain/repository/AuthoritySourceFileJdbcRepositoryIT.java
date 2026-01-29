@@ -2,7 +2,6 @@ package org.folio.entlinks.domain.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.support.base.TestConstants.TENANT_ID;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
@@ -22,7 +21,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
@@ -31,15 +33,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 @EnablePostgres
 @AutoConfigureJson
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ContextConfiguration(classes = AuthoritySourceFileJdbcRepositoryIT.TestConfig.class)
 class AuthoritySourceFileJdbcRepositoryIT {
 
-  private @MockitoSpyBean JdbcTemplate jdbcTemplate;
   private @MockitoBean FolioExecutionContext context;
-  private AuthoritySourceFileJdbcRepository repository;
+  private @MockitoSpyBean JdbcTemplate jdbcTemplate;
+  private @MockitoSpyBean AuthoritySourceFileJdbcRepository repository;
 
   @BeforeEach
   void setUp() {
-    repository = spy(new AuthoritySourceFileJdbcRepository(jdbcTemplate, context));
     when(context.getFolioModuleMetadata()).thenReturn(new FolioModuleMetadata() {
       @Override
       public String getModuleName() {
@@ -134,5 +136,15 @@ class AuthoritySourceFileJdbcRepositoryIT {
     entity.setCreatedDate(Timestamp.from(Instant.now()));
     entity.setUpdatedDate(Timestamp.from(Instant.now()));
     return entity;
+  }
+
+  @Configuration(proxyBeanMethods = false)
+  static class TestConfig {
+
+    @Bean
+    AuthoritySourceFileJdbcRepository authoritySourceFileJdbcRepository(JdbcTemplate jdbcTemplate,
+                                                                        FolioExecutionContext context) {
+      return new AuthoritySourceFileJdbcRepository(jdbcTemplate, context);
+    }
   }
 }

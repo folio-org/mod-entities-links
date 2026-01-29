@@ -1,0 +1,258 @@
+{
+    "eventType": "DI_SRS_MARC_AUTHORITY_RECORD_CREATED",
+    "currentNode": {
+      "id": "659b7d01-39c8-4d66-bd05-90e81e6e9aeb",
+      "profileId": "7915c72e-c6af-4962-969d-403c7238b051",
+      "profileWrapperId": "570476c2-2309-4a66-be93-eef158882f66",
+      "contentType": "ACTION_PROFILE",
+      "content": {
+        "id": "7915c72e-c6af-4962-969d-403c7238b051",
+        "name": "Default - Create MARC Authority",
+        "action": "CREATE",
+        "hidden": false,
+        "metadata": {
+          "createdDate": "2021-10-08T14:00:00.000+00:00",
+          "updatedDate": "2021-10-08T15:00:00.462+00:00",
+          "createdByUserId": "00000000-0000-0000-0000-000000000000",
+          "updatedByUserId": "00000000-0000-0000-0000-000000000000"
+        },
+        "userInfo": {
+          "lastName": "System",
+          "userName": "System",
+          "firstName": "System"
+        },
+        "description": "This action profile is used with FOLIO's default job profile for creating a MARC authority record in source-record-storage. It cannot be edited, duplicated, or deleted.",
+        "folioRecord": "AUTHORITY",
+        "childProfiles": [],
+        "parentProfiles": [],
+        "remove9Subfields": false
+      },
+      "order": 0,
+      "childSnapshotWrappers": [
+        {
+          "id": "61dbd29d-bc9c-4a40-a413-df4fe79fb757",
+          "profileId": "6a0ec1de-68eb-4833-bdbf-0741db25c314",
+          "profileWrapperId": "b5befbad-caac-4f05-8e94-6a292a1fbe17",
+          "contentType": "MAPPING_PROFILE",
+          "content": {
+            "id": "6a0ec1de-68eb-4833-bdbf-0741db25c314",
+            "name": "Default - Create MARC Authority",
+            "hidden": false,
+            "metadata": {
+              "createdDate": "2021-10-08T14:00:00.000+00:00",
+              "updatedDate": "2021-10-08T15:00:00.462+00:00",
+              "createdByUserId": "00000000-0000-0000-0000-000000000000",
+              "updatedByUserId": "00000000-0000-0000-0000-000000000000"
+            },
+            "userInfo": {
+              "lastName": "System",
+              "userName": "System",
+              "firstName": "System"
+            },
+            "description": "This field mapping profile is used with FOLIO's default job profile for creating MARC Authority records. It cannot be edited, duplicated, deleted, or linked to additional action profiles.",
+            "childProfiles": [],
+            "mappingDetails": {
+              "name": "authority",
+              "recordType": "AUTHORITY",
+              "mappingFields": [
+                {
+                  "name": "personalName",
+                  "path": "authority.personalName",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "sftPersonalName",
+                  "path": "authority.sftPersonalName[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "saftPersonalName",
+                  "path": "authority.saftPersonalName[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "corporateName",
+                  "path": "authority.corporateName",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "sftCorporateName",
+                  "path": "authority.sftCorporateName[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "saftCorporateName",
+                  "path": "authority.saftCorporateName[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "meetingName",
+                  "path": "authority.meetingName[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "sftMeetingName",
+                  "path": "authority.sftMeetingName[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "saftMeetingName",
+                  "path": "authority.saftMeetingName[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "uniformTitle",
+                  "path": "authority.uniformTitle",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "sftUniformTitle",
+                  "path": "authority.sftUniformTitle[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "saftUniformTitle",
+                  "path": "authority.saftUniformTitle[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "topicalTerm",
+                  "path": "authority.topicalTerm",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "sftTopicalTerm",
+                  "path": "authority.sftTopicalTerm[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "saftTopicalTerm",
+                  "path": "authority.saftTopicalTerm[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "subjectHeadings",
+                  "path": "authority.subjectHeadings",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "geographicName",
+                  "path": "authority.geographicName",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "sftGeographicTerm",
+                  "path": "authority.sftGeographicTerm[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "saftGeographicTerm",
+                  "path": "authority.saftGeographicTerm[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "genre",
+                  "path": "authority.genre",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "identifiers",
+                  "path": "authority.identifiers[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                },
+                {
+                  "name": "notes",
+                  "path": "authority.notes[]",
+                  "value": "",
+                  "enabled": "false",
+                  "required": false,
+                  "subfields": []
+                }
+              ],
+              "marcMappingDetails": []
+            },
+            "parentProfiles": [],
+            "existingRecordType": "AUTHORITY",
+            "incomingRecordType": "MARC_AUTHORITY",
+            "marcFieldProtectionSettings": []
+          },
+          "order": 0,
+          "childSnapshotWrappers": []
+        }
+      ]
+    },
+    "currentNodePath": [],
+    "eventsChain": [],
+    "jobExecutionId": "3b255ca5-6746-47a1-9bd6-45c5bb948b77",
+    "tenant": "test",
+    "token": "",
+    "okapiUrl": "",
+    "context": {
+      "MARC_AUTHORITY": "{\"id\":\"bdd611b6-4feb-4dab-9c19-da13a856045a\",\"snapshotId\":\"3b255ca5-6746-47a1-9bd6-45c5bb948b77\",\"matchedId\":\"bdd611b6-4feb-4dab-9c19-da13a856045a\",\"recordType\":\"MARC_AUTHORITY\",\"rawRecord\":{\"id\":\"bdd611b6-4feb-4dab-9c19-da13a856045a\",\"content\":\"01055cz  a2200169n  4500001000800000005001700008008004100025010001700066035002300083040003300106111005900139411006100198511007100259667009500330670012200425675033800547\\u001E8979089\\u001E20120828074806.0\\u001E120502n| acannaabn          |a ana     c\\u001E  \\u001Fano2012061368\\u001E  \\u001Fa(OCoLC)oca09186965\\u001E  \\u001FaOkS\\u001Fbeng\\u001FcOkS\\u001FdOkS\\u001FdDLC\\u001FdOkS\\u001E2 \\u001FaWestern Region Agricultural Education Research Meeting\\u001E2 \\u001FaWestern Regional Agricultural Education Research Meeting\\u001E2 \\u001Fwb\\u001FaWestern Region Agricultural Education Research Seminar (1983- )\\u001E  \\u001FaTHIS 1XX FIELD CANNOT BE USED UNDER RDA UNTIL THIS RECORD HAS BEEN REVIEWED AND/OR UPDATED\\u001E  \\u001FaFirst annual Western Region Agricultural Education Research Meeting, 1982:\\u001Fbt.p. (held April 26, 1982, Austin, Texas)\\u001E  \\u001FaSecond annual Western Region Agricultural Education Research Seminar, 1983: t.p. (held April 19, 1983, Rio Rico, Arizona) p. [3] (2nd Western Regional Research Meeting)\\u001FaResearch in agricultural education, 1993: cover (Twelfth annual Western Regional Agricultural Education Research Meeting; held in Bozeman, Montana, April 14, 1993)\\u001E\\u001D\"},\"parsedRecord\":{\"id\":\"bdd611b6-4feb-4dab-9c19-da13a856045a\",\"content\":\"{\\\"leader\\\":\\\"01146cz  a2200181n  4500\\\",\\\"fields\\\":[{\\\"001\\\":\\\"8979089\\\"},{\\\"005\\\":\\\"20120828074806.0\\\"},{\\\"008\\\":\\\"120502n| acannaabn          |a ana     c\\\"},{\\\"010\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"codeOne\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"035\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"(OCoLC)oca09186965\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"040\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"OkS\\\"},{\\\"b\\\":\\\"eng\\\"},{\\\"c\\\":\\\"OkS\\\"},{\\\"d\\\":\\\"OkS\\\"},{\\\"d\\\":\\\"DLC\\\"},{\\\"d\\\":\\\"OkS\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"111\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"Western Region Agricultural Education Research Meeting\\\"}],\\\"ind1\\\":\\\"2\\\",\\\"ind2\\\":\\\" \\\"}},{\\\"411\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"Western Regional Agricultural Education Research Meeting\\\"}],\\\"ind1\\\":\\\"2\\\",\\\"ind2\\\":\\\" \\\"}},{\\\"511\\\":{\\\"subfields\\\":[{\\\"w\\\":\\\"b\\\"},{\\\"a\\\":\\\"Western Region Agricultural Education Research Seminar (1983- )\\\"}],\\\"ind1\\\":\\\"2\\\",\\\"ind2\\\":\\\" \\\"}},{\\\"667\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"THIS 1XX FIELD CANNOT BE USED UNDER RDA UNTIL THIS RECORD HAS BEEN REVIEWED AND/OR UPDATED\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"670\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"First annual Western Region Agricultural Education Research Meeting, 1982:\\\"},{\\\"b\\\":\\\"t.p. (held April 26, 1982, Austin, Texas)\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"675\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"Second annual Western Region Agricultural Education Research Seminar, 1983: t.p. (held April 19, 1983, Rio Rico, Arizona) p. [3] (2nd Western Regional Research Meeting)\\\"},{\\\"a\\\":\\\"Research in agricultural education, 1993: cover (Twelfth annual Western Regional Agricultural Education Research Meeting; held in Bozeman, Montana, April 14, 1993)\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"999\\\":{\\\"subfields\\\":[{\\\"i\\\":\\\"7e3745e6-2d48-4f22-825e-72f3338bfa14\\\"},{\\\"s\\\":\\\"bdd611b6-4feb-4dab-9c19-da13a856045a\\\"}],\\\"ind1\\\":\\\"f\\\",\\\"ind2\\\":\\\"f\\\"}}]}\",\"formattedContent\":\"LEADER 01146cz  a2200181n  4500\\n001 8979089\\n005 20120828074806.0\\n008 120502n| acannaabn          |a ana     c\\n010   $ano2012061368\\n035   $a(OCoLC)oca09186965\\n040   $aOkS$beng$cOkS$dOkS$dDLC$dOkS\\n111 2 $aWestern Region Agricultural Education Research Meeting\\n411 2 $aWestern Regional Agricultural Education Research Meeting\\n511 2 $wb$aWestern Region Agricultural Education Research Seminar (1983- )\\n667   $aTHIS 1XX FIELD CANNOT BE USED UNDER RDA UNTIL THIS RECORD HAS BEEN REVIEWED AND/OR UPDATED\\n670   $aFirst annual Western Region Agricultural Education Research Meeting, 1982:$bt.p. (held April 26, 1982, Austin, Texas)\\n675   $aSecond annual Western Region Agricultural Education Research Seminar, 1983: t.p. (held April 19, 1983, Rio Rico, Arizona) p. [3] (2nd Western Regional Research Meeting)$aResearch in agricultural education, 1993: cover (Twelfth annual Western Regional Agricultural Education Research Meeting; held in Bozeman, Montana, April 14, 1993)\\n999 ff$i7e3745e6-2d48-4f22-825e-72f3338bfa14$sbdd611b6-4feb-4dab-9c19-da13a856045a\\n\\n\"},\"deleted\":false,\"order\":0,\"externalIdsHolder\":{\"authorityId\":\"7e3745e6-2d48-4f22-825e-72f3338bfa14\",\"authorityHrid\":\"8979089\"},\"additionalInfo\":{\"suppressDiscovery\":false},\"state\":\"ACTUAL\",\"metadata\":{\"createdByUserId\":\"fb218675-93c5-4843-b406-8f5a8a427bf4\",\"updatedByUserId\":\"fb218675-93c5-4843-b406-8f5a8a427bf4\"}}",
+      "INCOMING_RECORD_ID": "bdd611b6-4feb-4dab-9c19-da13a856045a",
+      "JOB_PROFILE_SNAPSHOT_ID": "ab7f0cff-1c02-4204-85ce-5917731041c1"
+    }
+}

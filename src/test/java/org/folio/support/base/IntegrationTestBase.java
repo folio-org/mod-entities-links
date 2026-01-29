@@ -42,6 +42,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.awaitility.Durations;
@@ -321,6 +322,16 @@ public class IntegrationTestBase {
   @SneakyThrows
   protected static void sendKafkaMessage(String topic, String key, Object event) {
     var future = kafkaTemplate.send(topic, key, new ObjectMapper().writeValueAsString(event));
+    awaitUntilAsserted(() -> Assertions.assertTrue(future.isDone(), "Message was not sent"));
+  }
+
+  @SneakyThrows
+  protected static void sendKafkaMessage(String topic, String key, Object event, Map<String, String> headers) {
+    var producerRecord = new ProducerRecord<>(topic, key, new ObjectMapper().writeValueAsString(event));
+    if (headers != null) {
+      headers.forEach((k, v) -> producerRecord.headers().add(k, v.getBytes()));
+    }
+    var future = kafkaTemplate.send(producerRecord);
     awaitUntilAsserted(() -> Assertions.assertTrue(future.isDone(), "Message was not sent"));
   }
 

@@ -60,6 +60,28 @@ folio:
       - name: specification-storage.specification.update
         numPartitions: 1
         replicationFactor:
+      - name: DI_INVENTORY_AUTHORITY_UPDATED
+        numPartitions: 1
+        replicationFactor:
+      - name: DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING
+        numPartitions: 1
+        replicationFactor:
+      # following topics are used to produce DI events for DataImportEventListener and check published events in tests
+      - name: DI_SRS_MARC_AUTHORITY_RECORD_CREATED
+        numPartitions: 1
+        replicationFactor:
+      - name: DI_SRS_MARC_AUTHORITY_RECORD_MODIFIED_READY_FOR_POST_PROCESSING
+        numPartitions: 1
+        replicationFactor:
+      - name: DI_SRS_MARC_AUTHORITY_RECORD_DELETED
+        numPartitions: 1
+        replicationFactor:
+      - name: DI_ERROR
+        numPartitions: 1
+        replicationFactor:
+      - name: DI_COMPLETED
+        numPartitions: 1
+        replicationFactor:
     listener:
       authority:
         concurrency: 1
@@ -74,6 +96,10 @@ folio:
         topic-pattern: (${folio.environment}\.)(.*\.)specification-storage\.specification\.updated
         group-id: ${folio.environment}-mod-entities-specification-storage-group
         auto-offset-reset: EARLIEST
+      data-import:
+        concurrency: 1
+        topic-pattern: (${folio.environment}\.)[A-Za-z0-9-]+\.\w+\.DI_SRS_MARC_AUTHORITY_RECORD_(CREATED|MODIFIED_READY_FOR_POST_PROCESSING|DELETED|NOT_MATCHED)
+        group-id: ${folio.environment}-mod-entities-links-data-import-group
   retry:
     enabled: true
   jpa:

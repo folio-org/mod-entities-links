@@ -21,7 +21,7 @@ spring:
       minimumIdle: ${DB_MINIMUM_IDLE:10}
       initializationFailTimeout: ${DB_INITIALIZATION_FAIL_TIMEOUT:30000}
       leakDetectionThreshold: ${DB_LEAK_DETECTION_THRESHOLD:60000}
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:okapi_modules}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:modules}
     password: ${DB_PASSWORD:folio_admin}
     username: ${DB_USERNAME:folio_admin}
   liquibase:

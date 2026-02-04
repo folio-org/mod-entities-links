@@ -22,6 +22,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jdbc.test.autoconfigure.JdbcTest;
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.support.NoOpCacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -31,6 +36,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 @EnablePostgres
 @AutoConfigureJson
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(AuthoritySourceFileJdbcRepositoryIT.TestCacheConfig.class)
 class AuthoritySourceFileJdbcRepositoryIT {
 
   private @MockitoSpyBean JdbcTemplate jdbcTemplate;
@@ -134,5 +140,13 @@ class AuthoritySourceFileJdbcRepositoryIT {
     entity.setCreatedDate(Timestamp.from(Instant.now()));
     entity.setUpdatedDate(Timestamp.from(Instant.now()));
     return entity;
+  }
+
+  @TestConfiguration
+  static class TestCacheConfig {
+    @Bean
+    public CacheManager cacheManager() {
+      return new NoOpCacheManager();
+    }
   }
 }

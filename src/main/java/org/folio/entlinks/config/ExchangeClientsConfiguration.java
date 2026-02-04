@@ -48,5 +48,4 @@ public class ExchangeClientsConfiguration {
   public UsersClient mainUsersClient(HttpServiceProxyFactory factory) {
     return factory.createClient(UsersClient.class);
   }
-
 }

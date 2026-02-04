@@ -46,10 +46,10 @@ class MappingRulesServiceTest {
 
     var actual = service.getFieldTargetsMappingRelations();
 
-    assertThat(actual).isPresent();
-    assertThat(actual.get())
-      .hasSize(2)
-      .contains(entry("100", List.of("a1", "a2")), entry("101", List.of("a3")));
+    assertNotNull(actual);
+    assertThat(actual)
+        .hasSize(2)
+        .contains(entry("100", List.of("a1", "a2")), entry("101", List.of("a3")));
   }
 
   @Test
@@ -57,8 +57,8 @@ class MappingRulesServiceTest {
     var cause = new IllegalArgumentException("test");
     when(client.fetchAuthorityMappingRules()).thenThrow(cause);
 
-    var actual = service.getFieldTargetsMappingRelations();
-    assertThat(actual).isEmpty();
+    var exception = assertThrows(FolioIntegrationException.class, () -> service.getFieldTargetsMappingRelations());
+    assertEquals("Failed to fetch authority mapping rules", exception.getMessage());
   }
 
   @Test

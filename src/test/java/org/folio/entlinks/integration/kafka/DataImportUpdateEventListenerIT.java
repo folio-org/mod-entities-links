@@ -29,7 +29,6 @@ import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.assertj.core.api.BDDSoftAssertions;
 import org.awaitility.Durations;
-import org.folio.entlinks.config.JpaConfig;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.spring.testing.extension.DatabaseCleanup;
@@ -44,11 +43,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-import org.springframework.context.annotation.Import;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 @IntegrationTest
-@Import(JpaConfig.class)
 @DatabaseCleanup(tables = {
   DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
   DatabaseHelper.AUTHORITY_TABLE,

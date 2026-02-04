@@ -53,7 +53,7 @@ public class InstanceAuthorityStatsEventListener {
       .forEach(dataStatService::updateForReports);
   }
 
-  private void logFailedEvent(LinkUpdateReport event, Exception e) {
+  private void logFailedEvent(LinkUpdateReport event, Throwable e) {
     if (event == null) {
       log.warn("Failed to process stats event [event: null]", e);
       return;

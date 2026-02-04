@@ -76,7 +76,7 @@ public class AuthorityEventListener {
     });
   }
 
-  private void logFailedEvent(AuthorityDomainEvent event, Exception e) {
+  private void logFailedEvent(AuthorityDomainEvent event, Throwable e) {
     if (event == null) {
       log.warn("Failed to process authority event [event: null]", e);
       return;

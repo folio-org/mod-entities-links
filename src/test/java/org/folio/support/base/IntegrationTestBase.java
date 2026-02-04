@@ -11,8 +11,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
+import static org.folio.spring.integration.XOkapiHeaders.TOKEN;
 import static org.folio.spring.integration.XOkapiHeaders.URL;
 import static org.folio.support.JsonTestUtils.asJson;
+import static org.folio.support.base.TestConstants.FOLIO_TENANT_ID;
+import static org.folio.support.base.TestConstants.JOB_EXECUTION_ID;
+import static org.folio.support.base.TestConstants.RECORD_ID;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -28,7 +32,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.Arrays;
@@ -75,6 +83,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -85,12 +94,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -103,9 +112,10 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
-@Import(IntegrationTestBase.KafkaTemplateTestConfiguration.class)
-public class IntegrationTestBase {
+@Import({
+  IntegrationTestBase.KafkaTemplateTestConfiguration.class,
+  IntegrationTestBase.TestConvertersConfig.class})
+public abstract class IntegrationTestBase {
 
   protected static final String DOMAIN_EVENT_HEADER_KEY = "domain-event-type";
   protected static final List<String> DOMAIN_EVENT_HEADER_KEYS =
@@ -184,6 +194,18 @@ public class IntegrationTestBase {
     httpHeaders.add(URL, okapi.getOkapiUrl());
 
     return httpHeaders;
+  }
+
+  public Map<String, String> geKafkaHeaders(String recordId) {
+    return Map.of(
+        FOLIO_TENANT_ID, TENANT_ID,
+        TENANT, TENANT_ID,
+        TOKEN, UUID.randomUUID().toString(),
+        URL, okapi.wireMockServer().baseUrl(),
+        USER_ID, USER_ID,
+        RECORD_ID, recordId,
+        JOB_EXECUTION_ID, UUID.randomUUID().toString()
+    );
   }
 
   protected static Map<String, Collection<String>> okapiHeaders() {
@@ -474,6 +496,32 @@ public class IntegrationTestBase {
 
     static LinkMatcher linkMatch(InstanceLinkDto expectedLink) {
       return new LinkMatcher(expectedLink);
+    }
+  }
+
+  @TestConfiguration
+  public static class TestConvertersConfig {
+
+    @Bean
+    public StringHttpMessageConverter stringHttpMessageConverter() {
+      return new StringHttpMessageConverter();
+    }
+
+    @Bean
+    public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
+      ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.registerModule(new JavaTimeModule());
+      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+      objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+      objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+      objectMapper.disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES);
+      objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+      return new MappingJackson2HttpMessageConverter(objectMapper);
+    }
+
+    @Bean
+    public HttpMessageConverters messageConverters(StringHttpMessageConverter stringHttpMessageConverter) {
+      return new HttpMessageConverters(stringHttpMessageConverter, mappingJackson2HttpMessageConverter());
     }
   }
 }

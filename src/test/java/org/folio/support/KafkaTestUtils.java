@@ -55,10 +55,8 @@ public class KafkaTestUtils {
 
   private static <T> KafkaMessageListenerContainer<String, T> setupTestConsumer(
       BlockingQueue<ConsumerRecord<String, T>> queue,
-      KafkaProperties properties,
-      Class<T> eventClass,
-      String... topicNames) {
-
+      KafkaProperties properties, Class<T> eventClass,
+      String... topicName) {
     var deserializer = new JsonDeserializer<>(eventClass, false);
     properties.getConsumer().setGroupId("test-group");
     Map<String, Object> config = new HashMap<>(properties.buildConsumerProperties(null));
@@ -67,7 +65,7 @@ public class KafkaTestUtils {
 
     var consumer = new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
 
-    var containerProperties = new ContainerProperties(topicNames);
+    var containerProperties = new ContainerProperties(topicName);
     var container = new KafkaMessageListenerContainer<>(consumer, containerProperties);
     container.setupMessageListener((MessageListener<String, T>) queue::add);
     container.start();

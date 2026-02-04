@@ -16,9 +16,9 @@
           "updatedByUserId": "9eb67301-6f6e-468f-9b1a-6134dc39a684"
         },
         "userInfo": {
-          "lastName": "folio",
-          "userName": "folio",
-          "firstName": "admin"
+          "lastName": "Doe",
+          "userName": "mod-entities-links",
+          "firstName": "John"
         },
         "description": "",
         "childProfiles": [],
@@ -72,8 +72,8 @@
       "JOB_PROFILE_SNAPSHOT_ID": "1978fc93-85a2-4cb0-a35e-51700aeea377",
       "X-Okapi-Permissions": "[\"orders.acquisitions-units-assignments.manage\",\"orders.acquisitions-units-assignments.assign\",\"orders.item.reopen\",\"invoices.acquisitions-units-assignments.assign\",\"orders.item.approve\",\"orders.item.unopen\"]",
       "chunkId": "d7e7dd2d-c322-46b8-a2b7-897fa86406b3",
-      "userId": "49699120-241e-458d-aae3-3b047bb8295b",
+      "userId": "38d3a441-c100-5e8d-bd12-71bde492b723",
       "POST_PROCESSING_RESULT_EVENT": "DI_SRS_MARC_AUTHORITY_RECORD_UPDATED"
     },
-    "userId": "49699120-241e-458d-aae3-3b047bb8295b"
+    "userId": "38d3a441-c100-5e8d-bd12-71bde492b723"
 }

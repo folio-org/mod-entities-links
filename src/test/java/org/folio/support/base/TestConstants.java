@@ -49,6 +49,13 @@ public class TestConstants {
   public static final String DI_CREATED_TYPE = "DI_SRS_MARC_AUTHORITY_RECORD_CREATED";
   public static final String DI_UPDATED_TYPE = "DI_INVENTORY_AUTHORITY_UPDATED";
   public static final String DI_DELETED_TYPE = "DI_SRS_MARC_AUTHORITY_RECORD_DELETED";
+  public static final String FOLIO_TENANT_ID = "folio.tenantId";
+  public static final String RECORD_ID = "recordId";
+  public static final String JOB_EXECUTION_ID = "jobExecutionId";
+  public static final String PATH = "classpath:di-authority/";
+  public static final String DI_CREATE_AUTHORITY_PATH = PATH + "create.json";
+  public static final String DI_UPDATE_AUTHORITY_PATH = PATH + "update.json";
+  public static final String DI_DELETE_AUTHORITY_PATH = PATH + "delete.json";
   public static final String TEST_STRING = "test, ";
 
   private static final String INSTANCE_LINKS_ENDPOINT_PATH = "/links/instances/{id}";

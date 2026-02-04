@@ -78,11 +78,11 @@
     "JOB_PROFILE_SNAPSHOT_ID": "df6f7fe8-b62a-4de4-bb28-9d36d059f8bb",
     "X-Okapi-Permissions": "[\\\"orders.item.reopen\\\",\\\"orders.acquisitions-units-assignments.assign\\\",\\\"invoices.acquisitions-units-assignments.assign\\\",\\\"orders.item.unopen\\\",\\\"orders.item.approve\\\",\\\"orders.acquisitions-units-assignments.manage\\\"]",
     "x-okapi-request-id": "096758/data-import",
-    "x-okapi-user-id": "480f7618-2998-4d49-9cbb-237ebdccb6cd",
+    "x-okapi-user-id": "38d3a441-c100-5e8d-bd12-71bde492b723",
     "AUTHORITY_RECORD_ID": "8e3745e6-2d48-4f22-825e-72f3338bfa25",
     "chunkId": "5cf23296-3939-4283-9283-cd257f7b93f7",
-    "userId": "480f7618-2998-4d49-9cbb-237ebdccb6cd",
+    "userId": "38d3a441-c100-5e8d-bd12-71bde492b723",
     "POST_PROCESSING_RESULT_EVENT": "DI_SRS_MARC_AUTHORITY_RECORD_DELETED"
   },
-  "userId": "480f7618-2998-4d49-9cbb-237ebdccb6cd"
+  "userId": "38d3a441-c100-5e8d-bd12-71bde492b723"
 }

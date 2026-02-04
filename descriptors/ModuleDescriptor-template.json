@@ -47,6 +47,10 @@
     {
       "id": "mapping-rules-provider",
       "version": "2.0"
+    },
+    {
+      "id": "mapping-metadata-provider",
+      "version": "1.1"
     }
   ],
   "provides": [
@@ -752,6 +756,7 @@
         "inventory-storage.instances.item.put",
         "mapping-metadata.type.item.get",
         "mapping-rules.get",
+        "mapping-metadata.item.get",
         "source-storage.source-records.item.get",
         "users.collection.get",
         "user-tenants.collection.get",

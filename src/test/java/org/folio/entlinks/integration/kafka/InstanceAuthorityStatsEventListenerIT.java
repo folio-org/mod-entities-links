@@ -76,6 +76,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
 
   @AfterEach
   void tearDown() {
+    consumerRecords.clear();
     container.stop();
   }
 

@@ -83,14 +83,14 @@ public class InstanceAuthorityStatServiceDelegate {
 
     var user = userResultList.getResult()
       .stream()
-      .filter(u -> UUID.fromString(u.getId()).equals(startedByUserId))
+      .filter(u -> UUID.fromString(u.id()).equals(startedByUserId))
       .findFirst().orElse(null);
     if (user == null) {
       return metadata;
     }
 
-    metadata.setStartedByUserFirstName(user.getPersonal().firstName());
-    metadata.setStartedByUserLastName(user.getPersonal().lastName());
+    metadata.setStartedByUserFirstName(user.personal().firstName());
+    metadata.setStartedByUserLastName(user.personal().lastName());
     return metadata;
   }
 

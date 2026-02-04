@@ -65,10 +65,6 @@ spring:
   sql:
     init:
       continue-on-error: true
-  cloud:
-    openfeign:
-      okhttp:
-        enabled: true
   docker:
     compose:
       enabled: true
@@ -83,6 +79,8 @@ folio:
     password: ${SYSTEM_USER_PASSWORD:mod-entities-links}
     lastname: Automated linking update
     permissionsFilePath: permissions/mod-entities-links-permissions.csv
+  exchange:
+    enabled: true
   kafka:
     topics:
       - name: authority.authority-source-file
@@ -144,7 +142,7 @@ folio:
   logging:
     request:
       enabled: true
-    feign:
+    exchange:
       enabled: true
 
 management:

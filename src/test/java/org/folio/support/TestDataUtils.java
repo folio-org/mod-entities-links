@@ -217,21 +217,10 @@ public class TestDataUtils {
 
   public static ResultList<UsersClient.User> usersList(List<UUID> userIds) {
     return ResultList.of(2, List.of(
-
-      UsersClient.User.builder()
-        .id(userIds.get(0).toString())
-        .username("john_doe")
-        .type("user")
-        .active(true)
-        .personal(new UsersClient.User.Personal("John", "Doe"))
-        .build(),
-      UsersClient.User.builder()
-        .id(userIds.get(1).toString())
-        .username("quick_fox")
-        .type("user1")
-        .active(true)
-        .personal(new UsersClient.User.Personal("Quick", "Brown"))
-        .build()
+      new UsersClient.User(userIds.get(0).toString(), "john_doe", "user", true, null,
+        new UsersClient.User.Personal("John", "Doe"), emptyMap()),
+      new UsersClient.User(userIds.get(1).toString(), "quick_fox", "user1", true, null,
+        new UsersClient.User.Personal("Quick", "Brown"), Collections.emptyMap())
     ));
   }
 
@@ -251,8 +240,8 @@ public class TestDataUtils {
     dto.setNaturalIdOld(dataStat.getAuthorityNaturalIdOld());
     AuthorityControlMetadata metadata = new AuthorityControlMetadata();
     metadata.setStartedByUserId(dataStat.getStartedByUserId());
-    metadata.setStartedByUserFirstName(user.getPersonal().firstName());
-    metadata.setStartedByUserLastName(user.getPersonal().lastName());
+    metadata.setStartedByUserFirstName(user.personal().firstName());
+    metadata.setStartedByUserLastName(user.personal().lastName());
     metadata.setStartedAt(fromTimestamp(dataStat.getStartedAt()));
     metadata.setCompletedAt(fromTimestamp(dataStat.getCompletedAt()));
     dto.setMetadata(metadata);

@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -211,7 +210,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .baseUrl("http://url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority Source File with the given 'id' already exists.")))
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
 
@@ -228,7 +227,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .baseUrl("http://url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority source file with the given 'name' already exists.")))
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
 
@@ -245,7 +244,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .baseUrl(createdEntities.getFirst().getFullBaseUrl()).type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority source file with the given 'baseUrl' already exists.")))
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
 
@@ -261,7 +260,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var dto = new AuthoritySourceFilePostDto("new name", "co").baseUrl("http://new/url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority source file with the given 'code' already exists.")))
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
 
@@ -277,7 +276,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     for (var code : List.of("123", "0x123", "abc ", "$")) {
       dto.setCode(code);
       tryPost(authoritySourceFilesEndpoint(), dto)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isUnprocessableContent())
         .andExpect(errorMessageMatch(
           containsString("Authority Source File prefix should be non-empty sequence of letters")))
         .andExpect(exceptionMatch(RequestBodyValidationException.class));
@@ -287,7 +286,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     for (var code : List.of("", "abcdefghijklmnopqrstuvwxyz")) {
       dto.setCode(code);
       tryPost(authoritySourceFilesEndpoint(), dto)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isUnprocessableContent())
         .andExpect(errorMessageMatch(is(
           "size must be between 1 and 25")))
         .andExpect(exceptionMatch(MethodArgumentNotValidException.class));
@@ -303,7 +302,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var dto = new AuthoritySourceFilePostDto(null, "code").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(exceptionMatch(MethodArgumentNotValidException.class))
       .andExpect(jsonPath("$.errors.[0].parameters[0].key", is("name")))
       .andExpect(jsonPath("$.errors.[0].parameters[0].value", is("null")))
@@ -502,7 +501,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     createAuthoritySourceFile(entity);
 
     tryDelete(authoritySourceFilesEndpoint(entity.getId()))
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(exceptionMatch(RequestBodyValidationException.class))
       .andExpect(errorMessageMatch(containsString(
         "Cannot delete Authority source file with source 'folio'")));
@@ -546,7 +545,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       assertEquals(1, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, TENANT_ID)));
 
     tryDelete(authoritySourceFilesEndpoint(authoritySrcFile.getId()))
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(exceptionMatch(DataIntegrityViolationException.class))
       .andExpect(errorMessageMatch(is("Cannot complete operation on the entity due to it's relation with"
                                       + " Authority Archive/Authority.")));
@@ -614,7 +613,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
 
     // patch source file
     tryPatch(authoritySourceFilesEndpoint(id), patchDto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(exceptionMatch(RequestBodyValidationException.class))
       .andExpect(errorMessageMatch(containsString(
         "Unable to patch. Authority source file source is FOLIO or it has authority references")));
@@ -652,7 +651,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
 
     // delete source file
     tryDelete(authoritySourceFilesEndpoint(id))
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(exceptionMatch(RequestBodyValidationException.class))
       .andExpect(errorMessageMatch(containsString(
         "Unable to delete. Authority source file has referenced authorities")));
@@ -730,8 +729,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     return jsonPath("$.errors.[0].message", errorMessageMatcher);
   }
 
-  private AuthorityDto requestAuthority(UUID id, String tenantId)
-    throws UnsupportedEncodingException, JsonProcessingException {
+  private AuthorityDto requestAuthority(UUID id, String tenantId) throws UnsupportedEncodingException {
     var response = doGet(authorityEndpoint(id), tenantHeaders(tenantId)).andReturn()
       .getResponse()
       .getContentAsString();
@@ -739,7 +737,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   }
 
   private AuthoritySourceFileDto requestAuthoritySourceFile(UUID id, String tenantId)
-    throws UnsupportedEncodingException, JsonProcessingException {
+    throws UnsupportedEncodingException {
     var response = doGet(authoritySourceFilesEndpoint(id), tenantHeaders(tenantId)).andReturn()
       .getResponse()
       .getContentAsString();

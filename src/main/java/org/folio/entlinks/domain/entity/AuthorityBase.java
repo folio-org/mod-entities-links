@@ -17,7 +17,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.folio.entlinks.utils.ConsortiumUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -111,7 +111,7 @@ public class AuthorityBase extends MetadataEntity {
   }
 
   public void makeAsConsortiumShadowCopy() {
-    this.setSource(StringUtils.prependIfMissing(this.getSource(), CONSORTIUM_SOURCE_PREFIX));
+    this.setSource(Strings.CS.prependIfMissing(this.getSource(), CONSORTIUM_SOURCE_PREFIX));
   }
 
   public boolean isConsortiumShadowCopy() {

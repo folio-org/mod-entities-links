@@ -9,8 +9,6 @@ import static org.folio.support.base.TestConstants.TEST_ID;
 import static org.folio.support.base.TestConstants.TEST_PROPERTY_VALUE;
 import static org.folio.support.base.TestConstants.TEST_VERSION;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import org.folio.entlinks.domain.dto.AuthorityDto;
@@ -27,6 +25,7 @@ import org.folio.spring.testing.type.UnitTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
+import tools.jackson.databind.ObjectMapper;
 
 @UnitTest
 class AuthorityMapperTest {
@@ -238,12 +237,11 @@ class AuthorityMapperTest {
   }
 
   @Test
-  void serializedDtoShouldNotContainEmptyArraysForExtendedFields() throws JsonProcessingException {
+  void serializedDtoShouldNotContainEmptyArraysForExtendedFields() {
     var objectMapper = new ObjectMapper();
     var serializedDto = objectMapper.writeValueAsString(new AuthorityDto());
     var jsonNode = objectMapper.readTree(serializedDto);
-    assertThat(jsonNode.fieldNames())
-      .toIterable()
+    assertThat(jsonNode.propertyNames())
       .contains("saftGenreTerm")
       .doesNotContain("saftBroaderTerm", "saftNarrowerTerm", "saftEarlierHeading", "saftLaterHeading",
         "saftGenreTermTrunc", "saftGeographicNameTrunc", "saftTopicalTermTrunc", "saftUniformTitleTrunc",

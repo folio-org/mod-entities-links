@@ -1,6 +1,7 @@
 ## v5.0.0 YYYY-mm-DD
 ### Breaking changes
 * Use internal module configuration instead of shared configuration from mod-settings ([MODELINKS-376](https://folio-org.atlassian.net/browse/MODELINKS-376))
+* Migrate to Spring Boot 4.0.x ([MODELINKS-349](https://folio-org.atlassian.net/browse/MODELINKS-349))
 
 ### New APIs versions
 * Provides `instance-authority-links-statistics v2.1`

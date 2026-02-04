@@ -79,13 +79,13 @@ class LinksSuggestionsServiceDelegateTest {
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
       .thenReturn(fetchRequest);
     var strippedParsedRecords = new StrippedParsedRecordCollection(emptyList(), 1);
-    when(sourceStorageClient.fetchParsedRecordsInBatch(fetchRequest)).thenReturn(strippedParsedRecords);
+    when(sourceStorageClient.fetchParsedRecords(fetchRequest)).thenReturn(strippedParsedRecords);
     when(executor.executeAsCentralTenant(any())).thenReturn(strippedParsedRecords);
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
 
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
-    verify(sourceStorageClient).fetchParsedRecordsInBatch(fetchRequest);
+    verify(sourceStorageClient).fetchParsedRecords(fetchRequest);
     verify(executor).executeAsCentralTenant(any());
     verify(suggestionService)
         .fillLinkDetailsWithSuggestedAuthorities(any(),
@@ -105,7 +105,7 @@ class LinksSuggestionsServiceDelegateTest {
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
       .thenReturn(fetchRequest);
-    when(sourceStorageClient.fetchParsedRecordsInBatch(fetchRequest)).thenReturn(
+    when(sourceStorageClient.fetchParsedRecords(fetchRequest)).thenReturn(
       new StrippedParsedRecordCollection(emptyList(), 1));
     var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
@@ -113,7 +113,7 @@ class LinksSuggestionsServiceDelegateTest {
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(authorityRepository).findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID));
-    verify(sourceStorageClient).fetchParsedRecordsInBatch(fetchRequest);
+    verify(sourceStorageClient).fetchParsedRecords(fetchRequest);
     verify(suggestionService)
       .fillLinkDetailsWithSuggestedAuthorities(any(),
           eq(List.of()), eq(Map.of("100", rules)), eq('0'), eq(false));
@@ -133,7 +133,7 @@ class LinksSuggestionsServiceDelegateTest {
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
       .thenReturn(fetchRequest);
-    when(sourceStorageClient.fetchParsedRecordsInBatch(fetchRequest)).thenReturn(
+    when(sourceStorageClient.fetchParsedRecords(fetchRequest)).thenReturn(
       new StrippedParsedRecordCollection(emptyList(), 1));
 
     var records = List.of(getRecord("100", Map.of("0", BASE_URL + NATURAL_ID)));
@@ -141,7 +141,7 @@ class LinksSuggestionsServiceDelegateTest {
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(authorityRepository).findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID));
-    verify(sourceStorageClient).fetchParsedRecordsInBatch(fetchRequest);
+    verify(sourceStorageClient).fetchParsedRecords(fetchRequest);
     verifyNoInteractions(executor);
   }
 
@@ -157,7 +157,7 @@ class LinksSuggestionsServiceDelegateTest {
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(authorityRepository).findByNaturalIdInAndDeletedFalse(emptySet());
-    verify(sourceStorageClient, times(0)).fetchParsedRecordsInBatch(any());
+    verify(sourceStorageClient, times(0)).fetchParsedRecords(any());
   }
 
   @Test
@@ -171,7 +171,7 @@ class LinksSuggestionsServiceDelegateTest {
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(authorityRepository).findByNaturalIdInAndDeletedFalse(emptySet());
-    verify(sourceStorageClient, times(0)).fetchParsedRecordsInBatch(any());
+    verify(sourceStorageClient, times(0)).fetchParsedRecords(any());
   }
 
   @Test

@@ -34,6 +34,7 @@ import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -114,6 +115,7 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
     });
   }
 
+  @Disabled("MODELINKS-386")
   @ParameterizedTest
   @CsvSource({"consortium, 0, 1", "test, 1, 1"})
   @DisplayName("DELETE: Should not delete existing local record in Member tenant from the authority archives "

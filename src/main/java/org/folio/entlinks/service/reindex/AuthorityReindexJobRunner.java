@@ -19,9 +19,6 @@ import static org.folio.entlinks.domain.entity.MetadataEntity.UPDATED_DATE_COLUM
 import static org.folio.entlinks.utils.ObjectUtils.transformIfNotNull;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -45,6 +42,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @Log4j2
 @Component
@@ -138,8 +137,7 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
   }
 
   @SuppressWarnings("java:S1168")
-  private <T> List<T> readJsonArray(ResultSet rs, String column, TypeReference<T[]> typeRef)
-    throws SQLException, JsonProcessingException {
+  private <T> List<T> readJsonArray(ResultSet rs, String column, TypeReference<T[]> typeRef) throws SQLException {
     var array = rs.getArray(column);
     if (array == null) {
       return null;

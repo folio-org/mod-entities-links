@@ -12,8 +12,7 @@ import org.folio.rspec.domain.dto.Scope;
 import org.folio.rspec.domain.dto.SubfieldDto;
 import org.folio.rspec.domain.dto.SubfieldUpdateRequestEvent;
 import org.folio.rspec.domain.dto.UpdateRequestEvent;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -27,7 +26,7 @@ public class MarcSpecificationUpdateService {
   private final InstanceAuthorityLinkingRulesService linkingRulesService;
   private final EventProducer<UpdateRequestEvent> eventProducer;
 
-  @Retryable(maxAttempts = 10, backoff = @Backoff(delay = 5000))
+  @Retryable(maxRetries = 10, delay = 5000)
   public void sendSpecificationRequests() {
     log.info("Sending specification update requests");
     var requestEvents = linkingRulesService.getLinkingRules().stream()

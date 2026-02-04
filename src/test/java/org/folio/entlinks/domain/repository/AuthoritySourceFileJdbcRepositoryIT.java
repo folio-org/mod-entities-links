@@ -2,6 +2,7 @@ package org.folio.entlinks.domain.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.support.base.TestConstants.TENANT_ID;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
@@ -18,13 +19,15 @@ import org.folio.spring.testing.extension.EnablePostgres;
 import org.folio.spring.testing.type.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.jdbc.test.autoconfigure.JdbcTest;
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.support.NoOpCacheManager;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
@@ -33,15 +36,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 @EnablePostgres
 @AutoConfigureJson
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ContextConfiguration(classes = AuthoritySourceFileJdbcRepositoryIT.TestConfig.class)
+@Import(AuthoritySourceFileJdbcRepositoryIT.TestCacheConfig.class)
 class AuthoritySourceFileJdbcRepositoryIT {
 
-  private @MockitoBean FolioExecutionContext context;
   private @MockitoSpyBean JdbcTemplate jdbcTemplate;
-  private @MockitoSpyBean AuthoritySourceFileJdbcRepository repository;
+  private @MockitoBean FolioExecutionContext context;
+  private AuthoritySourceFileJdbcRepository repository;
 
   @BeforeEach
   void setUp() {
+    repository = spy(new AuthoritySourceFileJdbcRepository(jdbcTemplate, context));
     when(context.getFolioModuleMetadata()).thenReturn(new FolioModuleMetadata() {
       @Override
       public String getModuleName() {
@@ -138,13 +142,11 @@ class AuthoritySourceFileJdbcRepositoryIT {
     return entity;
   }
 
-  @Configuration(proxyBeanMethods = false)
-  static class TestConfig {
-
+  @TestConfiguration
+  static class TestCacheConfig {
     @Bean
-    AuthoritySourceFileJdbcRepository authoritySourceFileJdbcRepository(JdbcTemplate jdbcTemplate,
-                                                                        FolioExecutionContext context) {
-      return new AuthoritySourceFileJdbcRepository(jdbcTemplate, context);
+    public CacheManager cacheManager() {
+      return new NoOpCacheManager();
     }
   }
 }

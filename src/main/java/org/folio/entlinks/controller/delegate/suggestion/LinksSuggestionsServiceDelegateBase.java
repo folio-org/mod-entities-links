@@ -104,7 +104,7 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
       AuthorityFieldConstants.MIN_FIELD,
       AuthorityFieldConstants.MAX_FIELD);
 
-    return sourceStorageClient.fetchParsedRecordsInBatch(authorityFetchRequest);
+    return sourceStorageClient.fetchParsedRecords(authorityFetchRequest);
   }
 
   private Set<T> extractIdsOfLinkableFields(List<SourceParsedContent> contentCollection,

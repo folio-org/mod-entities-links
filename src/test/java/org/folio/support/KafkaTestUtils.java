@@ -13,12 +13,12 @@ import lombok.experimental.UtilityClass;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 
 @UtilityClass
 public class KafkaTestUtils {
@@ -59,7 +59,7 @@ public class KafkaTestUtils {
       String... topicName) {
     var deserializer = new JsonDeserializer<>(eventClass, false);
     properties.getConsumer().setGroupId("test-group");
-    Map<String, Object> config = new HashMap<>(properties.buildConsumerProperties(null));
+    Map<String, Object> config = new HashMap<>(properties.buildConsumerProperties());
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
 

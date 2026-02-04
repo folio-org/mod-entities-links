@@ -26,10 +26,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-@EnableRetry
 @IntegrationTest
 @DatabaseCleanup(tables = {
   DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE,

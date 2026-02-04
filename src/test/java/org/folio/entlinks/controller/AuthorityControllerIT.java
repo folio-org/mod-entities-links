@@ -39,7 +39,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -86,7 +85,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.MediaType;
@@ -94,6 +93,7 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import tools.jackson.core.JacksonException;
 
 @IntegrationTest
 @DatabaseCleanup(tables = {
@@ -476,7 +476,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     dto.setSourceFileId(sourceFileId);
 
     tryPost(authorityEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority Source File with the given 'id' does not exists.")))
       .andExpect(exceptionMatch(InvalidDataAccessApiUsageException.class));
   }
@@ -494,7 +494,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     getConsumedEvent();
 
     tryPost(authorityEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is(DUPLICATE_AUTHORITY_ID.getMessage())))
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
   }
@@ -654,7 +654,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("DELETE: Should delete existing authority archives by retention in settings")
   void expireAuthorityArchives_positive_shouldExpireExistingArchives()
-    throws JsonProcessingException, UnsupportedEncodingException {
+    throws JacksonException, UnsupportedEncodingException {
     var body = new SettingUpdateRequest().value(1);
     doPatch(authorityConfigEndpoint(ARCHIVES_EXPIRATION_PERIOD), body, tenantHeaders(TENANT_ID));
 
@@ -716,13 +716,12 @@ class AuthorityControllerIT extends IntegrationTestBase {
     assertEquals(dto.getSourceFileId(), expected.getSourceFileId());
 
     tryDelete(authoritySourceFilesEndpoint(expected.getSourceFileId()))
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Unable to delete. Authority source file has referenced authorities")))
       .andExpect(exceptionMatch(RequestBodyValidationException.class));
   }
 
-  private void verifyExpiredArchivesDeleted(Authority authority1, String content1, String content2)
-    throws JsonProcessingException {
+  private void verifyExpiredArchivesDeleted(Authority authority1, String content1, String content2) {
     doPost(authorityExpireEndpoint(), null);
 
     getConsumedEvent();

@@ -29,6 +29,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
+import org.folio.entlinks.client.UsersClient;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
@@ -67,8 +68,6 @@ import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
-import org.folio.spring.client.UsersClient;
-import org.folio.spring.model.ResultList;
 
 @UtilityClass
 public class TestDataUtils {
@@ -237,23 +236,10 @@ public class TestDataUtils {
       .build();
   }
 
-  public static ResultList<UsersClient.User> usersList(List<UUID> userIds) {
-    return ResultList.of(2, List.of(
-
-      UsersClient.User.builder()
-        .id(userIds.get(0).toString())
-        .username("john_doe")
-        .type("user")
-        .active(true)
-        .personal(new UsersClient.User.Personal("John", "Doe"))
-        .build(),
-      UsersClient.User.builder()
-        .id(userIds.get(1).toString())
-        .username("quick_fox")
-        .type("user1")
-        .active(true)
-        .personal(new UsersClient.User.Personal("Quick", "Brown"))
-        .build()
+  public static UsersClient.UserCollection usersList(List<UUID> userIds) {
+    return new UsersClient.UserCollection(List.of(
+      new UsersClient.User(userIds.get(0).toString(), "john_doe", new UsersClient.Personal("John", "Doe")),
+      new UsersClient.User(userIds.get(1).toString(), "quick_fox", new UsersClient.Personal("Quick", "Brown"))
     ));
   }
 
@@ -273,8 +259,8 @@ public class TestDataUtils {
     dto.setNaturalIdOld(dataStat.getAuthorityNaturalIdOld());
     AuthorityControlMetadata metadata = new AuthorityControlMetadata();
     metadata.setStartedByUserId(dataStat.getStartedByUserId());
-    metadata.setStartedByUserFirstName(user.getPersonal().firstName());
-    metadata.setStartedByUserLastName(user.getPersonal().lastName());
+    metadata.setStartedByUserFirstName(user.personal().firstName());
+    metadata.setStartedByUserLastName(user.personal().lastName());
     metadata.setStartedAt(fromTimestamp(dataStat.getStartedAt()));
     metadata.setCompletedAt(fromTimestamp(dataStat.getCompletedAt()));
     dto.setMetadata(metadata);

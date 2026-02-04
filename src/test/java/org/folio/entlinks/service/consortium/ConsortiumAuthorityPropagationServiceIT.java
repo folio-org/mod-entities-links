@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -216,8 +215,7 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
       .personalName("Nikola Tesla");
   }
 
-  private AuthorityDto requestAuthority(String tenantId, UUID id)
-    throws UnsupportedEncodingException, JsonProcessingException {
+  private AuthorityDto requestAuthority(String tenantId, UUID id) throws UnsupportedEncodingException {
     var response = doGet(authorityEndpoint(id), tenantHeaders(tenantId)).andReturn()
       .getResponse()
       .getContentAsString();

@@ -14,7 +14,6 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +31,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.json.JsonCompareMode;
+import tools.jackson.core.type.TypeReference;
 
 @Log4j2
 @IntegrationTest
@@ -139,7 +139,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
   void patchLinkingRulesById_negative_requestBodyValidation() {
     var request = new LinkingRulePatchRequest().autoLinkingEnabled(false);
     tryPatch(linkingRulesEndpoint(MAX_VALUE), request)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
@@ -155,7 +155,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
       .authoritySubfields(Set.of("a", "b"));
 
     tryPatch(linkingRulesEndpoint(1), request)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
@@ -171,7 +171,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
       .authoritySubfields(Set.of("b", "c"));
 
     tryPatch(linkingRulesEndpoint(10), request)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
@@ -187,7 +187,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
       .authoritySubfields(Set.of("a", "9", "x")); // '9' is invalid as per SubfieldValidation
 
     tryPatch(linkingRulesEndpoint(10), request)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))

@@ -9,12 +9,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.retry.annotation.EnableRetry;
 
 @Log4j2
 @Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
-@EnableRetry
 public class JpaConfig {
 
   private static final UUID DEFAULT_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");

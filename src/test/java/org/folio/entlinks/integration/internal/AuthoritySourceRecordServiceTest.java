@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.entlinks.client.SourceStorageClient;
@@ -19,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.marc4j.marc.VariableField;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)

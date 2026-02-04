@@ -28,6 +28,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
+import org.folio.entlinks.client.UsersClient;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
@@ -64,8 +65,6 @@ import org.folio.entlinks.domain.entity.ReindexJobStatus;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEventType;
-import org.folio.spring.client.UsersClient;
-import org.folio.spring.model.ResultList;
 
 @UtilityClass
 public class TestDataUtils {
@@ -215,12 +214,10 @@ public class TestDataUtils {
       .build();
   }
 
-  public static ResultList<UsersClient.User> usersList(List<UUID> userIds) {
-    return ResultList.of(2, List.of(
-      new UsersClient.User(userIds.get(0).toString(), "john_doe", "user", true, null,
-        new UsersClient.User.Personal("John", "Doe"), emptyMap()),
-      new UsersClient.User(userIds.get(1).toString(), "quick_fox", "user1", true, null,
-        new UsersClient.User.Personal("Quick", "Brown"), Collections.emptyMap())
+  public static UsersClient.UserCollection usersList(List<UUID> userIds) {
+    return new UsersClient.UserCollection(List.of(
+      new UsersClient.User(userIds.get(0).toString(), "john_doe", new UsersClient.Personal("John", "Doe")),
+      new UsersClient.User(userIds.get(1).toString(), "quick_fox", new UsersClient.Personal("Quick", "Brown"))
     ));
   }
 

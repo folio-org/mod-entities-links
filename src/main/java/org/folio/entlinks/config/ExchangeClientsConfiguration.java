@@ -6,6 +6,7 @@ import org.folio.entlinks.client.MappingRulesClient;
 import org.folio.entlinks.client.SettingsClient;
 import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.client.UserTenantsClient;
+import org.folio.entlinks.client.UsersClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -42,4 +43,10 @@ public class ExchangeClientsConfiguration {
   public UserTenantsClient userTenantsClient(HttpServiceProxyFactory factory) {
     return factory.createClient(UserTenantsClient.class);
   }
+
+  @Bean
+  public UsersClient mainUsersClient(HttpServiceProxyFactory factory) {
+    return factory.createClient(UsersClient.class);
+  }
+
 }

@@ -21,7 +21,6 @@ public class BulkAuthorityS3Client {
   private final FolioS3Client s3Client;
 
   @Retryable(
-    includes = Exception.class,
     maxRetriesString = "${folio.remote-storage.retryCount}",
     delayString = "${folio.remote-storage.retryDelayMs}")
   public List<String> readFile(String remoteFileName) {
@@ -36,7 +35,6 @@ public class BulkAuthorityS3Client {
   }
 
   @Retryable(
-    includes = Exception.class,
     maxRetriesString = "${folio.remote-storage.retryCount}",
     delayString = "${folio.remote-storage.retryDelayMs}")
   public void uploadErrorFiles(AuthoritiesBulkContext bulkContext) {

@@ -1,6 +1,5 @@
 package org.folio.entlinks.service.dataloader;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,6 +14,7 @@ import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 @Log4j2
 @Service

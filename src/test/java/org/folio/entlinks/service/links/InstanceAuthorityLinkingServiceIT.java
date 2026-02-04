@@ -37,14 +37,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 @IntegrationTest
 @DatabaseCleanup(tables = {
   DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
   AUTHORITY_TABLE},
-  tenants = TENANT_ID)
+                 tenants = TENANT_ID)
 class InstanceAuthorityLinkingServiceIT extends IntegrationTestBase {
 
   private KafkaMessageListenerContainer<String, AuthorityDomainEvent> container;
@@ -64,7 +64,7 @@ class InstanceAuthorityLinkingServiceIT extends IntegrationTestBase {
   void setup(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(
-        authorityTopic(), consumerRecords, kafkaProperties, AuthorityDomainEvent.class);
+      authorityTopic(), consumerRecords, kafkaProperties, AuthorityDomainEvent.class);
     context = getFolioExecutionContext();
   }
 
@@ -98,7 +98,7 @@ class InstanceAuthorityLinkingServiceIT extends IntegrationTestBase {
     });
 
     awaitUntilAsserted(() ->
-        assertEquals(0, databaseHelper.queryAuthorityVersion(TENANT_ID, existedLinks.getFirst().getAuthorityId())));
+      assertEquals(0, databaseHelper.queryAuthorityVersion(TENANT_ID, existedLinks.getFirst().getAuthorityId())));
   }
 
   private FolioExecutionContext getFolioExecutionContext() {
@@ -117,18 +117,18 @@ class InstanceAuthorityLinkingServiceIT extends IntegrationTestBase {
 
   private InstanceLinkDtoCollection createLinkDtoCollection(UUID instanceId) {
     var links = IntStream.of(1)
-        .mapToObj(i -> TestDataUtils.Link.of(i, i, TestDataUtils.NATURAL_IDS[i]))
-        .toArray(TestDataUtils.Link[]::new);
+      .mapToObj(i -> TestDataUtils.Link.of(i, i, TestDataUtils.NATURAL_IDS[i]))
+      .toArray(TestDataUtils.Link[]::new);
     return linksDtoCollection(linksDto(instanceId, links));
   }
 
   private void createAuthority(InstanceLinkDto link) {
     var dto = new AuthorityDto()
-        .id(link.getAuthorityId())
-        .version(0)
-        .source("MARC")
-        .naturalId(link.getAuthorityNaturalId())
-        .personalName("Nikola Tesla1");
+      .id(link.getAuthorityId())
+      .version(0)
+      .source("MARC")
+      .naturalId(link.getAuthorityNaturalId())
+      .personalName("Nikola Tesla1");
     doPost(authorityEndpoint(), dto, tenantHeaders(TENANT_ID));
   }
 }

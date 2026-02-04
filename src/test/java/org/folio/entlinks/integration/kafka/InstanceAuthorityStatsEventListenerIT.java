@@ -19,7 +19,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -46,7 +45,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 @IntegrationTest
@@ -122,7 +121,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
     assertLinksUpdated(failCause);
   }
 
-  private void prepareData(UUID instanceId) throws JsonProcessingException, UnsupportedEncodingException {
+  private void prepareData(UUID instanceId) throws UnsupportedEncodingException {
     var link = Link.of(0, 1, TestDataUtils.NATURAL_IDS[0]);
     var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
@@ -144,16 +143,16 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
   private void assertLinksUpdated(String failCause) {
     var now = OffsetDateTime.now();
     awaitUntilAsserted(() ->
-        doGet(linksStatsInstanceEndpoint(LinkStatus.ERROR, now.minusDays(1), now))
-            .andExpect(jsonPath("$.stats", hasSize(1)))
-            .andExpect(jsonPath("$.stats[0].errorCause", is(failCause)))
+      doGet(linksStatsInstanceEndpoint(LinkStatus.ERROR, now.minusDays(1), now))
+        .andExpect(jsonPath("$.stats", hasSize(1)))
+        .andExpect(jsonPath("$.stats[0].errorCause", is(failCause)))
     );
 
     await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
-        doGet(authorityStatsEndpoint(LinkAction.UPDATE_NATURAL_ID, now.minusDays(1), now, 1))
-            .andExpect(jsonPath("$.stats", hasSize(1)))
-            .andExpect(jsonPath("$.stats[0].lbFailed", is(1)))
-            .andExpect(jsonPath("$.stats[0].lbUpdated", is(0)))
+      doGet(authorityStatsEndpoint(LinkAction.UPDATE_NATURAL_ID, now.minusDays(1), now, 1))
+        .andExpect(jsonPath("$.stats", hasSize(1)))
+        .andExpect(jsonPath("$.stats[0].lbFailed", is(1)))
+        .andExpect(jsonPath("$.stats[0].lbUpdated", is(0)))
     );
   }
 

@@ -62,7 +62,7 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
   @DisplayName("Get Collection: find no Authority Note Types")
   void getAuthorityNoteTypes_positive_noEntitiesFound() throws Exception {
     doGet(authorityNoteTypesEndpoint())
-        .andExpect(jsonPath("totalRecords", is(0)));
+      .andExpect(jsonPath("totalRecords", is(0)));
   }
 
   @Test
@@ -71,12 +71,12 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     var createdEntities = createAuthorityNoteTypes();
 
     doGet(authorityNoteTypesEndpoint())
-        .andExpect(jsonPath("totalRecords", is(createdEntities.size())))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata", notNullValue()))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdByUserId", is(USER_ID)))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedByUserId", is(USER_ID)));
+      .andExpect(jsonPath("totalRecords", is(createdEntities.size())))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata", notNullValue()))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdByUserId", is(USER_ID)))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedByUserId", is(USER_ID)));
   }
 
   @MethodSource("cqlQueryProvider")
@@ -86,15 +86,15 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     createAuthorityNoteTypes();
 
     doGet(authorityNoteTypesEndpoint() + "?query=({cql})", cqlQuery)
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("authorityNoteTypes[0].id", is(NOTE_TYPE_IDS[0].toString())))
-        .andExpect(jsonPath("authorityNoteTypes[0].source", is(NOTE_TYPE_SOURCES[0])))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdByUserId", is(USER_ID)))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedByUserId", is(USER_ID)))
-        .andExpect(jsonPath("authorityNoteTypes[1]").doesNotExist())
-        .andExpect(jsonPath("totalRecords").value(1));
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("authorityNoteTypes[0].id", is(NOTE_TYPE_IDS[0].toString())))
+      .andExpect(jsonPath("authorityNoteTypes[0].source", is(NOTE_TYPE_SOURCES[0])))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdByUserId", is(USER_ID)))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("authorityNoteTypes[1]").doesNotExist())
+      .andExpect(jsonPath("totalRecords").value(1));
   }
 
   @Test
@@ -106,14 +106,14 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     var limit = "1";
     var offset = "1";
     doGet(authorityNoteTypesEndpoint() + "?limit={l}&offset={o}&query={cql}", limit, offset, cqlQuery)
-        .andExpect(jsonPath("authorityNoteTypes[0].id", is(NOTE_TYPE_IDS[1].toString())))
-        .andExpect(jsonPath("authorityNoteTypes[0].name", is(NOTE_TYPE_NAMES[1])))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdByUserId", is(USER_ID)))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedByUserId", is(USER_ID)))
-        .andExpect(jsonPath("authorityNoteTypes[1]").doesNotExist())
-        .andExpect(jsonPath("totalRecords").value(noteTypes.size()));
+      .andExpect(jsonPath("authorityNoteTypes[0].id", is(NOTE_TYPE_IDS[1].toString())))
+      .andExpect(jsonPath("authorityNoteTypes[0].name", is(NOTE_TYPE_NAMES[1])))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdByUserId", is(USER_ID)))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("authorityNoteTypes[1]").doesNotExist())
+      .andExpect(jsonPath("totalRecords").value(noteTypes.size()));
   }
 
   @ParameterizedTest
@@ -129,12 +129,12 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
 
     var cqlQuery = "(cql.allRecords=1)sortby name/sort." + sortOrder;
     doGet(authorityNoteTypesEndpoint() + "?limit={l}&offset={o}&query={cql}", limit, offset, cqlQuery)
-        .andExpect(jsonPath("authorityNoteTypes[0].name", is(firstNoteTypeName)))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdByUserId", is(USER_ID)))
-        .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedByUserId", is(USER_ID)))
-        .andExpect(jsonPath("totalRecords").value(3));
+      .andExpect(jsonPath("authorityNoteTypes[0].name", is(firstNoteTypeName)))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdByUserId", is(USER_ID)))
+      .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("totalRecords").value(3));
   }
 
   // Tests for Get By ID
@@ -146,11 +146,11 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     createAuthorityNoteType(noteType);
 
     doGet(authorityNoteTypesEndpoint(noteType.getId()))
-        .andExpect(jsonPath("name", is(noteType.getName())))
-        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
-        .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)));
+      .andExpect(jsonPath("name", is(noteType.getName())))
+      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)));
   }
 
   @Test
@@ -158,19 +158,19 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
   void getById_negative_noAuthorityNoteTypeExistForGivenId() throws Exception {
 
     tryGet(authorityNoteTypesEndpoint(UUID.randomUUID()))
-        .andExpect(status().isNotFound())
-        .andExpect(exceptionMatch(AuthorityNoteTypeNotFoundException.class))
-        .andExpect(errorMessageMatch(containsString("was not found")));
+      .andExpect(status().isNotFound())
+      .andExpect(exceptionMatch(AuthorityNoteTypeNotFoundException.class))
+      .andExpect(errorMessageMatch(containsString("was not found")));
   }
 
   @Test
   @DisplayName("Get By ID: return 400 when id is invalid")
   void getById_negative_IdIsInvalid() throws Exception {
     tryGet(authorityNoteTypesEndpoint() + "/{id}", "invalid-uuid")
-        .andExpect(status().isBadRequest())
-        .andExpect(exceptionMatch(MethodArgumentTypeMismatchException.class))
-        .andExpect(errorMessageMatch(containsString(
-            "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'")));
+      .andExpect(status().isBadRequest())
+      .andExpect(exceptionMatch(MethodArgumentTypeMismatchException.class))
+      .andExpect(errorMessageMatch(containsString(
+        "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'")));
   }
 
   // Tests for POST
@@ -183,13 +183,13 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     var dto = new AuthorityNoteTypeDto("name", "source");
 
     tryPost(authorityNoteTypesEndpoint(), dto)
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("name", is(dto.getName())))
-        .andExpect(jsonPath("source", is(dto.getSource())))
-        .andExpect(jsonPath("metadata.createdDate").isNotEmpty())
-        .andExpect(jsonPath("metadata.updatedDate").isNotEmpty())
-        .andExpect(jsonPath("metadata.updatedByUserId").isNotEmpty())
-        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("name", is(dto.getName())))
+      .andExpect(jsonPath("source", is(dto.getSource())))
+      .andExpect(jsonPath("metadata.createdDate").isNotEmpty())
+      .andExpect(jsonPath("metadata.updatedDate").isNotEmpty())
+      .andExpect(jsonPath("metadata.updatedByUserId").isNotEmpty())
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
 
     assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_NOTE_TYPE_TABLE, TENANT_ID));
   }
@@ -200,11 +200,11 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     var dto = new AuthorityNoteTypeDto(null, "source");
 
     tryPost(authorityNoteTypesEndpoint(), dto)
-        .andExpect(status().isUnprocessableEntity())
-        .andExpect(exceptionMatch(MethodArgumentNotValidException.class))
-        .andExpect(jsonPath("$.errors.[0].parameters[0].key", is("name")))
-        .andExpect(jsonPath("$.errors.[0].parameters[0].value", is("null")))
-        .andExpect(errorMessageMatch(containsString("must not be null")));
+      .andExpect(status().isUnprocessableContent())
+      .andExpect(exceptionMatch(MethodArgumentNotValidException.class))
+      .andExpect(jsonPath("$.errors.[0].parameters[0].key", is("name")))
+      .andExpect(jsonPath("$.errors.[0].parameters[0].value", is("null")))
+      .andExpect(errorMessageMatch(containsString("must not be null")));
   }
 
   // Tests for PUT
@@ -224,10 +224,10 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     tryPut(authorityNoteTypesEndpoint(modified.getId()), modified).andExpect(status().isNoContent());
 
     doGet(authorityNoteTypesEndpoint(modified.getId()))
-        .andExpect(jsonPath("name", is(modified.getName())))
-        .andExpect(jsonPath("source", is(modified.getSource())))
-        .andExpect(jsonPath("metadata.updatedDate").isNotEmpty())
-        .andExpect(jsonPath("metadata.updatedByUserId").isNotEmpty());
+      .andExpect(jsonPath("name", is(modified.getName())))
+      .andExpect(jsonPath("source", is(modified.getSource())))
+      .andExpect(jsonPath("metadata.updatedDate").isNotEmpty())
+      .andExpect(jsonPath("metadata.updatedByUserId").isNotEmpty());
   }
 
   @Test
@@ -237,8 +237,8 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     var dto = new AuthorityNoteTypeDto("name", "source").id(id);
 
     tryPut(authorityNoteTypesEndpoint(id), dto).andExpect(status().isNotFound())
-        .andExpect(exceptionMatch(AuthorityNoteTypeNotFoundException.class))
-        .andExpect(errorMessageMatch(containsString("was not found")));
+      .andExpect(exceptionMatch(AuthorityNoteTypeNotFoundException.class))
+      .andExpect(errorMessageMatch(containsString("was not found")));
   }
 
   @Test
@@ -247,11 +247,12 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     var id = UUID.randomUUID();
     var dto = new AuthorityNoteTypeDto(null, "source").id(id);
 
-    tryPut(authorityNoteTypesEndpoint(id), dto).andExpect(status().isUnprocessableEntity())
-        .andExpect(exceptionMatch(MethodArgumentNotValidException.class))
-        .andExpect(jsonPath("$.errors.[0].parameters[0].key", is("name")))
-        .andExpect(jsonPath("$.errors.[0].parameters[0].value", is("null")))
-        .andExpect(errorMessageMatch(containsString("must not be null")));
+    tryPut(authorityNoteTypesEndpoint(id), dto)
+      .andExpect(status().isUnprocessableContent())
+      .andExpect(exceptionMatch(MethodArgumentNotValidException.class))
+      .andExpect(jsonPath("$.errors.[0].parameters[0].key", is("name")))
+      .andExpect(jsonPath("$.errors.[0].parameters[0].value", is("null")))
+      .andExpect(errorMessageMatch(containsString("must not be null")));
   }
 
   // Tests for DELETE
@@ -272,8 +273,8 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
   void deleteAuthorityNoteType_negative_entityNotFound() throws Exception {
 
     tryDelete(authorityNoteTypesEndpoint(UUID.randomUUID())).andExpect(status().isNotFound())
-        .andExpect(exceptionMatch(AuthorityNoteTypeNotFoundException.class))
-        .andExpect(errorMessageMatch(containsString("was not found")));
+      .andExpect(exceptionMatch(AuthorityNoteTypeNotFoundException.class))
+      .andExpect(errorMessageMatch(containsString("was not found")));
   }
 
   @Test
@@ -281,16 +282,16 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
   void deleteAuthorityNoteType_negative_invalidProvidedRequestId() throws Exception {
 
     tryDelete(authorityNoteTypesEndpoint() + "/{id}", "invalid-uuid").andExpect(status().isBadRequest())
-        .andExpect(exceptionMatch(MethodArgumentTypeMismatchException.class))
-        .andExpect(errorMessageMatch(containsString(
-            "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'")));
+      .andExpect(exceptionMatch(MethodArgumentTypeMismatchException.class))
+      .andExpect(errorMessageMatch(containsString(
+        "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'")));
   }
 
   private static Stream<Arguments> cqlQueryProvider() {
     return Stream.of(
-        arguments("id = " + NOTE_TYPE_IDS[0]),
-        arguments("name <= " + NOTE_TYPE_NAMES[0]),
-        arguments("source <= " + NOTE_TYPE_SOURCES[0])
+      arguments("id = " + NOTE_TYPE_IDS[0]),
+      arguments("name <= " + NOTE_TYPE_NAMES[0]),
+      arguments("source <= " + NOTE_TYPE_SOURCES[0])
     );
   }
 

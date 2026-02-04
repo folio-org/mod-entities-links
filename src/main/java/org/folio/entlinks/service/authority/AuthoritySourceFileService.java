@@ -28,8 +28,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -104,9 +103,9 @@ public class AuthoritySourceFileService implements AuthoritySourceFileServiceI {
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Retryable(
-    retryFor = OptimisticLockingException.class,
-    maxAttempts = 2,
-    backoff = @Backoff(delay = 500))
+    includes = OptimisticLockingException.class,
+    maxRetries = 2,
+    delay = 500)
   public AuthoritySourceFile update(UUID id, AuthoritySourceFile modified) {
     return updateInner(id, modified, null);
   }
@@ -114,9 +113,9 @@ public class AuthoritySourceFileService implements AuthoritySourceFileServiceI {
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Retryable(
-    retryFor = OptimisticLockingException.class,
-    maxAttempts = 2,
-    backoff = @Backoff(delay = 500))
+    includes = OptimisticLockingException.class,
+    maxRetries = 2,
+    delay = 500)
   public AuthoritySourceFile update(UUID id, AuthoritySourceFile modified,
                                     BiConsumer<AuthoritySourceFile, AuthoritySourceFile> publishConsumer) {
     return updateInner(id, modified, publishConsumer);
@@ -158,8 +157,26 @@ public class AuthoritySourceFileService implements AuthoritySourceFileServiceI {
     }
 
     var command = String.format("select exists (select true from %s.%s a where a.source_file_id='%s' limit 1)",
-        folioExecutionContext.getFolioModuleMetadata().getDBSchemaName(tenantId), tableName, sourceFileId);
+      folioExecutionContext.getFolioModuleMetadata().getDBSchemaName(tenantId), tableName, sourceFileId);
     return Boolean.TRUE.equals(jdbcTemplate.queryForObject(command, Boolean.class));
+  }
+
+  @Override
+  public void createSequence(String sequenceName, int startNumber) {
+    jdbcRepository.createSequence(sequenceName, startNumber);
+  }
+
+  @Override
+  public void deleteSequence(String sequenceName) {
+    jdbcRepository.dropSequence(sequenceName);
+  }
+
+  protected void validateOnDelete(UUID id) {
+    var sourceFile = repository.findById(id).orElseThrow(() -> new AuthoritySourceFileNotFoundException(id));
+    if (FOLIO.equals(sourceFile.getSource())) {
+      throw new RequestBodyValidationException("Cannot delete Authority source file with source 'folio'",
+        List.of(new Parameter("source").value(sourceFile.getSource().name())));
+    }
   }
 
   private void validateOnCreate(AuthoritySourceFile entity) {
@@ -193,7 +210,7 @@ public class AuthoritySourceFileService implements AuthoritySourceFileServiceI {
   private void validateOnUpdate(UUID id, AuthoritySourceFile entity) {
     if (!Objects.equals(id, entity.getId())) {
       throw new RequestBodyValidationException("Request should have id = " + id,
-          List.of(new Parameter("id").value(String.valueOf(entity.getId()))));
+        List.of(new Parameter("id").value(String.valueOf(entity.getId()))));
     }
 
     entity.getAuthoritySourceFileCodes().forEach(this::validateSourceFileCode);
@@ -203,7 +220,7 @@ public class AuthoritySourceFileService implements AuthoritySourceFileServiceI {
     var code = sourceFileCode.getCode();
     if (StringUtils.isBlank(code) || !StringUtils.isAlpha(code)) {
       throw new RequestBodyValidationException("Authority Source File prefix should be non-empty sequence of letters",
-          List.of(new Parameter("code").value(code)));
+        List.of(new Parameter("code").value(code)));
     }
   }
 
@@ -254,16 +271,6 @@ public class AuthoritySourceFileService implements AuthoritySourceFileServiceI {
     }
   }
 
-  @Override
-  public void createSequence(String sequenceName, int startNumber) {
-    jdbcRepository.createSequence(sequenceName, startNumber);
-  }
-
-  @Override
-  public void deleteSequence(String sequenceName) {
-    jdbcRepository.dropSequence(sequenceName);
-  }
-
   private void updateSequenceStartNumber(AuthoritySourceFile existing, AuthoritySourceFile modified) {
     if (!Objects.equals(existing.getHridStartNumber(), modified.getHridStartNumber())
         && existing.getHridStartNumber() != null && modified.getHridStartNumber() != null) {
@@ -271,14 +278,6 @@ public class AuthoritySourceFileService implements AuthoritySourceFileServiceI {
       var modifiedStartNumber = (int) modified.getHridStartNumber();
       deleteSequence(sequenceName);
       createSequence(sequenceName, modifiedStartNumber);
-    }
-  }
-
-  protected void validateOnDelete(UUID id) {
-    var sourceFile = repository.findById(id).orElseThrow(() -> new AuthoritySourceFileNotFoundException(id));
-    if (FOLIO.equals(sourceFile.getSource())) {
-      throw new RequestBodyValidationException("Cannot delete Authority source file with source 'folio'",
-        List.of(new Parameter("source").value(sourceFile.getSource().name())));
     }
   }
 }

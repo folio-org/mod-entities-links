@@ -22,10 +22,6 @@ spring:
   sql:
     init:
       continue-on-error: true
-  cloud:
-    openfeign:
-      okhttp:
-        enabled: true
   jackson:
     default-property-inclusion: non_null
     deserialization:
@@ -40,6 +36,8 @@ folio:
     password: mod-entities-links
     lastname: System
     permissionsFilePath: permissions/test-permissions.csv
+  exchange:
+    enabled: true
   kafka:
     topics:
       - name: links.instance-authority
@@ -74,8 +72,6 @@ folio:
         topic-pattern: (${folio.environment}\.)(.*\.)specification-storage\.specification\.updated
         group-id: ${folio.environment}-mod-entities-specification-storage-group
         auto-offset-reset: EARLIEST
-  retry:
-    enabled: true
   jpa:
     repository:
       base-packages: org.folio.entlinks.domain
@@ -88,7 +84,7 @@ folio:
   logging:
     request:
       enabled: true
-    feign:
+    exchange:
       enabled: true
 
 server.port: 8081

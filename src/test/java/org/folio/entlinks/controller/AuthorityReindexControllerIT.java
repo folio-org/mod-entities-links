@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.UUID;
@@ -51,7 +50,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 @IntegrationTest
@@ -63,7 +62,7 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 class AuthorityReindexControllerIT extends IntegrationTestBase {
 
   @Autowired
-  ReindexJobMapper mapper;
+  private ReindexJobMapper mapper;
 
   private KafkaMessageListenerContainer<String, AuthorityDomainEvent> container;
   private BlockingQueue<ConsumerRecord<String, AuthorityDomainEvent>> consumerRecords;
@@ -77,7 +76,7 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container =
-        createAndStartTestConsumer(authorityTopic(), consumerRecords, kafkaProperties, AuthorityDomainEvent.class);
+      createAndStartTestConsumer(authorityTopic(), consumerRecords, kafkaProperties, AuthorityDomainEvent.class);
   }
 
   @AfterEach
@@ -90,7 +89,7 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
   @DisplayName("Get Collection: find no ReindexJob")
   void getCollection_positive_noEntitiesFound() throws Exception {
     doGet(authorityReindexEndpoint())
-        .andExpect(jsonPath("totalRecords", is(0)));
+      .andExpect(jsonPath("totalRecords", is(0)));
   }
 
   @Test
@@ -100,14 +99,14 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     var dto = mapper.toDto(reindexJob);
 
     var contentAsString = doGet(authorityReindexEndpoint())
-        .andReturn().getResponse().getContentAsString();
+      .andReturn().getResponse().getContentAsString();
     var resultCollectionDto = objectMapper.readValue(contentAsString, ReindexJobDtoCollection.class);
 
     assertThat(resultCollectionDto.getTotalRecords()).isEqualTo(1);
     assertThat(resultCollectionDto.getReindexJobs().getFirst().getSubmittedDate()).isNotNull();
     assertThat(resultCollectionDto.getReindexJobs())
-        .usingRecursiveFieldByFieldElementComparatorIgnoringFields("submittedDate")
-        .isEqualTo(List.of(dto));
+      .usingRecursiveFieldByFieldElementComparatorIgnoringFields("submittedDate")
+      .isEqualTo(List.of(dto));
   }
 
   @Test
@@ -117,14 +116,14 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     var dto = mapper.toDto(reindexJob);
 
     var contentAsString = doGet(authorityReindexEndpoint(reindexJob.getId()))
-        .andReturn().getResponse().getContentAsString();
+      .andReturn().getResponse().getContentAsString();
     var resultDto = objectMapper.readValue(contentAsString, ReindexJobDto.class);
 
     assertThat(resultDto.getSubmittedDate()).isNotNull();
     assertThat(resultDto)
-        .usingRecursiveComparison()
-        .ignoringFields("submittedDate")
-        .isEqualTo(dto);
+      .usingRecursiveComparison()
+      .ignoringFields("submittedDate")
+      .isEqualTo(dto);
   }
 
   @Test
@@ -140,15 +139,14 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     verifyReceivedEvents(receivedEvents, dtos);
     assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_REINDEX_JOB_TABLE, TENANT_ID));
     awaitUntilAsserted(() ->
-            doGet(authorityReindexEndpoint())
-                .andExpect(jsonPath("reindexJobs[0].jobStatus", is(IDS_PUBLISHED.getValue())))
+      doGet(authorityReindexEndpoint())
+        .andExpect(jsonPath("reindexJobs[0].jobStatus", is(IDS_PUBLISHED.getValue())))
     );
   }
 
   @Test
   @DisplayName("Cancel submitted in-progress reindex job")
-  void cancelReindexJob_positive_shouldCancelSubmittedReindexJob()
-      throws UnsupportedEncodingException, JsonProcessingException {
+  void cancelReindexJob_positive_shouldCancelSubmittedReindexJob() throws UnsupportedEncodingException {
     createAuthoritySourceFile();
     var authority = TestDataUtils.AuthorityTestData.authority(0, 0);
     for (int i = 0; i < 1000; i++) {
@@ -158,7 +156,7 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     doPost(authorityReindexEndpoint(), null);
 
     var content = doGet(authorityReindexEndpoint())
-        .andReturn().getResponse().getContentAsString();
+      .andReturn().getResponse().getContentAsString();
     var dto = objectMapper.readValue(content, ReindexJobDtoCollection.class);
     var id = dto.getReindexJobs().getFirst().getId();
 
@@ -171,7 +169,7 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     await().timeout(TEN_SECONDS);
 
     var cancelledContent = doGet(authorityReindexEndpoint(id))
-        .andReturn().getResponse().getContentAsString();
+      .andReturn().getResponse().getContentAsString();
     var cancelled = objectMapper.readValue(cancelledContent, ReindexJobDto.class);
     assertThat(cancelled.getJobStatus().getValue()).isEqualTo(ReindexJobDto.JobStatusEnum.PENDING_CANCEL.getValue());
   }
@@ -184,18 +182,18 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     doPost(authorityReindexEndpoint(), null);
     awaitUntilAsserted(() ->
       doGet(authorityReindexEndpoint())
-          .andExpect(jsonPath("reindexJobs[0].jobStatus", is(IDS_PUBLISHED.getValue())))
+        .andExpect(jsonPath("reindexJobs[0].jobStatus", is(IDS_PUBLISHED.getValue())))
     );
 
     var content = doGet(authorityReindexEndpoint())
-        .andReturn().getResponse().getContentAsString();
+      .andReturn().getResponse().getContentAsString();
     var dto = objectMapper.readValue(content, ReindexJobDtoCollection.class);
     var id = dto.getReindexJobs().getFirst().getId();
 
     tryDelete(authorityReindexEndpoint(id))
-        .andExpect(status().isInternalServerError())
-        .andExpect(exceptionMatch(IllegalStateException.class))
-        .andExpect(errorMessageMatch(containsString("The job has been finished")));
+      .andExpect(status().isInternalServerError())
+      .andExpect(exceptionMatch(IllegalStateException.class))
+      .andExpect(errorMessageMatch(containsString("The job has been finished")));
   }
 
   private void verifyReceivedEvents(List<ConsumerRecord<String, AuthorityDomainEvent>> receivedEvents,
@@ -217,8 +215,7 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     return entity;
   }
 
-  private List<AuthorityDto> createAuthorityData(boolean autogenerateId)
-      throws UnsupportedEncodingException, JsonProcessingException {
+  private List<AuthorityDto> createAuthorityData(boolean autogenerateId) throws UnsupportedEncodingException {
     createAuthoritySourceFile();
     return createAuthority(autogenerateId);
   }
@@ -230,8 +227,7 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
     databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, sourceFile.getId(), sourceFileCode);
   }
 
-  private List<AuthorityDto> createAuthority(boolean autogenerateId)
-      throws JsonProcessingException, UnsupportedEncodingException {
+  private List<AuthorityDto> createAuthority(boolean autogenerateId) throws UnsupportedEncodingException {
     var authority1 = authorityDto(0, 0);
     var authority2 = authorityDto(1, 0);
     var authority3 = authorityDto(2, 0);

@@ -28,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.Arrays;
@@ -74,10 +73,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -95,6 +94,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import tools.jackson.databind.ObjectMapper;
 
 @EnableMinio
 @EnableKafka
@@ -108,7 +108,7 @@ public class IntegrationTestBase {
 
   protected static final String DOMAIN_EVENT_HEADER_KEY = "domain-event-type";
   protected static final List<String> DOMAIN_EVENT_HEADER_KEYS =
-      List.of(TENANT, URL, XOkapiHeaders.USER_ID, DOMAIN_EVENT_HEADER_KEY);
+    List.of(TENANT, URL, XOkapiHeaders.USER_ID, DOMAIN_EVENT_HEADER_KEY);
   protected static final String[] IGNORED_FIELDS_FOR_VERIFICATION = {"metadata", "version"};
   protected static MockMvc mockMvc;
   protected static OkapiConfiguration okapi;
@@ -156,15 +156,15 @@ public class IntegrationTestBase {
     memberTenantIds.forEach(tenantId -> setUpTenant(tenantId, loadReference));
     var consortiumId = UUID.randomUUID().toString();
     var userTenants = new UserTenantsClient.UserTenants(
-        List.of(new UserTenantsClient.UserTenant(centralTenantId, consortiumId)));
+      List.of(new UserTenantsClient.UserTenant(centralTenantId, consortiumId)));
     mockGet("/user-tenants", objectMapper.writeValueAsString(userTenants), SC_OK, okapi.wireMockServer());
     var consortiumTenantList = memberTenantIds.stream()
-        .map(s -> new ConsortiumTenantsClient.ConsortiumTenant(s, false))
-        .collect(Collectors.toList());
+      .map(s -> new ConsortiumTenantsClient.ConsortiumTenant(s, false))
+      .collect(Collectors.toList());
     consortiumTenantList.add(new ConsortiumTenantsClient.ConsortiumTenant(centralTenantId, true));
     var consortiumTenants = new ConsortiumTenantsClient.ConsortiumTenants(consortiumTenantList);
     mockGet("/consortia/" + consortiumId + "/tenants", objectMapper.writeValueAsString(consortiumTenants), SC_OK,
-        okapi.wireMockServer());
+      okapi.wireMockServer());
   }
 
   protected static void mockGet(String url, String body, int status, WireMockServer mockServer) {
@@ -348,24 +348,16 @@ public class IntegrationTestBase {
     var dto = getAuthorityDomainEventDto(event.value(), expectedEventType);
 
     assertThat(dto)
-        .usingRecursiveComparison()
-        .ignoringFields(IGNORED_FIELDS_FOR_VERIFICATION)
-        .isEqualTo(expectedDto);
-  }
-
-  private AuthorityDto getAuthorityDomainEventDto(AuthorityDomainEvent event, DomainEventType eventType) {
-    if (List.of(DomainEventType.CREATE, DomainEventType.UPDATE, DomainEventType.REINDEX).contains(eventType)) {
-      return event.getNewEntity();
-    }
-
-    return event.getOldEntity();
+      .usingRecursiveComparison()
+      .ignoringFields(IGNORED_FIELDS_FOR_VERIFICATION)
+      .isEqualTo(expectedDto);
   }
 
   @SuppressWarnings("unchecked")
   protected ResultMatcher linksMatch(InstanceLinkDtoCollection links) {
     var linkMatchers = links.getLinks().stream()
-        .map(LinkMatcher::linkMatch)
-        .toArray(Matcher[]::new);
+      .map(LinkMatcher::linkMatch)
+      .toArray(Matcher[]::new);
     return jsonPath("$.links", containsInAnyOrder(linkMatchers));
   }
 
@@ -395,6 +387,14 @@ public class IntegrationTestBase {
     cacheManager.getCacheNames().forEach(name -> requireNonNull(cacheManager.getCache(name)).clear());
   }
 
+  private AuthorityDto getAuthorityDomainEventDto(AuthorityDomainEvent event, DomainEventType eventType) {
+    if (List.of(DomainEventType.CREATE, DomainEventType.UPDATE, DomainEventType.REINDEX).contains(eventType)) {
+      return event.getNewEntity();
+    }
+
+    return event.getOldEntity();
+  }
+
   @NotNull
   private static ResultActions tryDoHttpMethod(MockHttpServletRequestBuilder builder, Object body,
                                                HttpHeaders headers) throws Exception {
@@ -415,7 +415,7 @@ public class IntegrationTestBase {
     @Bean
     @Primary
     public ProducerFactory<String, String> producerStringFactory(KafkaProperties kafkaProperties) {
-      Map<String, Object> configProps = new HashMap<>(kafkaProperties.buildProducerProperties(null));
+      Map<String, Object> configProps = new HashMap<>(kafkaProperties.buildProducerProperties());
       configProps.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
       configProps.put(VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
       return new DefaultKafkaProducerFactory<>(configProps);
@@ -446,11 +446,11 @@ public class IntegrationTestBase {
     public boolean matches(Object actual) {
       if (actual instanceof LinkedHashMap actualLink) {
         return Objects.equals(expectedLink.getAuthorityId().toString(), actualLink.get("authorityId"))
-            && Objects.equals(expectedLink.getAuthorityNaturalId(), actualLink.get("authorityNaturalId"))
-            && Objects.equals(expectedLink.getInstanceId().toString(), actualLink.get("instanceId"))
-            && Objects.equals(expectedLink.getLinkingRuleId(), actualLink.get("linkingRuleId"))
-            && Objects.equals(expectedLink.getStatus(), actualLink.get("status"))
-            && Objects.equals(expectedLink.getErrorCause(), actualLink.get("errorCause"));
+               && Objects.equals(expectedLink.getAuthorityNaturalId(), actualLink.get("authorityNaturalId"))
+               && Objects.equals(expectedLink.getInstanceId().toString(), actualLink.get("instanceId"))
+               && Objects.equals(expectedLink.getLinkingRuleId(), actualLink.get("linkingRuleId"))
+               && Objects.equals(expectedLink.getStatus(), actualLink.get("status"))
+               && Objects.equals(expectedLink.getErrorCause(), actualLink.get("errorCause"));
       }
 
       return false;

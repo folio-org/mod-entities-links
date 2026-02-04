@@ -12,8 +12,7 @@ import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,9 +66,9 @@ public class PropagationAuthoritySourceFileService extends AuthoritySourceFileSe
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Retryable(
-    retryFor = OptimisticLockingException.class,
-    maxAttempts = 2,
-    backoff = @Backoff(delay = 500))
+    includes = OptimisticLockingException.class,
+    maxRetries = 2,
+    delay = 500)
   public AuthoritySourceFile update(UUID id, AuthoritySourceFile modified,
                                     BiConsumer<AuthoritySourceFile, AuthoritySourceFile> publishConsumer) {
     log.debug("update:: Attempting to update AuthoritySourceFile [id: {}, modified: {}]", id, modified);

@@ -530,14 +530,6 @@
         </executions>
         <configuration>
           <groups>integration</groups>
-<!--          <includes>
-            <include>ConsortiumAuthoritySourceFilesIT</include>
-            <include>InstanceAuthorityLinkStatisticsIT</include>
-            <include>InstanceAuthorityLinkStatisticsConsortiumIT</include>
-            <include>DataImportCreateEventListenerIT</include>
-            <include>ConsortiumAuthorityPropagationServiceIT</include>
-            <include>AuthoritySourceFilesControllerIT</include>
-          </includes>-->
           <systemPropertyVariables>
             <spring.jpa.show-sql>false</spring.jpa.show-sql>
           </systemPropertyVariables>

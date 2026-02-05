@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -59,5 +61,31 @@ class AuthorityS3ServiceTest {
     verify(bulkConsumer).accept(List.of(testAuthority));
     verify(bulkContext).deleteLocalFiles();
     verify(s3Client, never()).uploadErrorFiles(any());
+  }
+
+  @Test
+  void processAuthorities_multipleAuthorities_invalidId() throws IOException {
+    // Arrange
+    var bulkContext = spy(new AuthoritiesBulkContext("test", "localSubPath"));
+    var authoritiesJson = List.of("{\"id\": \"" + AUTHORITY_UUID + "\", \"personalName\": \"Test Authority 1\"}",
+        "{\"id\": \"invalidId\", \"personalName\": \"Test Authority 2\"}");
+    when(s3Client.readFile(any())).thenReturn(authoritiesJson);
+    when(mapper.toEntity(any())).thenCallRealMethod();
+
+    // Act
+    int errorCount = authorityS3Service.processAuthorities(bulkContext, bulkConsumer);
+
+    // Assert
+    assertEquals(1, errorCount);
+    assertEquals("localSubPath/test_failedEntities", bulkContext.getLocalFailedEntitiesFile().getPath());
+    assertEquals("localSubPath/test_errors", bulkContext.getLocalErrorsFile().getPath());
+    var testAuthority = new Authority();
+    testAuthority.setId(UUID.fromString(AUTHORITY_UUID));
+    testAuthority.setHeading("Test Authority 1");
+    testAuthority.setHeadingType("personalName");
+    verify(bulkConsumer).accept(List.of(testAuthority));
+    verifyNoMoreInteractions(bulkConsumer);
+    verify(bulkContext).deleteLocalFiles();
+    verify(s3Client).uploadErrorFiles(any());
   }
 }

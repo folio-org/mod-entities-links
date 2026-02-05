@@ -2,6 +2,7 @@ package org.folio.entlinks.service.authority;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,6 +20,18 @@ class AuthoritiesBulkContextTest {
   void setUp() throws IOException {
     String initialFilePath = "/path/to/initial/file";
     authoritiesBulkContext = new AuthoritiesBulkContext(initialFilePath, "localSubPath");
+  }
+
+  @Test
+  void constructor_PropertiesInitializedCorrectly() {
+    // Assert
+    assertEquals("path/to/initial/file", authoritiesBulkContext.getInitialFilePath());
+    assertEquals("/path/to/initial", authoritiesBulkContext.getInitialFileLocation());
+    assertEquals("path/to/initial/file_failedEntities", authoritiesBulkContext.getFailedEntitiesFilePath());
+    assertEquals("path/to/initial/file_errors", authoritiesBulkContext.getErrorsFilePath());
+
+    assertNotNull(authoritiesBulkContext.getLocalFailedEntitiesFile());
+    assertNotNull(authoritiesBulkContext.getLocalErrorsFile());
   }
 
   @Test

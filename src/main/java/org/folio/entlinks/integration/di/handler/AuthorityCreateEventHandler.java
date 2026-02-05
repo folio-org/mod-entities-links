@@ -2,8 +2,6 @@ package org.folio.entlinks.integration.di.handler;
 
 import static org.folio.ActionProfile.FolioRecord.AUTHORITY;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.JsonObject;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +17,8 @@ import org.folio.processing.exceptions.EventProcessingException;
 import org.folio.rest.jaxrs.model.ProfileSnapshotWrapper;
 import org.folio.rest.jaxrs.model.ProfileType;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Data import event handler for authority create events.
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AuthorityCreateEventHandler implements EventHandler {
 
-  private final ObjectMapper objectMapper;
+  private final JsonMapper jsonMapper;
   private final AuthorityServiceDelegate delegate;
   private final AuthoritySourceMapper sourceMapper;
 
@@ -59,11 +59,11 @@ public class AuthorityCreateEventHandler implements EventHandler {
 
   private void preparePayload(DataImportEventPayload payload, AuthorityDto createdAuthority) {
     try {
-      payload.getContext().put(AUTHORITY.value(), objectMapper.writeValueAsString(createdAuthority));
+      payload.getContext().put(AUTHORITY.value(), jsonMapper.writeValueAsString(createdAuthority));
       payload.setEventType(DataImportEventTypes.DI_INVENTORY_AUTHORITY_CREATED.value());
       payload.getEventsChain().add(payload.getEventType());
       payload.setCurrentNode(payload.getCurrentNode().getChildSnapshotWrappers().getFirst());
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new EventProcessingException("Failed to prepare payload for DI event", e);
     }
   }

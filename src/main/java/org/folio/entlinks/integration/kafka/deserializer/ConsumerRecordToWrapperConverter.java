@@ -8,14 +8,13 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.folio.DataImportEventPayload;
 import org.folio.entlinks.integration.kafka.model.DataImportEventWrapper;
 import org.folio.spring.tools.kafka.FolioKafkaProperties;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.kafka.support.Acknowledgment;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.converter.RecordMessageConverter;
 import org.springframework.messaging.Message;
@@ -24,8 +23,10 @@ import org.springframework.messaging.support.MessageBuilder;
 public class ConsumerRecordToWrapperConverter implements RecordMessageConverter {
 
   @Override
-  public @NotNull Message<?> toMessage(ConsumerRecord<?, ?> consumerRecord, Acknowledgment acknowledgment,
-                                       Consumer<?, ?> consumer, Type payloadType) {
+  public @NonNull Message<?> toMessage(ConsumerRecord<?, ?> consumerRecord,
+                                       @Nullable Object acknowledgment,
+                                       @Nullable Object consumer,
+                                       @Nullable Type payloadType) {
     var payload = (DataImportEventPayload) consumerRecord.value();
 
     Map<String, String> headers = new HashMap<>();

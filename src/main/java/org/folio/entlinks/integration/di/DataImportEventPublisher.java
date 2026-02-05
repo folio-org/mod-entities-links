@@ -11,8 +11,6 @@ import static org.folio.spring.integration.XOkapiHeaders.TOKEN;
 import static org.folio.spring.integration.XOkapiHeaders.URL;
 import static org.folio.spring.tools.kafka.FolioKafkaProperties.TENANT_ID;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +33,8 @@ import org.folio.spring.tools.config.properties.FolioEnvironment;
 import org.folio.spring.tools.kafka.KafkaUtils;
 import org.springframework.kafka.core.RoutingKafkaTemplate;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Spring-managed implementation of EventPublisher for publishing data import events to Kafka.
@@ -53,7 +53,7 @@ public class DataImportEventPublisher implements EventPublisher {
 
   private static final String DEFAULT_NAMESPACE = "Default";
 
-  private final ObjectMapper objectMapper;
+  private final JsonMapper jsonMapper;
   private final RoutingKafkaTemplate kafkaTemplate;
   private final ApplicationMetadata applicationMetadata;
 
@@ -90,13 +90,13 @@ public class DataImportEventPublisher implements EventPublisher {
     try {
       return new Event()
         .withId(UUID.randomUUID().toString())
-        .withEventPayload(objectMapper.writeValueAsString(payload))
+        .withEventPayload(jsonMapper.writeValueAsString(payload))
         .withEventMetadata(new EventMetadata()
           .withEventTTL(1)
           .withTenantId(payload.getTenant())
           .withPublishedBy(applicationMetadata.getFullApplicationName())
           .withPublishedDate(new Date()));
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new KafkaEventPublishingException(e);
     }
   }

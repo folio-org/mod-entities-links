@@ -32,11 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.Arrays;
@@ -68,7 +63,6 @@ import org.folio.spring.testing.extension.EnableKafka;
 import org.folio.spring.testing.extension.EnableMinio;
 import org.folio.spring.testing.extension.EnablePostgres;
 import org.folio.spring.testing.extension.impl.OkapiConfiguration;
-import org.folio.spring.testing.extension.impl.OkapiExtension;
 import org.folio.support.DatabaseHelper;
 import org.folio.tenant.domain.dto.Parameter;
 import org.folio.tenant.domain.dto.TenantAttributes;
@@ -83,9 +77,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -96,8 +87,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -116,8 +105,7 @@ import tools.jackson.databind.ObjectMapper;
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @Import({
-  IntegrationTestBase.KafkaTemplateTestConfiguration.class,
-  IntegrationTestBase.TestConvertersConfig.class})
+  IntegrationTestBase.KafkaTemplateTestConfiguration.class})
 public class IntegrationTestBase {
 
   protected static final String DOMAIN_EVENT_HEADER_KEY = "domain-event-type";
@@ -130,8 +118,9 @@ public class IntegrationTestBase {
   protected static ObjectMapper objectMapper;
   protected static DatabaseHelper databaseHelper;
 
+  // Okapi extension with HTTP/2 disabled to avoid issues with "IOException: GOAWAY received" errors in Http2Connection
   @RegisterExtension
-  static OkapiExtension okapiExtension = new OkapiExtension();
+  static OkapiExtensionHttp2Disabled okapiExtension = new OkapiExtensionHttp2Disabled();
 
   @SneakyThrows
   protected static void setUpTenant() {
@@ -499,32 +488,6 @@ public class IntegrationTestBase {
 
     static LinkMatcher linkMatch(InstanceLinkDto expectedLink) {
       return new LinkMatcher(expectedLink);
-    }
-  }
-
-  @TestConfiguration
-  public static class TestConvertersConfig {
-
-    @Bean
-    public StringHttpMessageConverter stringHttpMessageConverter() {
-      return new StringHttpMessageConverter();
-    }
-
-    @Bean
-    public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
-      ObjectMapper objectMapper = new ObjectMapper();
-      objectMapper.registerModule(new JavaTimeModule());
-      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-      objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
-      objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-      objectMapper.disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES);
-      objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-      return new MappingJackson2HttpMessageConverter(objectMapper);
-    }
-
-    @Bean
-    public HttpMessageConverters messageConverters(StringHttpMessageConverter stringHttpMessageConverter) {
-      return new HttpMessageConverters(stringHttpMessageConverter, mappingJackson2HttpMessageConverter());
     }
   }
 }

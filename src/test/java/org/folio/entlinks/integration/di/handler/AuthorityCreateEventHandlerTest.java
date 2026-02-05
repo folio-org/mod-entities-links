@@ -8,9 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +29,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.json.JsonMapper;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
@@ -40,7 +39,7 @@ class AuthorityCreateEventHandlerTest {
   private static final String MOCKED_AUTHORITY_DTO_AS_STRING = "mocked authority dto";
 
   @Mock
-  private ObjectMapper objectMapper;
+  private JsonMapper jsonMapper;
   @Mock
   private AuthorityServiceDelegate delegate;
   @Mock
@@ -77,7 +76,7 @@ class AuthorityCreateEventHandlerTest {
   void handle_positive() {
     when(sourceMapper.map(payload)).thenReturn(authorityDto);
     when(delegate.createAuthority(authorityDto)).thenReturn(authorityDto);
-    when(objectMapper.writeValueAsString(authorityDto)).thenReturn(MOCKED_AUTHORITY_DTO_AS_STRING);
+    when(jsonMapper.writeValueAsString(authorityDto)).thenReturn(MOCKED_AUTHORITY_DTO_AS_STRING);
 
     var future = handler.handle(payload);
     var result = future.get();
@@ -88,13 +87,13 @@ class AuthorityCreateEventHandlerTest {
   }
 
   @Test
-  void handle_negative() throws JsonProcessingException {
+  @SneakyThrows
+  void handle_negative() {
     // Arrange
     when(sourceMapper.map(payload)).thenReturn(authorityDto);
     when(delegate.createAuthority(authorityDto)).thenReturn(authorityDto);
-    when(objectMapper.writeValueAsString(authorityDto))
-        .thenThrow(new JsonMappingException(null, "test error"));
-
+    when(jsonMapper.writeValueAsString(authorityDto))
+        .thenThrow(new StreamReadException(null, "test error"));
     // Act + Assert
     EventProcessingException ex =
         assertThrows(EventProcessingException.class,

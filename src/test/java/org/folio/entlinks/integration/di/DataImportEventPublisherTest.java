@@ -6,11 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -31,6 +28,8 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.RoutingKafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
@@ -43,7 +42,7 @@ class DataImportEventPublisherTest {
   private static final String EVENT_PAYLOAD = "event-payload";
 
   @Mock
-  private ObjectMapper objectMapper;
+  private JsonMapper jsonMapper;
   @Mock
   private RoutingKafkaTemplate kafkaTemplate;
   @Mock
@@ -70,7 +69,7 @@ class DataImportEventPublisherTest {
         new ProducerRecord<>(TOPIC_NAME, "key", event),
         new RecordMetadata(new TopicPartition(TOPIC_NAME, 0), 0, 0, 0, 0, 0)
     );
-    when(objectMapper.writeValueAsString(any())).thenReturn(EVENT_PAYLOAD);
+    when(jsonMapper.writeValueAsString(any())).thenReturn(EVENT_PAYLOAD);
     when(kafkaTemplate.send(any(ProducerRecord.class))).thenReturn(CompletableFuture.completedFuture(sendResult));
     when(applicationMetadata.getFullApplicationName()).thenReturn(APP_NAME);
 
@@ -84,9 +83,10 @@ class DataImportEventPublisherTest {
   }
 
   @Test
-  void publish_serializationFails() throws JsonProcessingException {
+  @SneakyThrows
+  void publish_serializationFails() {
     var payload = new DataImportEventPayload().withTenant(TENANT_ID);
-    when(objectMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("error") {
+    when(jsonMapper.writeValueAsString(any())).thenThrow(new JacksonException("error") {
     });
 
     // Act & Assert
@@ -94,11 +94,12 @@ class DataImportEventPublisherTest {
   }
 
   @Test
-  void publish_kafkaSendFails() throws JsonProcessingException, ExecutionException, InterruptedException {
+  @SneakyThrows
+  void publish_kafkaSendFails()  {
     var payload = new DataImportEventPayload().withTenant(TENANT_ID).withContext(new HashMap<>());
     var future = CompletableFuture.failedFuture(new RuntimeException("Kafka send failed"));
     when(kafkaTemplate.send(any(ProducerRecord.class))).thenReturn(future);
-    when(objectMapper.writeValueAsString(any())).thenReturn(EVENT_PAYLOAD);
+    when(jsonMapper.writeValueAsString(any())).thenReturn(EVENT_PAYLOAD);
     when(applicationMetadata.getFullApplicationName()).thenReturn(APP_NAME);
 
     // Act

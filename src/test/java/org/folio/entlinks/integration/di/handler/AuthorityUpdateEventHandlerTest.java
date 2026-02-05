@@ -6,11 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
@@ -36,6 +34,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.json.JsonMapper;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
@@ -47,7 +47,7 @@ class AuthorityUpdateEventHandlerTest {
   private static final UUID AUTHORITY_ID = UUID.randomUUID();
 
   @Mock
-  private ObjectMapper objectMapper;
+  private JsonMapper jsonMapper;
   @Mock
   private AuthorityServiceDelegate delegate;
   @Mock
@@ -81,10 +81,11 @@ class AuthorityUpdateEventHandlerTest {
   }
 
   @Test
-  void handle_positive() throws ExecutionException, InterruptedException, JsonProcessingException {
+  @SneakyThrows
+  void handle_positive() {
     when(sourceMapper.map(payload)).thenReturn(authorityDto);
     when(delegate.getAuthorityById(AUTHORITY_ID)).thenReturn(existingAuthorityDto);
-    when(objectMapper.writeValueAsString(authorityDto)).thenReturn(MOCKED_AUTHORITY_DTO_AS_STRING);
+    when(jsonMapper.writeValueAsString(authorityDto)).thenReturn(MOCKED_AUTHORITY_DTO_AS_STRING);
     when(eventPublisher.publish(any(DataImportEventPayload.class)))
         .thenReturn(CompletableFuture.completedFuture(new Event()));
 
@@ -115,7 +116,7 @@ class AuthorityUpdateEventHandlerTest {
   void handle_negative_shouldThrowExceptionWhenJsonProcessingFails() {
     when(sourceMapper.map(payload)).thenReturn(authorityDto);
     when(delegate.getAuthorityById(AUTHORITY_ID)).thenReturn(existingAuthorityDto);
-    when(objectMapper.writeValueAsString(authorityDto)).thenThrow(new JsonMappingException(null, "test error"));
+    doThrow(new StreamReadException("test error")).when(jsonMapper).writeValueAsString(authorityDto);
 
     // Act + Assert
     EventProcessingException ex =

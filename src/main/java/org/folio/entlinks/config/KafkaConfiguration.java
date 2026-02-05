@@ -36,10 +36,10 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.CommonLoggingErrorHandler;
+import org.springframework.kafka.support.converter.BatchMessagingMessageConverter;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 import tools.jackson.databind.json.JsonMapper;
-import org.springframework.kafka.support.converter.BatchMessagingMessageConverter;
 
 /**
  * Responsible for Kafka configuration.
@@ -78,8 +78,8 @@ public class KafkaConfiguration {
    */
   @Bean
   public ConsumerFactory<String, DataImportEventPayload> diConsumerFactory(KafkaProperties kafkaProperties) {
-    var deserializer = new DataImportEventDeserializer(objectMapper);
-    Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties(null));
+    var deserializer = new DataImportEventDeserializer(jsonMapper);
+    Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties());
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
 

@@ -38,26 +38,11 @@ public class KafkaTestUtils {
   }
 
   public static <T> KafkaMessageListenerContainer<String, T> createAndStartTestConsumer(
-      String topicName,
-      BlockingQueue<ConsumerRecord<String, T>> queue,
-      KafkaProperties properties,
-      Class<T> eventClass) {
-    return setupTestConsumer(queue, properties, eventClass, topicName);
-  }
-
-  public static <T> KafkaMessageListenerContainer<String, T> createAndStartTestConsumer(
       BlockingQueue<ConsumerRecord<String, T>> queue,
       KafkaProperties properties,
       Class<T> eventClass,
       String... topicNames) {
-    return setupTestConsumer(queue, properties, eventClass, topicNames);
-  }
-
-  private static <T> KafkaMessageListenerContainer<String, T> setupTestConsumer(
-      BlockingQueue<ConsumerRecord<String, T>> queue,
-      KafkaProperties properties, Class<T> eventClass,
-      String... topicName) {
-    var deserializer = new JsonDeserializer<>(eventClass, false);
+    var deserializer = new JacksonJsonDeserializer<>(eventClass, false);
     properties.getConsumer().setGroupId("test-group");
     Map<String, Object> config = new HashMap<>(properties.buildConsumerProperties());
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -65,7 +50,7 @@ public class KafkaTestUtils {
 
     var consumer = new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
 
-    var containerProperties = new ContainerProperties(topicName);
+    var containerProperties = new ContainerProperties(topicNames);
     var container = new KafkaMessageListenerContainer<>(consumer, containerProperties);
     container.setupMessageListener((MessageListener<String, T>) queue::add);
     container.start();

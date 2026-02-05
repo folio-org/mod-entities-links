@@ -65,7 +65,7 @@ public class OkapiExtensionHttp2Disabled implements BeforeAllCallback, AfterAllC
   }
 
   private static int nextFreePort() {
-    return nextFreePort(ThreadLocalRandom.current() //NOSONAR
+    return nextFreePort(ThreadLocalRandom.current()
         .ints(49152, 65535).iterator());
   }
 

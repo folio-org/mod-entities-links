@@ -47,6 +47,9 @@ import tools.jackson.databind.json.JsonMapper;
 @Configuration
 public class KafkaConfiguration {
 
+  private static final Pattern DI_COMPLETED_PATTERN = Pattern.compile(".*\\.DI_COMPLETED$");
+  private static final Pattern DI_ERROR_PATTERN = Pattern.compile(".*\\.DI_ERROR$");
+  private static final Pattern MATCH_ALL_PATTERN = Pattern.compile(".*");
   private final JsonMapper jsonMapper;
 
   public KafkaConfiguration(JsonMapper jsonMapper) {
@@ -226,13 +229,11 @@ public class KafkaConfiguration {
     Map<Pattern, ProducerFactory<Object, Object>> factoryMap = new LinkedHashMap<>();
 
     // Route EventManager response events to diProducerFactory
-    factoryMap.put(Pattern.compile(".*\\.DI_COMPLETED$"),
-        (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diProducerFactory);
-    factoryMap.put(Pattern.compile(".*\\.DI_ERROR$"),
-        (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diProducerFactory);
+    factoryMap.put(DI_COMPLETED_PATTERN, (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diProducerFactory);
+    factoryMap.put(DI_ERROR_PATTERN, (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diProducerFactory);
 
     // Route all other DI events (handler events) to diHandlerProducerFactory (default)
-    factoryMap.put(Pattern.compile(".*"),
+    factoryMap.put(MATCH_ALL_PATTERN,
         (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diHandlerProducerFactory);
 
     return new org.springframework.kafka.core.RoutingKafkaTemplate(factoryMap);

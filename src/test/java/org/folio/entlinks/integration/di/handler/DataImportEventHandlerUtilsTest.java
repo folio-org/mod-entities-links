@@ -51,7 +51,7 @@ class DataImportEventHandlerUtilsTest {
     var payload = getPayloadWithContext();
     var exception = new RuntimeException("test error");
     // Act
-    DataImportEventHandlerUtils.logDataImport(logger, "Test error message", payload, exception);
+    DataImportEventHandlerUtils.logDataImportError(logger, "Test error message", payload, exception);
     // Assert
     verify(logger).error(any(MessageSupplier.class), eq(exception));
   }

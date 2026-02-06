@@ -28,7 +28,7 @@ public class DataImportEventHandlerUtils {
     logger.log(level, DI_LOG_TEMPLATE, message, jobExecutionId, chunkId, recordId);
   }
 
-  public static void logDataImport(Logger logger, String message, DataImportEventPayload payload, Throwable t) {
+  public static void logDataImportError(Logger logger, String message, DataImportEventPayload payload, Throwable t) {
     var jobExecutionId = getJobExecutionId(payload);
     var chunkId = getChunkId(payload);
     var recordId = getRecordId(payload);

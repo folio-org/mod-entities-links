@@ -84,7 +84,7 @@ class DataImportEventServiceTest {
       eventManager.verify(() -> EventManager.handleEvent(any(), any()), times(1));
       logger.verify(() -> DataImportEventHandlerUtils.logDataImport(any(Logger.class), eq(Level.INFO), anyString(),
           eq(payload)), times(1));
-      logger.verify(() -> DataImportEventHandlerUtils.logDataImport(any(Logger.class), anyString(),
+      logger.verify(() -> DataImportEventHandlerUtils.logDataImportError(any(Logger.class), anyString(),
           any(), any(Throwable.class)), times(1));
     }
   }

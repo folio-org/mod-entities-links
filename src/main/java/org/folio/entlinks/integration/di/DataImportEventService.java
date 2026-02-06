@@ -1,6 +1,7 @@
 package org.folio.entlinks.integration.di;
 
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.logDataImport;
+import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.logDataImportError;
 
 import jakarta.annotation.PostConstruct;
 import java.util.concurrent.CompletableFuture;
@@ -50,7 +51,7 @@ public class DataImportEventService {
     return EventManager.handleEvent(payload, new ProfileSnapshotWrapper())
       .handle((diPayload, throwable) -> {
         if (throwable != null) {
-          logDataImport(log, "Process data-import %s event failed".formatted(eventType), diPayload, throwable);
+          logDataImportError(log, "Process data-import %s event failed".formatted(eventType), diPayload, throwable);
         } else {
           logDataImport(log, Level.INFO, "Data-import %s event processed".formatted(eventType), diPayload);
         }

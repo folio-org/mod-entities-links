@@ -1,0 +1,78 @@
+package org.folio.entlinks.integration.di.handler;
+
+import static java.util.concurrent.CompletableFuture.failedFuture;
+import static org.folio.ActionProfile.FolioRecord.AUTHORITY;
+
+import io.vertx.core.json.JsonObject;
+import java.util.concurrent.CompletableFuture;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.folio.DataImportEventPayload;
+import org.folio.DataImportEventTypes;
+import org.folio.MappingProfile;
+import org.folio.entlinks.controller.delegate.AuthorityServiceDelegate;
+import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.integration.di.AuthoritySourceMapper;
+import org.folio.entlinks.integration.di.DataImportEventPublisher;
+import org.folio.entlinks.utils.ConsortiumUtils;
+import org.folio.processing.events.services.handler.EventHandler;
+import org.folio.processing.exceptions.EventProcessingException;
+import org.folio.rest.jaxrs.model.EntityType;
+import org.folio.rest.jaxrs.model.ProfileSnapshotWrapper;
+import org.folio.rest.jaxrs.model.ProfileType;
+import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
+
+/**
+ * Data import event handler for authority update events.
+ */
+@Log4j2
+@Component
+@RequiredArgsConstructor
+public class AuthorityUpdateEventHandler implements EventHandler {
+
+  private static final String SHADOW_COPY_UPDATE_RESTRICTED_MSG =
+    "Shared MARC authority record cannot be updated from this tenant";
+
+  private final JsonMapper jsonMapper;
+  private final AuthorityServiceDelegate delegate;
+  private final AuthoritySourceMapper sourceMapper;
+  private final DataImportEventPublisher eventPublisher;
+
+  @Override
+  public CompletableFuture<DataImportEventPayload> handle(DataImportEventPayload payload) {
+    var updatedAuthority = sourceMapper.map(payload);
+    var recordId = updatedAuthority.getId();
+    var currentAuthority = delegate.getAuthorityById(recordId);
+    if (ConsortiumUtils.isConsortiumShadowCopy(currentAuthority.getSource())) {
+      return failedFuture(new EventProcessingException(SHADOW_COPY_UPDATE_RESTRICTED_MSG));
+    }
+    updatedAuthority.setVersion(currentAuthority.getVersion());
+    delegate.updateAuthority(recordId, updatedAuthority);
+    preparePayload(payload, updatedAuthority);
+    return eventPublisher.publish(payload).thenApply(event -> payload);
+  }
+
+  @Override
+  public boolean isEligible(DataImportEventPayload payload) {
+    var currentNode = payload.getCurrentNode();
+    return ProfileType.MAPPING_PROFILE == currentNode.getContentType()
+           && isEligibleMappingProfile(currentNode);
+  }
+
+  private void preparePayload(DataImportEventPayload payload, AuthorityDto createdAuthority) {
+    try {
+      payload.getContext().put(AUTHORITY.value(), jsonMapper.writeValueAsString(createdAuthority));
+      payload.setEventType(DataImportEventTypes.DI_INVENTORY_AUTHORITY_UPDATED.value());
+      payload.getEventsChain().add(payload.getEventType());
+    } catch (JacksonException e) {
+      throw new EventProcessingException("Failed to prepare payload for DI event", e);
+    }
+  }
+
+  private boolean isEligibleMappingProfile(ProfileSnapshotWrapper profile) {
+    var mappingProfile = JsonObject.mapFrom(profile.getContent()).mapTo(MappingProfile.class);
+    return EntityType.MARC_AUTHORITY == mappingProfile.getExistingRecordType();
+  }
+}

@@ -16,10 +16,10 @@ public class AuthorityMappingRulesProcessingService {
 
   public Optional<String> getTagByAuthorityChangeField(AuthorityChangeField authorityChangeField) {
     var mappingRelations = mappingRulesService.getFieldTargetsMappingRelations();
-    return mappingRelations.flatMap(stringListMap -> stringListMap.entrySet().stream()
+    return mappingRelations.entrySet().stream()
       .filter(mappingRelation -> mappingRelation.getValue().contains(authorityChangeField.getFieldName()))
       .findFirst()
-      .map(Map.Entry::getKey));
+      .map(Map.Entry::getKey);
   }
 
   public Map<AuthorityChangeField, String> getFieldTagRelations() {

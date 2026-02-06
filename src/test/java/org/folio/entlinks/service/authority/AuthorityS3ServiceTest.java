@@ -68,7 +68,7 @@ class AuthorityS3ServiceTest {
     // Arrange
     var bulkContext = spy(new AuthoritiesBulkContext("test", "localSubPath"));
     var authoritiesJson = List.of("{\"id\": \"" + AUTHORITY_UUID + "\", \"personalName\": \"Test Authority 1\"}",
-      "{\"id\": \"invalidId\", \"personalName\": \"Test Authority 2\"}");
+        "{\"id\": \"invalidId\", \"personalName\": \"Test Authority 2\"}");
     when(s3Client.readFile(any())).thenReturn(authoritiesJson);
     when(mapper.toEntity(any())).thenCallRealMethod();
 

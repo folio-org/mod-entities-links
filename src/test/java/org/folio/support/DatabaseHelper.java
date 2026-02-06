@@ -140,6 +140,17 @@ public class DatabaseHelper {
     jdbcTemplate.update(sql, updatedDate, authorityArchiveId);
   }
 
+  public String getAuthorityArchive(String tenant, UUID id) {
+    var sql = "SELECT * FROM " + getDbPath(tenant, AUTHORITY_ARCHIVE_TABLE) + " WHERE id = '" + id + "'";
+    return jdbcTemplate.query(sql, rs -> {
+      if (rs.next()) {
+        return rs.getString("id");
+      } else {
+        return null;
+      }
+    });
+  }
+
   public void saveAuthoritySourceFileCode(String tenant, UUID sourceFileId, AuthoritySourceFileCode code) {
     var sql = "INSERT INTO " + getDbPath(tenant, AUTHORITY_SOURCE_FILE_CODE_TABLE)
       + " (authority_source_file_id, code) VALUES (?,?)";

@@ -2,6 +2,8 @@ package org.folio.entlinks.controller;
 
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_ID;
 import static org.folio.entlinks.integration.dto.event.DomainEventType.CREATE;
 import static org.folio.entlinks.integration.dto.event.DomainEventType.DELETE;
@@ -52,6 +54,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.awaitility.Durations;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.entity.Authority;
@@ -113,7 +116,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container =
-      createAndStartTestConsumer(authorityTopic(), consumerRecords, kafkaProperties, AuthorityDomainEvent.class);
+        createAndStartTestConsumer(consumerRecords, kafkaProperties, AuthorityDomainEvent.class, authorityTopic());
   }
 
   @AfterEach
@@ -283,6 +286,24 @@ class AuthorityControllerIT extends IntegrationTestBase {
     authority4.setAuthoritySourceFile(null);
     authority4.setUpdatedDate(Timestamp.from(Instant.parse(UPDATED_DATE).minus(2, ChronoUnit.DAYS)));
     databaseHelper.saveAuthority(TENANT_ID, authority4);
+
+    // wait until authorities are created
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(authority1.getId()), tenantHeaders(TENANT_ID))
+            .andExpect(status().isOk())
+    );
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(authority2.getId()), tenantHeaders(TENANT_ID))
+            .andExpect(status().isOk())
+    );
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(authority3.getId()), tenantHeaders(TENANT_ID))
+            .andExpect(status().isOk())
+    );
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(authority4.getId()), tenantHeaders(TENANT_ID))
+            .andExpect(status().isOk())
+    );
 
     // query and filter authorities
     var cqlQuery = "(" + query + ")sortby createdDate";

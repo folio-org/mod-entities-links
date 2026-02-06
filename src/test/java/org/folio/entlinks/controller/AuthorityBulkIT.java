@@ -71,9 +71,9 @@ class AuthorityBulkIT extends IntegrationTestBase {
         .lines()
         .toList();
     assertThat(errors)
-      .hasSize(2)
-      .anyMatch(s -> s.contains("constraint [authority_storage_source_file_id_foreign_key]"))
-      .anyMatch(s -> s.contains("Unexpected json parsing exception")); //invalid UUID for noteTypeId
+        .hasSize(2)
+        .anyMatch(s -> s.contains("constraint [authority_storage_source_file_id_foreign_key]"))
+        .anyMatch(s -> s.contains("Unexpected json parsing exception")); //invalid UUID for noteTypeId
 
     //1'st time with exception triggering spring retry, then - 2 regular calls
     verify(s3Client, times(3)).upload(any(), any());

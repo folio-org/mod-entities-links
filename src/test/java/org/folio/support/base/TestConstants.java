@@ -1,5 +1,6 @@
 package org.folio.support.base;
 
+import static org.folio.support.KafkaTestUtils.fullDiTopicName;
 import static org.folio.support.KafkaTestUtils.fullTopicName;
 
 import java.sql.Timestamp;
@@ -35,7 +36,26 @@ public class TestConstants {
   public static final String INSTANCE_AUTHORITY_TOPIC = "links.instance-authority";
   public static final String INSTANCE_AUTHORITY_STATS_TOPIC = "links.instance-authority-stats";
   public static final String AUTHORITY_TOPIC = "authorities.authority";
+  public static final String SRS_AUTHORITY_CREATED_TOPIC = "DI_SRS_MARC_AUTHORITY_RECORD_CREATED";
+  public static final String SRS_AUTHORITY_DELETED_TOPIC = "DI_SRS_MARC_AUTHORITY_RECORD_DELETED";
+  public static final String SRS_AUTHORITY_MODIFIED_TOPIC =
+      "DI_SRS_MARC_AUTHORITY_RECORD_MODIFIED_READY_FOR_POST_PROCESSING";
+  public static final String DI_AUTHORITY_CREATED_POST_PROCESSING_TOPIC =
+      "DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING";
+  public static final String DI_AUTHORITY_UPDATED_TOPIC = "DI_INVENTORY_AUTHORITY_UPDATED";
+  public static final String DI_ERROR_TOPIC = "DI_ERROR";
+  public static final String DI_COMPLETED_TOPIC = "DI_COMPLETED";
   public static final String UPDATE_TYPE = "UPDATE";
+  public static final String DI_CREATED_TYPE = "DI_SRS_MARC_AUTHORITY_RECORD_CREATED";
+  public static final String DI_UPDATED_TYPE = "DI_INVENTORY_AUTHORITY_UPDATED";
+  public static final String DI_DELETED_TYPE = "DI_SRS_MARC_AUTHORITY_RECORD_DELETED";
+  public static final String FOLIO_TENANT_ID = "folio.tenantId";
+  public static final String RECORD_ID = "recordId";
+  public static final String JOB_EXECUTION_ID = "jobExecutionId";
+  public static final String PATH = "classpath:di-authority/";
+  public static final String DI_CREATE_AUTHORITY_PATH = PATH + "create.json";
+  public static final String DI_UPDATE_AUTHORITY_PATH = PATH + "update.json";
+  public static final String DI_DELETE_AUTHORITY_PATH = PATH + "delete.json";
   public static final String TEST_STRING = "test, ";
 
   private static final String INSTANCE_LINKS_ENDPOINT_PATH = "/links/instances/{id}";
@@ -66,6 +86,34 @@ public class TestConstants {
 
   public static String linksInstanceAuthorityStatsTopic() {
     return fullTopicName(INSTANCE_AUTHORITY_STATS_TOPIC, TENANT_ID);
+  }
+
+  public static String dataImportAuthorityCreatedTopic() {
+    return fullDiTopicName(SRS_AUTHORITY_CREATED_TOPIC, TENANT_ID);
+  }
+
+  public static String diAuthorityCreatedPostProcessingTopic() {
+    return fullDiTopicName(DI_AUTHORITY_CREATED_POST_PROCESSING_TOPIC, TENANT_ID);
+  }
+
+  public static String diAuthorityUpdateTopic() {
+    return fullDiTopicName(DI_AUTHORITY_UPDATED_TOPIC, TENANT_ID);
+  }
+
+  public static String diAuthorityErrorTopic() {
+    return fullDiTopicName(DI_ERROR_TOPIC, TENANT_ID);
+  }
+
+  public static String diAuthorityCompletedTopic() {
+    return fullDiTopicName(DI_COMPLETED_TOPIC, TENANT_ID);
+  }
+
+  public static String dataImportAuthorityDeletedTopic() {
+    return fullDiTopicName(SRS_AUTHORITY_DELETED_TOPIC, TENANT_ID);
+  }
+
+  public static String dataImportAuthorityModifiedTopic() {
+    return fullDiTopicName(SRS_AUTHORITY_MODIFIED_TOPIC, TENANT_ID);
   }
 
   public static String linksInstanceEndpoint() {

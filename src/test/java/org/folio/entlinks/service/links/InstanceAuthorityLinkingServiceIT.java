@@ -64,7 +64,7 @@ class InstanceAuthorityLinkingServiceIT extends IntegrationTestBase {
   void setup(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(
-      authorityTopic(), consumerRecords, kafkaProperties, AuthorityDomainEvent.class);
+        consumerRecords, kafkaProperties, AuthorityDomainEvent.class, authorityTopic());
     context = getFolioExecutionContext();
   }
 

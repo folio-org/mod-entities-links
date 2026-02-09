@@ -24,6 +24,14 @@ TOPICS=(
 "${ENV}.Default.authority.authority-source-file"
 "${ENV}.Default.links.instance-authority"
 "${ENV}.Default.links.instance-authority-stats"
+"${ENV}.Default.DI_INVENTORY_AUTHORITY_UPDATED"
+"${ENV}.Default.DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING"
+"${ENV}.Default.DI_SRS_MARC_AUTHORITY_RECORD_CREATED"
+"${ENV}.Default.DI_SRS_MARC_AUTHORITY_RECORD_MODIFIED_READY_FOR_POST_PROCESSING"
+"${ENV}.Default.DI_SRS_MARC_AUTHORITY_RECORD_NOT_MATCHED"
+"${ENV}.Default.DI_SRS_MARC_AUTHORITY_RECORD_DELETED"
+"${ENV}.Default.DI_COMPLETED"
+"${ENV}.Default.DI_ERROR"
 )
 
 # Updated to use the full path to kafka-topics.sh

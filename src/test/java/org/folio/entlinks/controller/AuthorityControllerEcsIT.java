@@ -1,5 +1,7 @@
 package org.folio.entlinks.controller;
 
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
@@ -15,6 +17,7 @@ import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authorityExpireEndpoint;
 import static org.folio.support.base.TestConstants.authorityTopic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -25,6 +28,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.awaitility.Durations;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
@@ -34,7 +38,6 @@ import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -63,7 +66,7 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(
-      authorityTopic(), consumerRecords, kafkaProperties, AuthorityDomainEvent.class);
+        consumerRecords, kafkaProperties, AuthorityDomainEvent.class, authorityTopic());
   }
 
   @AfterEach
@@ -79,30 +82,36 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
   void expireAuthorityArchives_positive_shouldExpireExistingArchivesForConsortiumAndMemberTenant(String tenant,
                                                                                                  int expectedCount) {
     //create authority records for consortium tenant
-    var authority = createAuthorityForConsortium();
+    var authority = createAuthorityForConsortium(2);
+    var authorityId = authority.getId();
 
-    var count = 1;
-    awaitUntilAsserted(() -> {
-      assertEquals(count, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID));
-      assertEquals(count, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID));
-    });
+    // await for the record to be created in both tenants
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+            tryGet(authorityEndpoint(authorityId), tenantHeaders(CENTRAL_TENANT_ID))
+                .andExpect(status().isOk()));
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(authorityId), tenantHeaders(TENANT_ID))
+            .andExpect(status().isOk()));
 
-    //delete records from authority table
-    doDelete(authorityEndpoint(authority.getId()), tenantHeaders(CENTRAL_TENANT_ID));
+    //delete record from authority table
+    doDelete(authorityEndpoint(authorityId), tenantHeaders(CENTRAL_TENANT_ID));
     getConsumedEvent();
 
     // wait for the archive to be created
-    awaitUntilAsserted(() -> {
-      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, CENTRAL_TENANT_ID, "deleted = true"));
-      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID, "deleted = true"));
-    });
+    awaitUntilAsserted(() ->
+        assertEquals(authorityId.toString(), databaseHelper.getAuthorityArchive(CENTRAL_TENANT_ID, authorityId)));
+    awaitUntilAsserted(() ->
+        assertEquals(authorityId.toString(), databaseHelper.getAuthorityArchive(TENANT_ID, authorityId)));
 
-    awaitUntilAsserted(() -> assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID)));
+    // verify authority record is deleted
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(authorityId), tenantHeaders(CENTRAL_TENANT_ID))
+            .andExpect(status().isNotFound()));
 
     // update AuthorityArchive updated_date field
     var dateInPast = Timestamp.from(Instant.now().minus(8, ChronoUnit.DAYS));
-    databaseHelper.updateAuthorityArchiveUpdateDate(CENTRAL_TENANT_ID, authority.getId(), dateInPast);
-    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority.getId(), dateInPast);
+    databaseHelper.updateAuthorityArchiveUpdateDate(CENTRAL_TENANT_ID, authorityId, dateInPast);
+    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authorityId, dateInPast);
 
     // trigger endpoint
     doPost(authorityExpireEndpoint(), null, tenantHeaders(tenant));
@@ -115,7 +124,7 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
     });
   }
 
-  @Disabled("MODELINKS-386")
+  //@Disabled("MODELINKS-386")
   @ParameterizedTest
   @CsvSource({"consortium, 0, 1", "test, 1, 1"})
   @DisplayName("DELETE: Should not delete existing local record in Member tenant from the authority archives "
@@ -126,32 +135,55 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
     //mock retention period
     createSourceFile();
     //create authority record for consortium tenant
-    var authority1 = createAuthorityForConsortium();
+    var shared = createAuthorityForConsortium(0);
+    var sharedId = shared.getId();
     //create local authority record for Member tenant
-    var authority2 = createAuthority();
+    var local = createAuthority();
+    var localId = local.getId();
+
+    // await for the record to be created in both tenants
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(sharedId), tenantHeaders(CENTRAL_TENANT_ID))
+            .andExpect(status().isOk()));
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(localId), tenantHeaders(TENANT_ID))
+            .andExpect(status().isOk()));
 
     //delete records from authority table
-    doDelete(authorityEndpoint(authority1.getId()), tenantHeaders(CENTRAL_TENANT_ID));
+    doDelete(authorityEndpoint(sharedId), tenantHeaders(CENTRAL_TENANT_ID));
     getConsumedEvent();
-    doDelete(authorityEndpoint(authority2.getId()), tenantHeaders(TENANT_ID));
+    doDelete(authorityEndpoint(localId), tenantHeaders(TENANT_ID));
     getConsumedEvent();
 
     // wait for the archive to be created
-    awaitUntilAsserted(() -> {
-      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, CENTRAL_TENANT_ID, "deleted = true"));
-      assertEquals(2, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID, "deleted = true"));
-    });
+    awaitUntilAsserted(() ->
+        assertEquals(sharedId.toString(),
+            databaseHelper.getAuthorityArchive(CENTRAL_TENANT_ID, sharedId)));
 
-    awaitUntilAsserted(() -> {
-      assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID));
-      assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID));
-    });
+    awaitUntilAsserted(() ->
+        assertEquals(sharedId.toString(),
+            databaseHelper.getAuthorityArchive(TENANT_ID, sharedId)));
+    awaitUntilAsserted(() ->
+        assertEquals(localId.toString(),
+            databaseHelper.getAuthorityArchive(TENANT_ID, localId)));
+
+    // verify authority record is deleted in both tenants
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(sharedId), tenantHeaders(CENTRAL_TENANT_ID))
+            .andExpect(status().isNotFound()));
+
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(sharedId), tenantHeaders(TENANT_ID))
+            .andExpect(status().isNotFound()));
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        tryGet(authorityEndpoint(localId), tenantHeaders(TENANT_ID))
+            .andExpect(status().isNotFound()));
 
     // update AuthorityArchive updated_date field
     var dateInPast = Timestamp.from(Instant.now().minus(8, ChronoUnit.DAYS));
-    databaseHelper.updateAuthorityArchiveUpdateDate(CENTRAL_TENANT_ID, authority1.getId(), dateInPast);
-    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority1.getId(), dateInPast);
-    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority2.getId(), dateInPast);
+    databaseHelper.updateAuthorityArchiveUpdateDate(CENTRAL_TENANT_ID, sharedId, dateInPast);
+    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, sharedId, dateInPast);
+    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, localId, dateInPast);
 
     // trigger endpoint
     doPost(authorityExpireEndpoint(), null, tenantHeaders(tenant));
@@ -171,9 +203,9 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
     return entity;
   }
 
-  private AuthorityDto createAuthorityForConsortium() {
+  private AuthorityDto createAuthorityForConsortium(int index) {
     var dto = new AuthorityDto()
-      .id(AUTHORITY_IDS[0])
+      .id(AUTHORITY_IDS[index])
       .version(0)
       .source("MARC")
       .naturalId("ns123456")

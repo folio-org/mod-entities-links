@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -65,6 +66,8 @@ import org.folio.entlinks.domain.entity.ReindexJobStatus;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEventType;
+import org.folio.rest.jaxrs.model.Event;
+import org.folio.rest.jaxrs.model.EventMetadata;
 
 @UtilityClass
 public class TestDataUtils {
@@ -76,8 +79,27 @@ public class TestDataUtils {
     return new AuthorityDomainEvent(randomUUID(), o, n, DomainEventType.valueOf(type), TENANT_ID);
   }
 
+  @SneakyThrows
+  public static Event diDomainEvent(String type, String eventPayload, String authorityId, String tenant) {
+    var metadata = new EventMetadata()
+        .withTenantId(tenant)
+        .withEventTTL(1)
+        .withPublishedBy("mod-entities-links");
+
+    var event = new Event();
+    event.setId(authorityId);
+    event.setEventType(type);
+    event.setEventMetadata(metadata);
+    event.setEventPayload(eventPayload);
+    return event;
+  }
+
   public static AuthorityDomainEvent authorityEvent(String type, AuthorityDto n, AuthorityDto o) {
     return domainEvent(type, n, o);
+  }
+
+  public static Event diAuthorityEvent(String type, String eventPayload, String authorityId, String tenant) {
+    return diDomainEvent(type, eventPayload, authorityId, tenant);
   }
 
   public static AuthorityDomainEvent authoritySoftDeleteEvent(AuthorityDto n, AuthorityDto o) {

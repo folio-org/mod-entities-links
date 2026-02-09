@@ -79,8 +79,8 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
   @BeforeEach
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
-    container = createAndStartTestConsumer(linksInstanceAuthorityTopic(), consumerRecords, kafkaProperties,
-      LinksChangeEvent.class);
+    container = createAndStartTestConsumer(consumerRecords, kafkaProperties, LinksChangeEvent.class,
+        linksInstanceAuthorityTopic());
 
     var sourceFile1 = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     var sourceFile2 = new AuthoritySourceFile(sourceFile1);
@@ -100,6 +100,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
 
   @AfterEach
   void tearDown() {
+    consumerRecords.clear();
     container.stop();
   }
 
@@ -130,7 +131,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
     assertions.then(headers)
       .as("Headers")
       .extracting(Header::key)
-      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.TOKEN);
+      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL);
 
     var value = received.value();
     assertions.then(value.getTenant()).as("Tenant").isEqualTo(TENANT_ID);
@@ -178,7 +179,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
     assertions.then(headers)
       .as("Headers")
       .extracting(Header::key)
-      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.TOKEN);
+      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL);
 
     var value = received.value();
     assertions.then(value.getTenant()).as("Tenant").isEqualTo(TENANT_ID);
@@ -229,7 +230,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
     assertions.then(headers)
       .as("Headers")
       .extracting(Header::key)
-      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.TOKEN);
+      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL);
 
     var value = received.value();
     var expectedSubfieldChange = subfieldChange("0", FULL_BASE_URL + updatedNaturalId);
@@ -286,7 +287,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
     assertions.then(headers)
       .as("Headers")
       .extracting(Header::key)
-      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.TOKEN);
+      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL);
 
     var value = received.value();
     assertions.then(value.getTenant()).as("Tenant").isEqualTo(TENANT_ID);

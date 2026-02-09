@@ -2,7 +2,6 @@ package org.folio.entlinks.service.links;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,14 +15,11 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.LinkingRulesRepository;
 import org.folio.entlinks.exception.LinkingRuleNotFoundException;
 import org.folio.entlinks.service.links.validator.LinkingRuleValidator;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -163,19 +159,5 @@ class InstanceAuthorityLinkingRulesServiceTest {
     assertThatThrownBy(() -> service.updateLinkingRule(ruleId, linkingRulePatch))
       .isInstanceOf(LinkingRuleNotFoundException.class)
       .hasMessage(String.format("Linking rule with ID [%s] was not found", ruleId));
-  }
-
-  @TestConfiguration
-  static class TestConfig {
-
-    @Bean
-    public FolioExecutionContext folioExecutionContext() {
-      return new FolioExecutionContext() {
-        @Override
-        public String getTenantId() {
-          return TENANT_ID;
-        }
-      };
-    }
   }
 }

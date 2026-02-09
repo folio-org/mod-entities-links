@@ -2,19 +2,26 @@ package org.folio.entlinks.config;
 
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.folio.DataImportEventPayload;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEvent;
 import org.folio.entlinks.integration.kafka.AuthorityChangeFilterStrategy;
 import org.folio.entlinks.integration.kafka.EventProducer;
+import org.folio.entlinks.integration.kafka.deserializer.ConsumerRecordToWrapperConverter;
+import org.folio.entlinks.integration.kafka.deserializer.DataImportEventDeserializer;
+import org.folio.rest.jaxrs.model.Event;
 import org.folio.rspec.domain.dto.SpecificationUpdatedEvent;
 import org.folio.rspec.domain.dto.UpdateRequestEvent;
 import org.folio.spring.tools.kafka.FolioKafkaProperties;
@@ -29,6 +36,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.CommonLoggingErrorHandler;
+import org.springframework.kafka.support.converter.BatchMessagingMessageConverter;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 import tools.jackson.databind.json.JsonMapper;
@@ -39,10 +47,49 @@ import tools.jackson.databind.json.JsonMapper;
 @Configuration
 public class KafkaConfiguration {
 
+  private static final Pattern DI_COMPLETED_PATTERN = Pattern.compile(".*\\.DI_COMPLETED$");
+  private static final Pattern DI_ERROR_PATTERN = Pattern.compile(".*\\.DI_ERROR$");
+  private static final Pattern MATCH_ALL_PATTERN = Pattern.compile(".*");
   private final JsonMapper jsonMapper;
 
   public KafkaConfiguration(JsonMapper jsonMapper) {
     this.jsonMapper = jsonMapper;
+  }
+
+  /**
+   * Creates and configures {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} as
+   * Spring bean for consuming authority events from Apache Kafka.
+   *
+   * @return {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} object as Spring bean.
+   */
+  @Bean
+  public ConcurrentKafkaListenerContainerFactory<String, DataImportEventPayload> diListenerFactory(
+    ConsumerFactory<String, DataImportEventPayload> consumerFactory) {
+    var listenerFactory = listenerFactory(consumerFactory, true);
+    listenerFactory.setBatchMessageConverter(
+      new BatchMessagingMessageConverter(new ConsumerRecordToWrapperConverter()));
+
+    return listenerFactory;
+  }
+
+  /**
+   * Creates and configures {@link org.springframework.kafka.core.ConsumerFactory} as Spring bean.
+   *
+   * <p>Key type - {@link String}, value - {@link AuthorityDomainEvent}.</p>
+   *
+   * @return typed {@link org.springframework.kafka.core.ConsumerFactory} object as Spring bean.
+   */
+  @Bean
+  public ConsumerFactory<String, DataImportEventPayload> diConsumerFactory(KafkaProperties kafkaProperties) {
+    var deserializer = new DataImportEventDeserializer(jsonMapper);
+    Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties());
+    config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
+
+    // Data Import specific configurations to match mod-inventory behavior
+    config.put(MAX_POLL_INTERVAL_MS_CONFIG, "600000"); // 10 minutes for long-running data import processing
+
+    return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
   }
 
   /**
@@ -145,6 +192,51 @@ public class KafkaConfiguration {
   @Bean
   public ProducerFactory<String, LinkUpdateReport> linkUpdateProducerFactory(KafkaProperties kafkaProperties) {
     return getProducerConfigProps(kafkaProperties);
+  }
+
+  @Bean
+  public ProducerFactory<String, Event> diProducerFactory(KafkaProperties kafkaProperties) {
+    return getProducerConfigProps(kafkaProperties);
+  }
+
+  /**
+   * Separate ProducerFactory for handler events to ensure completely independent producer instance.
+   */
+  @Bean
+  public ProducerFactory<String, Event> diHandlerProducerFactory(KafkaProperties kafkaProperties) {
+    return getProducerConfigProps(kafkaProperties);
+  }
+
+  /**
+   * RoutingKafkaTemplate that routes sends to different ProducerFactory instances based on topic patterns.
+   * This ensures that EventManager response events (DI_COMPLETED, DI_ERROR) and handler events
+   * (DI_INVENTORY_AUTHORITY_UPDATED, etc.) use separate underlying Kafka producers, preventing
+   * concurrent metadata fetch interference that causes timeouts.
+   *
+   * <p>Topic routing:
+   * <ul>
+   *   <li>.*\.DI_COMPLETED$ → diProducerFactory (EventManager responses)</li>
+   *   <li>.*\.DI_ERROR$ → diProducerFactory (EventManager errors)</li>
+   *   <li>All other topics → diHandlerProducerFactory (handler events)</li>
+   * </ul>
+   */
+  @Bean
+  @SuppressWarnings("unchecked")
+  public org.springframework.kafka.core.RoutingKafkaTemplate routingKafkaTemplate(
+      ProducerFactory<String, Event> diProducerFactory,
+      ProducerFactory<String, Event> diHandlerProducerFactory) {
+
+    Map<Pattern, ProducerFactory<Object, Object>> factoryMap = new LinkedHashMap<>();
+
+    // Route EventManager response events to diProducerFactory
+    factoryMap.put(DI_COMPLETED_PATTERN, (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diProducerFactory);
+    factoryMap.put(DI_ERROR_PATTERN, (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diProducerFactory);
+
+    // Route all other DI events (handler events) to diHandlerProducerFactory (default)
+    factoryMap.put(MATCH_ALL_PATTERN,
+        (ProducerFactory<Object, Object>) (ProducerFactory<?, ?>) diHandlerProducerFactory);
+
+    return new org.springframework.kafka.core.RoutingKafkaTemplate(factoryMap);
   }
 
   /**

@@ -28,6 +28,7 @@
     <folio-spring-support.version>10.0.0-RC1</folio-spring-support.version>
     <folio-service-tools.version>6.0.0-SNAPSHOT</folio-service-tools.version>
     <folio-s3-client.version>3.0.0-SNAPSHOT</folio-s3-client.version>
+    <data-import-processing-core.version>4.5.0-SNAPSHOT</data-import-processing-core.version>
     <mod-record-specifications-dto.version>3.0.0-20260203.094332-1</mod-record-specifications-dto.version>
     <aws-sdk-java.version>2.38.7</aws-sdk-java.version>
     <mapstruct.version>1.6.3</mapstruct.version>
@@ -95,6 +96,18 @@
       <groupId>org.folio</groupId>
       <artifactId>mod-record-specifications-dto</artifactId>
       <version>${mod-record-specifications-dto.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>data-import-processing-core</artifactId>
+      <version>${data-import-processing-core.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.folio</groupId>
+          <artifactId>domain-models-api-aspects</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>

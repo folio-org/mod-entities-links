@@ -37,9 +37,6 @@ class DataStatsMapperTest {
     assertThat(dto.getHeadingNew()).isEqualTo(source.getHeadingNew());
     assertThat(dto.getHeadingTypeOld()).isEqualTo(source.getHeadingTypeOld());
     assertThat(dto.getHeadingTypeNew()).isEqualTo(source.getHeadingTypeNew());
-    assertThat(dto.getLbTotal()).isEqualTo(source.getLbTotal());
-    assertThat(dto.getLbUpdated()).isEqualTo(source.getLbUpdated());
-    assertThat(dto.getLbFailed()).isEqualTo(source.getLbFailed());
   }
 
   @Test
@@ -97,9 +94,6 @@ class DataStatsMapperTest {
     source.setHeadingNew("NewHeading");
     source.setHeadingTypeOld("OldHeadingType");
     source.setHeadingTypeNew("NewHeadingType");
-    source.setLbTotal(10);
-    source.setLbUpdated(5);
-    source.setLbFailed(2);
     return source;
   }
 }

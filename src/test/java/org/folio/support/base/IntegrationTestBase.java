@@ -253,6 +253,12 @@ public class IntegrationTestBase {
   }
 
   @SneakyThrows
+  protected static <T> T doGetAndReturn(String uri, Class<T> responseClass, Object... args) {
+    var content = doGet(uri, defaultHeaders(), args).andReturn().getResponse().getContentAsString();
+    return objectMapper.readValue(content, responseClass);
+  }
+
+  @SneakyThrows
   protected static ResultActions tryPut(String uri, Object body, HttpHeaders headers, Object... args) {
     return tryDoHttpMethod(put(uri, args), body, headers);
   }

@@ -4,9 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -19,11 +17,8 @@ import org.folio.entlinks.domain.dto.AuthorityStatsDtoCollection;
 import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
-import org.folio.entlinks.service.authority.AuthorityService;
-import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.utils.DateUtils;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.client.UsersClient;
 import org.folio.spring.model.ResultList;
 import org.springframework.stereotype.Component;
@@ -38,38 +33,27 @@ public class InstanceAuthorityStatServiceDelegate {
   private final DataStatsMapper dataStatMapper;
   private final UsersClient usersClient;
   private final AuthoritySourceFileRepository sourceFileRepository;
-  private final AuthorityService authorityService;
-  private final UserTenantsService userTenantsService;
-  private final FolioExecutionContext context;
 
-  public AuthorityStatsDtoCollection fetchAuthorityLinksStats(OffsetDateTime fromDate, OffsetDateTime toDate,
-                                                              LinkAction action, Integer limit) {
+  public AuthorityStatsDtoCollection fetchAuthorityDataStats(OffsetDateTime fromDate, OffsetDateTime toDate,
+                                                             LinkAction action, Integer limit) {
     var authorityStatsCollection = new AuthorityStatsDtoCollection();
     var dataStatList = dataStatService.fetchDataStats(fromDate, toDate, action, limit + 1);
 
     log.debug("Retrieved data stat count {}", dataStatList.size());
 
     if (dataStatList.size() > limit) {
-      var nextDate = fromTimestamp(dataStatList.get(limit).getUpdatedAt());
+      var nextDate = fromTimestamp(dataStatList.get(limit).getStartedAt());
       authorityStatsCollection.setNext(nextDate);
       dataStatList = dataStatList.subList(0, limit);
     }
 
     var users = getUsers(dataStatList);
-    var centralTenant = userTenantsService.getCentralTenant(context.getTenantId());
-    var isCentralConsortiumTenant = centralTenant.isPresent() && centralTenant.get().equals(context.getTenantId());
-    var isMemberConsortiumTenant = centralTenant.isPresent() && !isCentralConsortiumTenant;
-    var authoritiesExistence = authoritiesExistenceForConsortiumMember(isMemberConsortiumTenant, dataStatList);
     var stats = dataStatList.stream()
       .map(source -> {
         var authorityDataStatDto = dataStatMapper.convertToDto(source);
         if (authorityDataStatDto != null) {
           fillSourceFiles(authorityDataStatDto);
           authorityDataStatDto.setMetadata(getMetadata(users, source));
-          var shared = isCentralConsortiumTenant
-            || isMemberConsortiumTenant
-            && !authoritiesExistence.getOrDefault(source.getAuthorityId(), false);
-          authorityDataStatDto.setShared(shared);
         }
         return authorityDataStatDto;
       })
@@ -79,11 +63,10 @@ public class InstanceAuthorityStatServiceDelegate {
   }
 
   private AuthorityControlMetadata getMetadata(ResultList<UsersClient.User> userResultList, AuthorityDataStat source) {
-    UUID startedByUserId = source.getStartedByUserId();
-    AuthorityControlMetadata metadata = new AuthorityControlMetadata();
+    var startedByUserId = source.getStartedByUserId();
+    var metadata = new AuthorityControlMetadata();
     metadata.setStartedByUserId(startedByUserId);
     metadata.setStartedAt(DateUtils.fromTimestamp(source.getStartedAt()));
-    metadata.setCompletedAt(DateUtils.fromTimestamp(source.getCompletedAt()));
     if (userResultList == null || userResultList.getResult() == null) {
       return metadata;
     }
@@ -131,16 +114,5 @@ public class InstanceAuthorityStatServiceDelegate {
     var sourceFileIdNew = authorityDataStatDto.getSourceFileNew();
     authorityDataStatDto.setSourceFileOld(getSourceFileName(sourceFileIdOld));
     authorityDataStatDto.setSourceFileNew(getSourceFileName(sourceFileIdNew));
-  }
-
-  private Map<UUID, Boolean> authoritiesExistenceForConsortiumMember(Boolean isConsortiumMember,
-                                                                     List<AuthorityDataStat> dataStats) {
-    if (!Boolean.TRUE.equals(isConsortiumMember)) {
-      return Collections.emptyMap();
-    }
-    var authorityIds = dataStats.stream()
-      .map(AuthorityDataStat::getAuthorityId)
-      .collect(Collectors.toSet());
-    return authorityService.authoritiesExist(authorityIds);
   }
 }

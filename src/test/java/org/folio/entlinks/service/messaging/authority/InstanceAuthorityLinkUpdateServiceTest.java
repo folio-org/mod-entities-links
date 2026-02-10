@@ -32,8 +32,6 @@ import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityDataStatsPropagationService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHandler;
@@ -50,7 +48,6 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-//todo: update tests
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class InstanceAuthorityLinkUpdateServiceTest {
@@ -69,7 +66,6 @@ class InstanceAuthorityLinkUpdateServiceTest {
   private @Mock ConsortiumTenantsService consortiumTenantsService;
   private @Mock FolioExecutionContext folioExecutionContext;
   private @Mock SystemUserScopedExecutionService executionService;
-  private @Mock ConsortiumAuthorityDataStatsPropagationService statsPropagationService;
 
   private InstanceAuthorityLinkUpdateService service;
 
@@ -80,7 +76,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     service = new InstanceAuthorityLinkUpdateService(authorityDataStatService,
       mappingRulesProcessingService, linkingService, eventProducer, List.of(updateHandler, deleteHandler),
-      sourceRecordService, consortiumTenantsService, folioExecutionContext, executionService, statsPropagationService);
+      sourceRecordService, consortiumTenantsService, folioExecutionContext, executionService);
   }
 
   @Test
@@ -251,11 +247,9 @@ class InstanceAuthorityLinkUpdateServiceTest {
       .hasSize(3)
       .allMatch(changeHolder -> changeHolder.getSourceRecord() == sourceRecord)
       .extracting(AuthorityChangeHolder::getNumberOfLinks)
-      .containsExactlyInAnyOrder(1, 3, 4);
+      .containsExactlyInAnyOrder(1, 2, 3);
 
     verify(authorityDataStatService, times(1)).createInBatch(anyList());
-    verify(statsPropagationService)
-      .propagate(any(), eq(ConsortiumPropagationService.PropagationType.CREATE), anyString());
   }
 
   @SuppressWarnings("unchecked")

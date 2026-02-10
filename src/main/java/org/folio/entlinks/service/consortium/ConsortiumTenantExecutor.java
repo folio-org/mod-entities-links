@@ -17,9 +17,6 @@ public class ConsortiumTenantExecutor {
   private final FolioExecutionContext folioExecutionContext;
   private final SystemUserScopedExecutionService scopedExecutionService;
 
-  //todo: code review for /main finished
-  // now build, fix style, sonar, tests
-  // once build completes and tests pass - push, draft PR and check sonar/coverage
   /**
    * Executes the given operation within the context of the central tenant of the consortium.
    * Returns null when called from a non-consortium tenant.

@@ -1,4 +1,4 @@
-package org.folio.entlinks.service.consortium;
+package org.folio.entlinks.controller;
 
 import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
@@ -49,8 +49,6 @@ class ConsortiumInstanceAuthorityLinksIT extends IntegrationTestBase {
     setUpConsortium(CENTRAL_TENANT_ID, List.of(COLLEGE_TENANT_ID, UNIVERSITY_TENANT_ID), true);
   }
 
-  //todo: since this fails when not using jdbc -
-  // need to add consortium bib stats case which will require naturalId from central to check if it also would need jdbc
   @Test
   @SneakyThrows
   void updateInstanceLinks_positive_forMemberTenantAndSharedAuthority() {

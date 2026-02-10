@@ -2,6 +2,7 @@ package org.folio.entlinks.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
@@ -21,6 +22,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Builder
 @AllArgsConstructor
@@ -30,7 +32,8 @@ import org.springframework.data.annotation.CreatedDate;
 @Setter
 @ToString
 @Table(name = "authority_data_stat")
-public class AuthorityDataStat extends AuditableEntity implements Identifiable<UUID> {
+@EntityListeners(AuditingEntityListener.class)
+public class AuthorityDataStat implements Identifiable<UUID> {
 
   @Id
   @Column(name = "id", nullable = false)
@@ -70,32 +73,12 @@ public class AuthorityDataStat extends AuditableEntity implements Identifiable<U
   @Column(name = "authority_source_file_new")
   private UUID authoritySourceFileNew;
 
-  @Column(name = "lb_total")
-  private int lbTotal;
-
-  @Column(name = "lb_updated")
-  private int lbUpdated;
-
-  @Column(name = "lb_failed")
-  private int lbFailed;
-
-  @Enumerated(EnumType.STRING)
-  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-  @Column(name = "status", nullable = false)
-  private AuthorityDataStatStatus status;
-
-  @Column(name = "fail_cause")
-  private String failCause;
-
   @Column(name = "started_by_user_id")
   private UUID startedByUserId;
 
   @CreatedDate
   @Column(name = "started_at")
   private Timestamp startedAt;
-
-  @Column(name = "completed_at")
-  private Timestamp completedAt;
 
   @Override
   public int hashCode() {
@@ -112,29 +95,5 @@ public class AuthorityDataStat extends AuditableEntity implements Identifiable<U
     }
     AuthorityDataStat that = (AuthorityDataStat) o;
     return id != null && Objects.equals(id, that.id);
-  }
-
-  public AuthorityDataStat copy() {
-    var copy = new AuthorityDataStat();
-    copy.setId(this.getId());
-    copy.setAuthorityId(this.getAuthorityId());
-    copy.setAction(this.getAction());
-    copy.setAuthorityNaturalIdOld(this.getAuthorityNaturalIdOld());
-    copy.setAuthorityNaturalIdNew(this.getAuthorityNaturalIdNew());
-    copy.setHeadingOld(this.getHeadingOld());
-    copy.setHeadingNew(this.getHeadingNew());
-    copy.setHeadingTypeOld(this.getHeadingTypeOld());
-    copy.setHeadingTypeNew(this.getHeadingTypeNew());
-    copy.setAuthoritySourceFileOld(this.getAuthoritySourceFileOld());
-    copy.setAuthoritySourceFileNew(this.getAuthoritySourceFileNew());
-    copy.setLbTotal(this.getLbTotal());
-    copy.setLbUpdated(this.getLbUpdated());
-    copy.setLbFailed(this.getLbFailed());
-    copy.setStatus(this.getStatus());
-    copy.setFailCause(this.getFailCause());
-    copy.setStartedByUserId(this.getStartedByUserId());
-    copy.setStartedAt(this.getStartedAt());
-    copy.setCompletedAt(this.getCompletedAt());
-    return copy;
   }
 }

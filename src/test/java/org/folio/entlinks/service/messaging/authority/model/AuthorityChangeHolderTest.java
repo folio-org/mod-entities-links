@@ -10,6 +10,7 @@ import static org.folio.entlinks.service.messaging.authority.model.AuthorityChan
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,6 +19,7 @@ import java.util.UUID;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.Metadata;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
+import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
@@ -26,9 +28,9 @@ import org.junit.jupiter.api.Test;
 class AuthorityChangeHolderTest {
 
   public static final String[] STAT_OBJ_PROPERTIES =
-    {"action", "headingOld", "headingNew", "headingTypeOld", "headingTypeNew",
+    {"id", "authorityId", "action", "headingOld", "headingNew", "headingTypeOld", "headingTypeNew",
      "authorityNaturalIdOld", "authorityNaturalIdNew", "authoritySourceFileOld", "authoritySourceFileNew",
-     "lbTotal", "startedByUserId"};
+     "startedByUserId"};
 
   @Test
   void getNewNaturalId_positive() {
@@ -188,9 +190,10 @@ class AuthorityChangeHolderTest {
 
   @Test
   void toAuthorityDataStat_positive_headingTypeChanged() {
+    var authorityId = UUID.randomUUID();
     var holder = new AuthorityChangeHolder(
-      new AuthorityDomainEvent(null, new AuthorityDto().naturalId("o"), new AuthorityDto().naturalId("n"), UPDATE,
-        TENANT_ID),
+      new AuthorityDomainEvent(authorityId, new AuthorityDto().naturalId("o"), new AuthorityDto().naturalId("n"),
+        UPDATE, TENANT_ID),
       Map.of(CORPORATE_NAME, new AuthorityChange(CORPORATE_NAME, "n", null),
         PERSONAL_NAME, new AuthorityChange(PERSONAL_NAME, null, "o")),
       Map.of(PERSONAL_NAME, "100", CORPORATE_NAME, "101"), 1);
@@ -198,30 +201,36 @@ class AuthorityChangeHolderTest {
     var actual = holder.toAuthorityDataStat();
 
     assertThat(actual)
+      .matches(dataStat -> dataStat.getId() != null)
       .extracting(STAT_OBJ_PROPERTIES)
-      .containsExactly(AuthorityDataStatAction.UPDATE_HEADING, "o", "n", "100", "101", "o", "n", null, null, 1, null);
+      .containsExactly(holder.getAuthorityDataStatId(), authorityId, AuthorityDataStatAction.UPDATE_HEADING,
+        "o", "n", "100", "101", "o", "n", null, null, null);
   }
 
   @Test
   void toAuthorityDataStat_positive_headingChanged() {
+    var authorityId = UUID.randomUUID();
     var holder = new AuthorityChangeHolder(
-      new AuthorityDomainEvent(null, new AuthorityDto().naturalId("n"), new AuthorityDto().naturalId("n"), UPDATE,
-        TENANT_ID),
+      new AuthorityDomainEvent(authorityId, new AuthorityDto().naturalId("n"), new AuthorityDto().naturalId("n"),
+        UPDATE, TENANT_ID),
       Map.of(PERSONAL_NAME, new AuthorityChange(PERSONAL_NAME, "n", "o")),
       Map.of(PERSONAL_NAME, "100"), 1);
 
     var actual = holder.toAuthorityDataStat();
 
     assertThat(actual)
+      .matches(dataStat -> dataStat.getId() != null)
       .extracting(STAT_OBJ_PROPERTIES)
-      .containsExactly(AuthorityDataStatAction.UPDATE_HEADING, "o", "n", "100", "100", "n", "n", null, null, 1, null);
+      .containsExactly(holder.getAuthorityDataStatId(), authorityId, AuthorityDataStatAction.UPDATE_HEADING,
+        "o", "n", "100", "100", "n", "n", null, null, null);
   }
 
   @Test
   void toAuthorityDataStat_positive_headingAndNaturalIdChangedChanged() {
+    var authorityId = UUID.randomUUID();
     var holder = new AuthorityChangeHolder(
-      new AuthorityDomainEvent(null, new AuthorityDto().naturalId("o"), new AuthorityDto().naturalId("n"), UPDATE,
-        TENANT_ID),
+      new AuthorityDomainEvent(authorityId, new AuthorityDto().naturalId("o"), new AuthorityDto().naturalId("n"),
+        UPDATE, TENANT_ID),
       Map.of(PERSONAL_NAME, new AuthorityChange(PERSONAL_NAME, "n", "o"),
         NATURAL_ID, new AuthorityChange(NATURAL_ID, "n", "o")),
       Map.of(PERSONAL_NAME, "100"), 1);
@@ -229,30 +238,36 @@ class AuthorityChangeHolderTest {
     var actual = holder.toAuthorityDataStat();
 
     assertThat(actual)
+      .matches(dataStat -> dataStat.getId() != null)
       .extracting(STAT_OBJ_PROPERTIES)
-      .containsExactly(AuthorityDataStatAction.UPDATE_HEADING, "o", "n", "100", "100", "o", "n", null, null, 1, null);
+      .containsExactly(holder.getAuthorityDataStatId(), authorityId, AuthorityDataStatAction.UPDATE_HEADING,
+        "o", "n", "100", "100", "o", "n", null, null, null);
   }
 
   @Test
   void toAuthorityDataStat_positive_authorityDeleted() {
+    var authorityId = UUID.randomUUID();
     var holder = new AuthorityChangeHolder(
-      new AuthorityDomainEvent(null, new AuthorityDto().naturalId("o"), null, DELETE, TENANT_ID),
+      new AuthorityDomainEvent(authorityId, new AuthorityDto().naturalId("o"), null, DELETE, TENANT_ID),
       Map.of(PERSONAL_NAME, new AuthorityChange(PERSONAL_NAME, null, "o")),
       Map.of(PERSONAL_NAME, "100"), 1);
 
     var actual = holder.toAuthorityDataStat();
 
     assertThat(actual)
+      .matches(dataStat -> dataStat.getId() != null)
       .extracting(STAT_OBJ_PROPERTIES)
-      .containsExactly(AuthorityDataStatAction.DELETE, "o", null, "100", "100", "o", null, null, null, 1, null);
+      .containsExactly(holder.getAuthorityDataStatId(), authorityId, AuthorityDataStatAction.DELETE,
+        "o", null, "100", "100", "o", null, null, null, null);
   }
 
   @Test
   void toAuthorityDataStat_positive_metadataGiven() {
+    var authorityId = UUID.randomUUID();
     UUID updatedByUserId = UUID.randomUUID();
     var holder = new AuthorityChangeHolder(
-      new AuthorityDomainEvent(null, new AuthorityDto().naturalId("o"), new AuthorityDto().naturalId("n").metadata(
-        new Metadata().updatedByUserId(updatedByUserId)), UPDATE, TENANT_ID),
+      new AuthorityDomainEvent(authorityId, new AuthorityDto().naturalId("o"), new AuthorityDto().naturalId("n")
+        .metadata(new Metadata().updatedByUserId(updatedByUserId)), UPDATE, TENANT_ID),
       Map.of(PERSONAL_NAME, new AuthorityChange(PERSONAL_NAME, "n", "o"),
         NATURAL_ID, new AuthorityChange(NATURAL_ID, "n", "o")),
       Map.of(PERSONAL_NAME, "100"), 1);
@@ -260,9 +275,10 @@ class AuthorityChangeHolderTest {
     var actual = holder.toAuthorityDataStat();
 
     assertThat(actual)
+      .matches(dataStat -> dataStat.getId() != null)
       .extracting(STAT_OBJ_PROPERTIES)
-      .containsExactly(AuthorityDataStatAction.UPDATE_HEADING, "o", "n", "100", "100", "o", "n", null, null, 1,
-        updatedByUserId);
+      .containsExactly(holder.getAuthorityDataStatId(), authorityId, AuthorityDataStatAction.UPDATE_HEADING,
+        "o", "n", "100", "100", "o", "n", null, null, updatedByUserId);
   }
 
   @Test
@@ -288,5 +304,27 @@ class AuthorityChangeHolderTest {
     var actual = holder.getFieldChange();
 
     assertNull(actual);
+  }
+
+  @Test
+  void copy_positive() {
+    var event = new AuthorityDomainEvent(UUID.randomUUID(), new AuthorityDto().naturalId("o"),
+      new AuthorityDto().naturalId("n"), UPDATE, TENANT_ID);
+    var changes = Map.of(PERSONAL_NAME, new AuthorityChange(PERSONAL_NAME, "n", "o"));
+    var fieldTagRelation = Map.of(PERSONAL_NAME, "100");
+    var sourceRecord = new AuthoritySourceRecord(UUID.randomUUID(), UUID.randomUUID(), null);
+
+    var holder = new AuthorityChangeHolder(event, changes, fieldTagRelation);
+    holder.setSourceRecord(sourceRecord);
+    holder.setNumberOfLinks(5);
+    holder.setAuthorityDataStatId(UUID.randomUUID());
+
+    var copy = holder.copy();
+
+    assertEquals(holder.getEvent(), copy.getEvent());
+    assertEquals(holder.getSourceRecord(), copy.getSourceRecord());
+    // numberOfLinks and authorityDataStatId are not copied
+    assertEquals(0, copy.getNumberOfLinks());
+    assertNotNull(copy.getAuthorityDataStatId());
   }
 }

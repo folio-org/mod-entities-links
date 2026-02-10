@@ -2,7 +2,6 @@ package org.folio.entlinks.service.links;
 
 import static org.apache.commons.collections4.MapUtils.isEmpty;
 import static org.apache.commons.collections4.MapUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.folio.entlinks.utils.DateUtils.toTimestamp;
 
 import java.time.OffsetDateTime;
@@ -18,14 +17,16 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.dto.LinkStatus;
+import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.service.authority.AuthorityService;
-import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +41,6 @@ public class InstanceAuthorityLinkingService {
 
   private final InstanceLinkRepository instanceLinkRepository;
   private final AuthorityService authorityService;
-  private final ConsortiumTenantExecutor executor;
 
   public List<InstanceAuthorityLink> getLinksByInstanceId(UUID instanceId) {
     log.info("Loading links for [instanceId: {}]", instanceId);
@@ -104,12 +104,6 @@ public class InstanceAuthorityLinkingService {
   }
 
   @Transactional
-  public void updateStatus(UUID authorityId, InstanceAuthorityLinkStatus status, String errorCause) {
-    log.info("Update links [authority id: {}, status: {}, errorCause: {}]", authorityId, status, errorCause);
-    instanceLinkRepository.updateStatusAndErrorCauseByAuthorityId(status, trimToNull(errorCause), authorityId);
-  }
-
-  @Transactional
   public void deleteByAuthorityIdIn(Set<UUID> authorityIds) {
     if (log.isDebugEnabled()) {
       log.info("Delete links for [authority ids: {}]", authorityIds);
@@ -117,14 +111,6 @@ public class InstanceAuthorityLinkingService {
       log.info("Delete links for [authority ids amount: {}]", authorityIds.size());
     }
     instanceLinkRepository.deleteByAuthorityIds(authorityIds);
-  }
-
-  @Transactional
-  public void saveAll(UUID instanceId, List<InstanceAuthorityLink> links) {
-    log.info("Save links for [instanceId: {}, links amount: {}]", instanceId, links.size());
-    log.debug("Save links for [instanceId: {}, links: {}]", instanceId, links);
-
-    instanceLinkRepository.saveAll(links);
   }
 
   public List<InstanceAuthorityLink> getLinks(LinkStatus status, OffsetDateTime fromDate,
@@ -173,6 +159,35 @@ public class InstanceAuthorityLinkingService {
         .ifPresent(link::setAuthorityNaturalId));
   }
 
+  @Transactional
+  public void updateForReports(UUID jobId, List<LinkUpdateReport> reports) {
+    log.info("updateForReports:: [jobId: {}, reports count: {}]", jobId, reports.size());
+    log.debug("updateForReports:: [reports: {}]", reports);
+
+    reports.forEach(report -> {
+      var linkIds = report.getLinkIds();
+      var status = mapReportStatus(report);
+      log.debug("Update links status for [status: {}, linkIds: {}, jobId: {}]", status, linkIds, jobId);
+      if (CollectionUtils.isNotEmpty(linkIds)) {
+        var links = getLinksByIds(linkIds);
+
+        links.forEach(link -> {
+          link.setStatus(status);
+          link.setErrorCause(StringUtils.trimToNull(report.getFailCause()));
+        });
+
+        saveAll(report.getInstanceId(), links);
+      }
+    });
+  }
+
+  private void saveAll(UUID instanceId, List<InstanceAuthorityLink> links) {
+    log.info("Save links for [instanceId: {}, links amount: {}]", instanceId, links.size());
+    log.debug("Save links for [instanceId: {}, links: {}]", instanceId, links);
+
+    instanceLinkRepository.saveAll(links);
+  }
+
   /**
    * Verification of authorities existence on links update needed since there's no foreign key constraint.
    * */
@@ -214,5 +229,12 @@ public class InstanceAuthorityLinkingService {
     return new LinkedHashSet<>(source).stream()
       .filter(t -> target.stream().noneMatch(link -> link.isSameLink(t)))
       .toList();
+  }
+
+  private InstanceAuthorityLinkStatus mapReportStatus(LinkUpdateReport report) {
+    return switch (report.getStatus()) {
+      case SUCCESS -> InstanceAuthorityLinkStatus.ACTUAL;
+      case FAIL -> InstanceAuthorityLinkStatus.ERROR;
+    };
   }
 }

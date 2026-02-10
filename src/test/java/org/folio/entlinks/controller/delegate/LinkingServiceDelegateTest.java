@@ -11,6 +11,7 @@ import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
 import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -47,7 +48,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-//todo: update tests
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class LinkingServiceDelegateTest {
@@ -82,6 +82,25 @@ class LinkingServiceDelegateTest {
     assertThat(actual.getLinks())
       .hasSize(1)
       .containsExactlyInAnyOrder(linkDto);
+
+    verify(linkingService).setNaturalIdForSharedAuthority(links);
+  }
+
+  @Test
+  void getLinks_positive_emptyLinks() {
+    var links = List.<InstanceAuthorityLink>of();
+
+    when(linkingService.getLinksByInstanceId(INSTANCE_ID)).thenReturn(links);
+    when(mapper.convertToDto(links)).thenReturn(
+      new InstanceLinkDtoCollection().links(List.of()).totalRecords(0));
+
+    var actual = delegate.getLinks(INSTANCE_ID);
+
+    assertThat(actual).isNotNull()
+      .extracting(InstanceLinkDtoCollection::getTotalRecords)
+      .isEqualTo(0);
+
+    assertThat(actual.getLinks()).isEmpty();
   }
 
   /**
@@ -145,6 +164,52 @@ class LinkingServiceDelegateTest {
     var instanceData = Map.of(instanceId.toString(), instanceData());
 
     testGetLinkedBibUpdateStats_positive(linksMock, singletonList(instanceId.toString()), instanceData);
+  }
+
+  @Test
+  void getLinkedBibUpdateStats_positive_blankTitleFiltered() {
+    var linksMock = links(3, "error");
+    var instanceIds = linksMock.stream()
+      .map(InstanceAuthorityLink::getInstanceId)
+      .map(UUID::toString)
+      .toList();
+    var instanceData = new HashMap<String, Pair<String, String>>();
+    instanceData.put(instanceIds.get(0), instanceData(false));
+    instanceData.put(instanceIds.get(1), Pair.of("", "source"));
+    instanceData.put(instanceIds.get(2), instanceData(false));
+    var expectedLinks = List.of(linksMock.get(0), linksMock.get(2));
+
+    testGetLinkedBibUpdateStats_positive(linksMock, expectedLinks, instanceIds, instanceData, null);
+  }
+
+  @Test
+  void getLinkedBibUpdateStats_positive_emptyLinks() {
+    var status = LinkStatus.ACTUAL;
+    var fromDate = OffsetDateTime.now();
+    var toDate = fromDate.plusDays(1);
+    var limit = 3;
+
+    when(linkingService.getLinks(status, fromDate, toDate, limit + 1))
+      .thenReturn(List.of());
+
+    var actual = delegate.getLinkedBibUpdateStats(fromDate, toDate, status, limit);
+
+    assertThat(actual)
+      .isEqualTo(new BibStatsDtoCollection().stats(List.of()).next(null));
+  }
+
+  @Test
+  void getLinkedBibUpdateStats_positive_nullDates() {
+    var status = LinkStatus.ACTUAL;
+    var limit = 3;
+
+    when(linkingService.getLinks(status, null, null, limit + 1))
+      .thenReturn(List.of());
+
+    var actual = delegate.getLinkedBibUpdateStats(null, null, status, limit);
+
+    assertThat(actual)
+      .isEqualTo(new BibStatsDtoCollection().stats(List.of()).next(null));
   }
 
   @Test
@@ -230,6 +295,30 @@ class LinkingServiceDelegateTest {
       .hasSize(ids.size())
       .extracting(LinksCountDto::getId, LinksCountDto::getTotalLinks)
       .containsExactlyInAnyOrder(tuple(ids.get(0), 2), tuple(ids.get(1), 1), tuple(ids.get(2), 0));
+
+    verify(executor).executeAsCentralTenantForMember(any());
+  }
+
+  @Test
+  void countLinksByAuthorityIds_positive_withConsortiumCentralLinks() {
+    var ids = List.of(randomUUID(), randomUUID(), randomUUID());
+    var localLinks = new HashMap<UUID, Integer>();
+    localLinks.put(ids.get(0), 2);
+    localLinks.put(ids.get(1), 1);
+    var consortiumLinks = Map.of(ids.get(0), 3, ids.get(2), 2);
+
+    when(linkingService.countLinksByAuthorityIds(new HashSet<>(ids))).thenReturn(localLinks);
+    when(executor.executeAsCentralTenantForMember(any())).thenReturn(consortiumLinks);
+    when(mapper.convert(anyMap())).thenCallRealMethod();
+
+    var actual = delegate.countLinksByAuthorityIds(new UuidCollection().ids(ids));
+
+    assertThat(actual.getLinks())
+      .hasSize(ids.size())
+      .extracting(LinksCountDto::getId, LinksCountDto::getTotalLinks)
+      .containsExactlyInAnyOrder(tuple(ids.get(0), 5), tuple(ids.get(1), 1), tuple(ids.get(2), 2));
+
+    verify(executor).executeAsCentralTenantForMember(any());
   }
 
   private void testGetLinkedBibUpdateStats_positive(List<InstanceAuthorityLink> linksMock,
@@ -271,6 +360,8 @@ class LinkingServiceDelegateTest {
       .isEqualTo(new BibStatsDtoCollection()
         .stats(expectedStatsDtos)
         .next(next));
+
+    verify(linkingService).setNaturalIdForSharedAuthority(linksMock);
   }
 
   private static Pair<String, String> instanceData() {

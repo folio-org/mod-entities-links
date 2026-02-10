@@ -57,14 +57,6 @@ public interface InstanceLinkRepository extends JpaRepository<InstanceAuthorityL
   List<LinkCountView> countLinksByAuthorityIds(@Param("authorityIds") Set<UUID> authorityIds);
 
   @Modifying
-  @Query("""
-    update InstanceAuthorityLink i set i.status = :status, i.errorCause = :errorCause
-    where i.authorityId = :authorityId""")
-  void updateStatusAndErrorCauseByAuthorityId(@Param("status") InstanceAuthorityLinkStatus status,
-                                              @Param("errorCause") String errorCause,
-                                              @Param("authorityId") UUID authorityId);
-
-  @Modifying
   @Query("delete from InstanceAuthorityLink i where i.authorityId in :authorityIds")
   void deleteByAuthorityIds(@Param("authorityIds") Collection<UUID> authorityIds);
 }

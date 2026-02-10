@@ -11,7 +11,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
-import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
@@ -19,9 +18,6 @@ import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityDataStatsPropagationService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
-import org.folio.entlinks.service.consortium.propagation.model.AuthorityDataStatsPropagationData;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHandler;
@@ -45,7 +41,6 @@ public class InstanceAuthorityLinkUpdateService {
   private final ConsortiumTenantsService consortiumTenantsService;
   private final FolioExecutionContext folioExecutionContext;
   private final SystemUserScopedExecutionService executionService;
-  private final ConsortiumAuthorityDataStatsPropagationService statsPropagationService;
 
   public InstanceAuthorityLinkUpdateService(AuthorityDataStatService authorityDataStatService,
                                             AuthorityMappingRulesProcessingService mappingRulesProcessingService,
@@ -55,8 +50,7 @@ public class InstanceAuthorityLinkUpdateService {
                                             AuthoritySourceRecordService sourceRecordService,
                                             ConsortiumTenantsService consortiumTenantsService,
                                             FolioExecutionContext folioExecutionContext,
-                                            SystemUserScopedExecutionService executionService,
-                                            ConsortiumAuthorityDataStatsPropagationService statsPropagationService) {
+                                            SystemUserScopedExecutionService executionService) {
     this.authorityDataStatService = authorityDataStatService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.linkingService = linkingService;
@@ -67,7 +61,6 @@ public class InstanceAuthorityLinkUpdateService {
     this.consortiumTenantsService = consortiumTenantsService;
     this.folioExecutionContext = folioExecutionContext;
     this.executionService = executionService;
-    this.statsPropagationService = statsPropagationService;
   }
 
   public void handleAuthoritiesChanges(List<AuthorityDomainEvent> events) {
@@ -83,8 +76,7 @@ public class InstanceAuthorityLinkUpdateService {
       .toList();
     fillChangeHoldersWithSourceRecord(changeHolders);
 
-    var authorityDataStats = prepareAndSaveAuthorityDataStats(changeHolders);
-    propagateAuthorityDataStats(authorityDataStats);
+    prepareAndSaveAuthorityDataStats(changeHolders);
 
     processEventsByChangeType(changeHolders);
     processChangesForConsortiumMemberTenants(incomingAuthorityIds, changeHolders);
@@ -139,17 +131,17 @@ public class InstanceAuthorityLinkUpdateService {
    * Prepares and saves AuthorityDataStats for updated authorities.
    * No need to create data stats for authority deletion since they're deleted after authority is soft-deleted.
    * */
-  private List<AuthorityDataStat> prepareAndSaveAuthorityDataStats(List<AuthorityChangeHolder> changeHolders) {
+  private void prepareAndSaveAuthorityDataStats(List<AuthorityChangeHolder> changeHolders) {
     var authorityDataStats = changeHolders.stream()
       .map(AuthorityChangeHolder::toAuthorityDataStat)
       .filter(dataStat -> dataStat.getAction() != null
         && !dataStat.getAction().equals(AuthorityDataStatAction.DELETE))
       .toList();
     if (authorityDataStats.isEmpty()) {
-      return authorityDataStats;
+      return;
     }
 
-    return authorityDataStatService.createInBatch(authorityDataStats);
+    authorityDataStatService.createInBatch(authorityDataStats);
   }
 
   /**
@@ -174,8 +166,7 @@ public class InstanceAuthorityLinkUpdateService {
         var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(authorityIds);
 
         changeHolderCopies.forEach(changeHolder -> {
-          var linksCount = linksNumberByAuthorityId.getOrDefault(
-            changeHolder.getAuthorityId(), 0) + changeHolder.getNumberOfLinks();
+          var linksCount = linksNumberByAuthorityId.getOrDefault(changeHolder.getAuthorityId(), 0);
           changeHolder.setNumberOfLinks(linksCount);
         });
         processEventsByChangeType(changeHolderCopies);
@@ -197,18 +188,5 @@ public class InstanceAuthorityLinkUpdateService {
     log.info("Sending {} {} events to Kafka for tenant {}", events.size(), type,
         folioExecutionContext.getTenantId());
     eventProducer.sendMessages(events);
-  }
-
-  /**
-   * Propagate stats created on central tenant to member tenants.
-   * Links count is recalculated for each member in propagation service.
-   * */
-  private void propagateAuthorityDataStats(List<AuthorityDataStat> authorityDataStats) {
-    if (authorityDataStats.isEmpty()) {
-      return;
-    }
-    var propagationData = AuthorityDataStatsPropagationData.forCreate(authorityDataStats);
-    statsPropagationService.propagate(propagationData, ConsortiumPropagationService.PropagationType.CREATE,
-      folioExecutionContext.getTenantId());
   }
 }

@@ -22,7 +22,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
@@ -42,13 +41,11 @@ import org.folio.entlinks.domain.dto.ParsedRecordContent;
 import org.folio.entlinks.domain.dto.RecordType;
 import org.folio.entlinks.domain.dto.RelatedHeading;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
-import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordParsedRecord;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
-import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
@@ -145,12 +142,18 @@ public class TestDataUtils {
 
   public static LinkUpdateReport report(String tenant, UUID jobId, LinkUpdateReport.StatusEnum status,
                                         String failCause) {
+    return report(tenant, jobId, status, failCause,
+      List.of(RandomUtils.insecure().randomInt(), RandomUtils.insecure().randomInt()));
+  }
+
+  public static LinkUpdateReport report(String tenant, UUID jobId, LinkUpdateReport.StatusEnum status,
+                                        String failCause, List<Integer> linkIds) {
     return new LinkUpdateReport()
       .tenant(tenant)
       .jobId(jobId)
       .instanceId(UUID.randomUUID())
       .status(status)
-      .linkIds(List.of(RandomUtils.insecure().randomInt(), RandomUtils.insecure().randomInt()))
+      .linkIds(linkIds)
       .failCause(failCause);
   }
 
@@ -194,17 +197,12 @@ public class TestDataUtils {
       .authorityNaturalIdNew("naturalIdNew")
       .authoritySourceFileNew(sourceFileId)
       .authoritySourceFileOld(UUID.randomUUID())
-      .completedAt(Timestamp.from(Instant.now()))
       .headingNew("headingNew")
       .headingOld("headingOld")
       .headingTypeNew("headingTypeNew")
       .headingTypeOld("headingTypeOld")
-      .lbUpdated(2)
-      .lbFailed(1)
-      .lbTotal(5)
       .startedAt(Timestamp.from(Instant.now().minus(4, ChronoUnit.DAYS)))
       .startedByUserId(userId)
-      .status(AuthorityDataStatStatus.COMPLETED_SUCCESS)
       .build();
   }
 
@@ -229,7 +227,7 @@ public class TestDataUtils {
   }
 
   public static AuthorityStatsDto getStatDataDto(AuthorityDataStat dataStat, UsersClient.User user) {
-    AuthorityStatsDto dto = new AuthorityStatsDto();
+    var dto = new AuthorityStatsDto();
     dto.setId(dataStat.getId());
     dto.setAuthorityId(dataStat.getAuthorityId());
     dto.setAction(LinkAction.fromValue(dataStat.getAction().name()));
@@ -237,36 +235,17 @@ public class TestDataUtils {
     dto.setHeadingOld(dataStat.getHeadingOld());
     dto.setHeadingTypeNew(dataStat.getHeadingTypeNew());
     dto.setHeadingTypeOld(dataStat.getHeadingTypeOld());
-    dto.setLbUpdated(dataStat.getLbUpdated());
-    dto.setLbFailed(dataStat.getLbFailed());
-    dto.setLbTotal(dataStat.getLbTotal());
     dto.setNaturalIdNew(dataStat.getAuthorityNaturalIdNew());
     dto.setNaturalIdOld(dataStat.getAuthorityNaturalIdOld());
-    AuthorityControlMetadata metadata = new AuthorityControlMetadata();
+    var metadata = new AuthorityControlMetadata();
     metadata.setStartedByUserId(dataStat.getStartedByUserId());
     metadata.setStartedByUserFirstName(user.getPersonal().firstName());
     metadata.setStartedByUserLastName(user.getPersonal().lastName());
     metadata.setStartedAt(fromTimestamp(dataStat.getStartedAt()));
-    metadata.setCompletedAt(fromTimestamp(dataStat.getCompletedAt()));
     dto.setMetadata(metadata);
     dto.setSourceFileNew(dataStat.getAuthoritySourceFileNew().toString());
     dto.setSourceFileOld(dataStat.getAuthoritySourceFileOld().toString());
     return dto;
-  }
-
-  public static StrippedParsedRecordCollection getAuthorityRecordsCollection(List<InstanceAuthorityLink> validLinks,
-                                                                             List<InstanceAuthorityLink> invalidLinks) {
-    var authorityRecords = ListUtils.union(
-      getAuthorityRecords(validLinks, true),
-      getAuthorityRecords(invalidLinks, false)
-    );
-
-    return new StrippedParsedRecordCollection(authorityRecords, authorityRecords.size());
-  }
-
-  public static StrippedParsedRecordCollection getAuthorityRecordsCollection(List<InstanceAuthorityLink> links) {
-    var authorityRecords = getAuthorityRecords(links, true);
-    return new StrippedParsedRecordCollection(authorityRecords, authorityRecords.size());
   }
 
   public static List<StrippedParsedRecord> getAuthorityRecords(List<InstanceAuthorityLink> links, Boolean valid) {

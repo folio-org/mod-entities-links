@@ -135,7 +135,6 @@ public class AuthorityChangeHolder {
         .headingTypeOld(headingTypeOld)
         .headingTypeNew(headingTypeNew)
         .action(getAuthorityDataStatAction())
-        .lbTotal(numberOfLinks)
         .build();
     if (this.event.getNewEntity() != null && this.event.getNewEntity().getMetadata() != null) {
       authorityDataStat.setStartedByUserId(this.event.getNewEntity().getMetadata().getUpdatedByUserId());
@@ -174,8 +173,8 @@ public class AuthorityChangeHolder {
 
   public AuthorityChangeHolder copy() {
     var copy = new AuthorityChangeHolder(event, changes, fieldTagRelation);
+    copy.setAuthorityDataStatId(authorityDataStatId);
     copy.setSourceRecord(sourceRecord);
-    copy.setNumberOfLinks(numberOfLinks);
     return copy;
   }
 }

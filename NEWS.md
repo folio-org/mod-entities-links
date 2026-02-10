@@ -1,9 +1,9 @@
 ## v4.1.0 YYYY-mm-DD
 ### Breaking changes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Remove Authority, AuthorityDataStat propagation ([MODELINKS-383](https://folio-org.atlassian.net/browse/MODELINKS-383))
 
 ### New APIs versions
-* Provides `instance-authority-links-statistics v2.1`
+* Provides `instance-authority-links-statistics v3.0`
 * Requires `API_NAME vX.Y`
 
 ### Features

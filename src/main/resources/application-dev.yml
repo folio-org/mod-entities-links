@@ -1,0 +1,162 @@
+# Development profile for local development with Spring Boot Docker Compose support
+# Activate this profile: --spring.profiles.active=dev or SPRING_PROFILES_ACTIVE=dev
+
+spring:
+  application:
+    name: mod-entities-links
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    hikari:
+      connectionTimeout: ${DB_CONNECTION_TIMEOUT:30000}
+      idleTimeout: ${DB_IDLE_TIMEOUT:600000}
+      keepaliveTime: ${DB_KEEPALIVE_TIME:0}
+      maxLifetime: ${DB_MAX_LIFETIME:1800000}
+      validationTimeout: ${DB_VALIDATION_TIMEOUT:5000}
+      maximumPoolSize: ${DB_MAXPOOLSIZE:10}
+      minimumIdle: ${DB_MINIMUM_IDLE:10}
+      initializationFailTimeout: ${DB_INITIALIZATION_FAIL_TIMEOUT:30000}
+      leakDetectionThreshold: ${DB_LEAK_DETECTION_THRESHOLD:60000}
+    url: jdbc:postgresql://localhost:5432/modules
+    password: folio_admin
+    username: folio_admin
+  liquibase:
+    change-log: classpath:db/changelog/changelog-master.xml
+  jpa:
+    properties:
+      hibernate:
+        ddl-auto: validate
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
+      accept-single-value-as-array: true
+  kafka:
+    bootstrap-servers: localhost:29092
+    consumer:
+      max-poll-records: ${KAFKA_CONSUMER_MAX_POLL_RECORDS:50}
+    security:
+      protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+    ssl:
+      key-store-password: ${KAFKA_SSL_KEYSTORE_PASSWORD:}
+      key-store-location: ${KAFKA_SSL_KEYSTORE_LOCATION:}
+      trust-store-password: ${KAFKA_SSL_TRUSTSTORE_PASSWORD:}
+      trust-store-location: ${KAFKA_SSL_TRUSTSTORE_LOCATION:}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        retries: 5
+  cache:
+    cache-names:
+      - authority-mapping-rules-cache
+      - authority-linking-rules-cache
+      - consortium-tenants-cache
+      - consortium-central-tenant-cache
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=3600s
+  sql:
+    init:
+      continue-on-error: true
+  docker:
+    compose:
+      enabled: true
+      file: ./docker/infra-docker-compose.yml
+
+folio:
+  environment: ${ENV:folio}
+  okapi-url: ${OKAPI_URL:http://localhost:9130}
+  system-user:
+    enabled: ${SYSTEM_USER_ENABLED:false}
+    username: ${SYSTEM_USER_USERNAME:mod-entities-links}
+    password: ${SYSTEM_USER_PASSWORD:mod-entities-links}
+    lastname: Automated linking update
+    permissionsFilePath: permissions/mod-entities-links-permissions.csv
+  exchange:
+    enabled: true
+  kafka:
+    topics:
+      - name: authority.authority-source-file
+        numPartitions: ${KAFKA_AUTHORITY_SOURCE_FILE_TOPIC_PARTITIONS:1}
+        replicationFactor: ${KAFKA_AUTHORITY_SOURCE_FILE_TOPIC_REPLICATION_FACTOR:}
+      - name: authorities.authority
+        numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:50}
+        replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR:}
+      - name: links.instance-authority
+        numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:10}
+        replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR:}
+      - name: links.instance-authority-stats
+        numPartitions: ${KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_PARTITIONS:10}
+        replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_REPLICATION_FACTOR:}
+    listener:
+      authority:
+        concurrency: ${KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY:1}
+        topic-pattern: (${folio.environment}\.)(.*\.)authorities\.authority
+        group-id: ${folio.environment}-mod-entities-links-authorities-group
+      instance-authority-stats:
+        concurrency: ${KAFKA_INSTANCE_AUTHORITY_STATS_CONSUMER_CONCURRENCY:1}
+        topic-pattern: (${folio.environment}\.)(.*\.)links\.instance-authority-stats
+        group-id: ${folio.environment}-mod-entities-links-stats-group
+      specification-storage:
+        concurrency: 1
+        topic-pattern: (${folio.environment}\.)(.*\.)specification-storage\.specification\.updated
+        group-id: ${folio.environment}-mod-entities-specification-storage-group
+        auto-offset-reset: EARLIEST
+  instance-authority:
+    change:
+      numPartitions: ${KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS:100}
+  instance-storage:
+    batch-size: ${INSTANCE_STORAGE_QUERY_BATCH_SIZE:50}
+  authority-archive:
+    expire:
+      retentionPeriodInDays: ${AUTHORITY_ARCHIVES_EXPIRATION_PERIOD:7}
+  local-storage:
+    localSubPath: ${S3_LOCAL_SUB_PATH:mod-entities-links}
+  remote-storage:
+    endpoint: ${S3_URL:https://s3.amazonaws.com}
+    region: ${S3_REGION:us-west-2}
+    bucket: ${S3_BUCKET:}
+    accessKey: ${S3_ACCESS_KEY_ID:}
+    secretKey: ${S3_SECRET_ACCESS_KEY:}
+    awsSdk: ${S3_IS_AWS:false}
+    retryCount: ${S3_RETRY_COUNT:3}
+    retryDelayMs: ${S3_RETRY_DELAY_MS:500}
+  retry:
+    enabled: true
+  jpa:
+    repository:
+      base-packages: org.folio.entlinks.domain
+  tenant:
+    settings:
+      domain: authorities
+      permission-check-enabled: false
+    validation:
+      enabled: true
+  logging:
+    request:
+      enabled: true
+    exchange:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info,health,liquibase,threaddump,heapdump,loggers
+      base-path: /admin
+  endpoint:
+    loggers:
+      access: unrestricted
+
+server:
+  port: 8081
+
+
+

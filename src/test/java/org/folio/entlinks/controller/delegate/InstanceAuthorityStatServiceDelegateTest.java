@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import org.folio.entlinks.client.UsersClient;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
@@ -27,8 +28,6 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
-import org.folio.spring.client.UsersClient;
-import org.folio.spring.model.ResultList;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +83,7 @@ class InstanceAuthorityStatServiceDelegateTest {
 
     var authorityDataStat1 = statData.get(0);
     var authorityDataStat2 = statData.get(1);
-    var userList = users.getResult();
+    var userList = users.users();
     when(mapper.convertToDto(authorityDataStat1))
       .thenReturn(TestDataUtils.getStatDataDto(authorityDataStat1, userList.getFirst()));
     when(mapper.convertToDto(authorityDataStat2))
@@ -134,7 +133,7 @@ class InstanceAuthorityStatServiceDelegateTest {
   void fetchStats_whenUpdatedUserIsNull() {
     //  WHEN
     when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.of(sourceFile));
-    when(usersClient.query(anyString())).thenReturn(ResultList.of(0, null));
+    when(usersClient.query(anyString())).thenReturn(new UsersClient.UserCollection(null));
 
     var authorityChangeStatDtoCollection = delegate
       .fetchAuthorityDataStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);

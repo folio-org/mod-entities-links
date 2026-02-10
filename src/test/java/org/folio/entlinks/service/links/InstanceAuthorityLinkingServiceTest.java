@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ERROR;
 import static org.folio.support.TestDataUtils.links;
+import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.TestDataUtils.report;
 import static org.folio.support.TestDataUtils.reports;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,6 +39,7 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.projection.InstanceLinkView;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
+import org.folio.entlinks.domain.entity.projection.LinkCountViewImpl;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.service.authority.AuthorityService;
@@ -373,7 +375,7 @@ class InstanceAuthorityLinkingServiceTest {
     var authorityId1 = randomUUID();
     var authorityId2 = randomUUID();
     var authorityId3 = randomUUID();
-    var resultSet = List.of(
+    var resultSet = List.<LinkCountView>of(
       linkCountView(authorityId1, 10),
       linkCountView(authorityId2, 15)
     );
@@ -399,6 +401,17 @@ class InstanceAuthorityLinkingServiceTest {
   }
 
   @Test
+  void saveAll_positive() {
+    var instanceId = UUID.randomUUID();
+    var links = links(2);
+
+    service.saveAll(instanceId, links);
+
+    verify(instanceLinkRepository).saveAll(links);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
   void getLinks_positive() {
     var status = LinkStatus.ACTUAL;
     var fromDate = OffsetDateTime.now();
@@ -571,18 +584,11 @@ class InstanceAuthorityLinkingServiceTest {
     return ArgumentCaptor.forClass(listClass);
   }
 
-  private LinkCountView linkCountView(UUID id, int totalLinks) {
-    return new LinkCountView() {
-      @Override
-      public UUID getId() {
-        return id;
-      }
-
-      @Override
-      public Integer getTotalLinks() {
-        return totalLinks;
-      }
-    };
+  private LinkCountViewImpl linkCountView(UUID id, int totalLinks) {
+    var view = new LinkCountViewImpl();
+    view.setId(id);
+    view.setTotalLinks(totalLinks);
+    return view;
   }
 
   private InstanceLinkView instanceLinkView(InstanceAuthorityLink link, String authorityNaturalId) {
@@ -600,10 +606,10 @@ class InstanceAuthorityLinkingServiceTest {
   }
 
   private void mockAuthorities(List<InstanceAuthorityLink> links) {
-    var authoritiesExistance = links.stream()
+    var authoritiesExistence = links.stream()
         .map(InstanceAuthorityLink::getAuthorityId)
         .collect(Collectors.toMap(id -> id, id -> true));
-    when(authorityService.authoritiesExist(anySet())).thenReturn(authoritiesExistance);
+    when(authorityService.authoritiesExist(anySet())).thenReturn(authoritiesExistence);
   }
 
   private Consumer<InstanceAuthorityLink> linkAsserter(InstanceAuthorityLinkStatus status, String errorCause) {

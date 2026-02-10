@@ -323,7 +323,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
     var fromDate = OffsetDateTime.now();
     var toDate = fromDate.minusDays(1);
     perform(getStatsRequest(LinkStatus.ACTUAL, fromDate, toDate))
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))

@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.AuthorityDto;
@@ -88,7 +89,7 @@ class UpdateAuthorityChangeHandlerTest {
     expected.setTenant(context.getTenantId());
     expected.setStatus(LinkUpdateReport.StatusEnum.FAIL);
 
-    when(mappingRulesProcessingService.getTagByAuthorityChangeField(any())).thenReturn("notExistingTag");
+    when(mappingRulesProcessingService.getTagByAuthorityChangeField(any())).thenReturn(Optional.of("notExistingTag"));
 
     var changes = Map.of(
       PERSONAL_NAME, new AuthorityChange(PERSONAL_NAME, "new", "old")

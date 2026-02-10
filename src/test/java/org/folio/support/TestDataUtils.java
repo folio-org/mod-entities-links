@@ -6,6 +6,7 @@ import static java.util.UUID.randomUUID;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authorityDto;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 
@@ -24,6 +25,7 @@ import java.util.stream.Stream;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
+import org.folio.entlinks.client.UsersClient;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
@@ -58,8 +60,6 @@ import org.folio.entlinks.domain.entity.ReindexJobStatus;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEventType;
-import org.folio.spring.client.UsersClient;
-import org.folio.spring.model.ResultList;
 
 @UtilityClass
 public class TestDataUtils {
@@ -77,7 +77,7 @@ public class TestDataUtils {
 
   public static AuthorityDomainEvent authoritySoftDeleteEvent(AuthorityDto n, AuthorityDto o) {
     return new AuthorityDomainEvent(randomUUID(), o, n, DomainEventType.DELETE, AuthorityDeleteEventSubType.SOFT_DELETE,
-        TENANT_ID);
+      TENANT_ID);
   }
 
   public static List<InstanceLinkDto> linksDto(UUID instanceId, Link... links) {
@@ -206,23 +206,10 @@ public class TestDataUtils {
       .build();
   }
 
-  public static ResultList<UsersClient.User> usersList(List<UUID> userIds) {
-    return ResultList.of(2, List.of(
-
-        UsersClient.User.builder()
-            .id(userIds.get(0).toString())
-            .username("john_doe")
-            .type("user")
-            .active(true)
-            .personal(new UsersClient.User.Personal("John", "Doe"))
-            .build(),
-        UsersClient.User.builder()
-            .id(userIds.get(1).toString())
-            .username("quick_fox")
-            .type("user1")
-            .active(true)
-            .personal(new UsersClient.User.Personal("Quick", "Brown"))
-            .build()
+  public static UsersClient.UserCollection usersList(List<UUID> userIds) {
+    return new UsersClient.UserCollection(List.of(
+      new UsersClient.User(userIds.get(0).toString(), "john_doe", new UsersClient.Personal("John", "Doe")),
+      new UsersClient.User(userIds.get(1).toString(), "quick_fox", new UsersClient.Personal("Quick", "Brown"))
     ));
   }
 
@@ -239,8 +226,8 @@ public class TestDataUtils {
     dto.setNaturalIdOld(dataStat.getAuthorityNaturalIdOld());
     var metadata = new AuthorityControlMetadata();
     metadata.setStartedByUserId(dataStat.getStartedByUserId());
-    metadata.setStartedByUserFirstName(user.getPersonal().firstName());
-    metadata.setStartedByUserLastName(user.getPersonal().lastName());
+    metadata.setStartedByUserFirstName(user.personal().firstName());
+    metadata.setStartedByUserLastName(user.personal().lastName());
     metadata.setStartedAt(fromTimestamp(dataStat.getStartedAt()));
     dto.setMetadata(metadata);
     dto.setSourceFileNew(dataStat.getAuthoritySourceFileNew().toString());
@@ -268,6 +255,17 @@ public class TestDataUtils {
       .toList();
   }
 
+  public static AuthorityDto modifiedAuthorityDto(int authorityIdNum, int sourceFileIdNum) {
+    var expected = authorityDto(authorityIdNum, sourceFileIdNum);
+    expected.setSource("updated source");
+    expected.setPersonalName(null);
+    expected.setCorporateName("headingCorporateName");
+    expected.setSftCorporateName(List.of("sftCorporateName"));
+    expected.setSaftCorporateName(List.of("saftCorporateName"));
+    expected.setSaftCorporateNameTrunc(List.of("saftCorporateNameTrunc"));
+    return expected;
+  }
+
   @UtilityClass
   public class AuthorityTestData {
     public static final String CREATED_DATE = "2021-10-28T06:31:31+05:00";
@@ -275,15 +273,15 @@ public class TestDataUtils {
 
     private static final String[] SOURCES = new String[] {"source1", "source2", "source3", "source4"};
     private static final String[] HEADINGS =
-        new String[] {"headingPersonalName", "headingCorporateName", "headingGenreTerm", "headingGenreTerm"};
+      new String[] {"headingPersonalName", "headingCorporateName", "headingGenreTerm", "headingGenreTerm"};
     private static final String[] HEADING_TYPES =
-        new String[] {"personalName", "corporateName", "genreTerm", "genreTerm"};
+      new String[] {"personalName", "corporateName", "genreTerm", "genreTerm"};
     private static final Character[] HEADING_CODES = new Character[] {'a', 'b', 'c', 'd'};
 
     private static final UUID[] SOURCE_FILE_IDS = new UUID[] {
-        UUID.fromString("51243be4-27cb-4d78-9206-c956299483b1"),
-        UUID.fromString("453e9a34-31a3-4f82-b3f5-1057f20b050e"),
-        UUID.fromString("08c9fd60-d038-46bb-be83-45f93a8e53b7")};
+      UUID.fromString("51243be4-27cb-4d78-9206-c956299483b1"),
+      UUID.fromString("453e9a34-31a3-4f82-b3f5-1057f20b050e"),
+      UUID.fromString("08c9fd60-d038-46bb-be83-45f93a8e53b7")};
     private static final Integer[] SOURCE_FILE_CODE_IDS = new Integer[] {1, 2, 3};
     private static final String[] SOURCE_FILE_CODES = new String[] {"codeOne", "codeTwo", "codeThree"};
     private static final String[] SOURCE_FILE_NAMES = new String[] {"name1", "name2", "name3"};
@@ -335,7 +333,7 @@ public class TestDataUtils {
       entity.setSource(SOURCE_FILE_SOURCES[sourceFileIdNum]);
       entity.setType(SOURCE_FILE_TYPES[sourceFileIdNum]);
       entity.setBaseUrlProtocol(sourceFileIdNum % 2 == 0 ? "https" : "http");
-      entity.setBaseUrl(SOURCE_FILE_URLS[sourceFileIdNum]  + "/");
+      entity.setBaseUrl(SOURCE_FILE_URLS[sourceFileIdNum] + "/");
       entity.setSequenceName(SOURCE_FILE_SEQUENCE_NAMES[sourceFileIdNum]);
       entity.setSelectable(sourceFileIdNum % 2 == 0);
       entity.setHridStartNumber(sourceFileIdNum);
@@ -456,7 +454,7 @@ public class TestDataUtils {
 
     public static Link of(InstanceAuthorityLinkStatus status, String errorCause) {
       return new Link(AUTHORITY_IDS[0], TAGS[0], AUTHORITY_IDS[0].toString(),
-          TAGS_TO_SUBFIELDS.get(TAGS[0]).toCharArray(), 1, status, errorCause);
+        TAGS_TO_SUBFIELDS.get(TAGS[0]).toCharArray(), 1, status, errorCause);
     }
 
     public InstanceLinkDto toDto(UUID instanceId) {

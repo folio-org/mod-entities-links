@@ -10,19 +10,20 @@ import org.folio.entlinks.domain.dto.FieldRange;
 import org.folio.entlinks.domain.dto.RecordType;
 import org.folio.entlinks.domain.dto.SourceRecord;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
-@FeignClient("source-storage")
+@HttpExchange("source-storage")
 public interface SourceStorageClient {
 
-  @GetMapping("/source-records/{id}?idType=AUTHORITY")
-  SourceRecord getMarcAuthorityById(@PathVariable("id") UUID id);
+  @GetExchange("/source-records/{id}?idType=AUTHORITY")
+  SourceRecord getMarcAuthorityById(@PathVariable UUID id);
 
-  @PostMapping("/batch/parsed-records/fetch")
-  StrippedParsedRecordCollection fetchParsedRecordsInBatch(FetchParsedRecordsBatchRequest recordsBatchRequest);
+  @PostExchange("/batch/parsed-records/fetch")
+  StrippedParsedRecordCollection fetchParsedRecords(@RequestBody FetchParsedRecordsBatchRequest recordsBatchRequest);
 
   default FetchParsedRecordsBatchRequest buildBatchFetchRequestForAuthority(Set<UUID> externalIds,
                                                                             String fieldFrom,

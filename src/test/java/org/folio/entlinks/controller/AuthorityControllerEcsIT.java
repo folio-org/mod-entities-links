@@ -1,9 +1,5 @@
 package org.folio.entlinks.controller;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
@@ -38,7 +34,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 @IntegrationTest
@@ -48,7 +44,7 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
   AUTHORITY_TABLE,
   AUTHORITY_ARCHIVE_TABLE,
   AUTHORITY_SOURCE_FILE_TABLE},
-  tenants = TENANT_ID)
+                 tenants = {CENTRAL_TENANT_ID, TENANT_ID})
 class AuthorityControllerEcsIT extends IntegrationTestBase {
   private KafkaMessageListenerContainer<String, AuthorityDomainEvent> container;
   private BlockingQueue<ConsumerRecord<String, AuthorityDomainEvent>> consumerRecords;
@@ -100,13 +96,6 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
       assertEquals(0, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID,
         "deleted = true"));
     });
-  }
-
-  private void mockExpirationSettingsRequest() {
-    okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-      .withQueryParam("query", equalTo("(scope=authority-storage AND key=authority-archives-expiration)"))
-      .withQueryParam("limit", equalTo("10000"))
-      .willReturn(aResponse().withStatus(500)));
   }
 
   private Authority createAuthority() {

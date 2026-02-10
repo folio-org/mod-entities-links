@@ -1,8 +1,11 @@
 package org.folio.entlinks.service.messaging.authority.model;
 
+import static org.folio.entlinks.utils.ObjectUtils.transformIfNotNull;
+
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -98,6 +101,39 @@ public class AuthorityChangeHolder {
     var changeMap = new EnumMap<>(changes);
     changeMap.remove(AuthorityChangeField.NATURAL_ID);
 
+    var headingChange = getHeadingChange(changeMap);
+
+    var authorityDataStat = prepareDataStat(headingChange);
+    if (this.event.getNewEntity() != null && this.event.getNewEntity().getMetadata() != null) {
+      authorityDataStat.setStartedByUserId(this.event.getNewEntity().getMetadata().getUpdatedByUserId());
+    }
+
+    return authorityDataStat;
+  }
+
+  public AuthorityChangeHolder copy() {
+    var copy = new AuthorityChangeHolder(event, changes, fieldTagRelation);
+    copy.setSourceRecord(sourceRecord);
+    return copy;
+  }
+
+  private AuthorityDataStat prepareDataStat(HeadingChange result) {
+    return AuthorityDataStat.builder()
+      .id(authorityDataStatId)
+      .authorityId(getAuthorityId())
+      .authorityNaturalIdOld(getOldNaturalId())
+      .authorityNaturalIdNew(getNewNaturalId())
+      .authoritySourceFileOld(getOldSourceFileId())
+      .authoritySourceFileNew(getNewSourceFileId())
+      .headingOld(result.headingOld())
+      .headingNew(result.headingNew())
+      .headingTypeOld(result.headingTypeOld())
+      .headingTypeNew(result.headingTypeNew())
+      .action(getAuthorityDataStatAction())
+      .build();
+  }
+
+  private HeadingChange getHeadingChange(EnumMap<AuthorityChangeField, AuthorityChange> changeMap) {
     String headingNew = null;
     String headingOld = null;
     String headingTypeNew = null;
@@ -105,9 +141,8 @@ public class AuthorityChangeHolder {
 
     if (changeMap.size() == 1) {
       var changeEntry = changeMap.entrySet().iterator().next();
-      var entryValue = changeEntry.getValue();
-      headingNew = entryValue.valNew() != null ? entryValue.valNew().toString() : null;
-      headingOld = entryValue.valOld() != null ? entryValue.valOld().toString() : null;
+      headingNew = transformIfNotNull(changeEntry.getValue().valNew(), Object::toString);
+      headingOld = transformIfNotNull(changeEntry.getValue().valOld(), Object::toString);
       var headingType = getHeadingType(changeEntry);
       headingTypeNew = headingType;
       headingTypeOld = headingType;
@@ -122,25 +157,7 @@ public class AuthorityChangeHolder {
         }
       }
     }
-
-    var authorityDataStat = AuthorityDataStat.builder()
-        .id(authorityDataStatId)
-        .authorityId(getAuthorityId())
-        .authorityNaturalIdOld(getOldNaturalId())
-        .authorityNaturalIdNew(getNewNaturalId())
-        .authoritySourceFileOld(getOldSourceFileId())
-        .authoritySourceFileNew(getNewSourceFileId())
-        .headingOld(headingOld)
-        .headingNew(headingNew)
-        .headingTypeOld(headingTypeOld)
-        .headingTypeNew(headingTypeNew)
-        .action(getAuthorityDataStatAction())
-        .build();
-    if (this.event.getNewEntity() != null && this.event.getNewEntity().getMetadata() != null) {
-      authorityDataStat.setStartedByUserId(this.event.getNewEntity().getMetadata().getUpdatedByUserId());
-    }
-
-    return authorityDataStat;
+    return new HeadingChange(headingNew, headingOld, headingTypeNew, headingTypeOld);
   }
 
   private AuthorityDataStatAction getAuthorityDataStatAction() {
@@ -177,4 +194,6 @@ public class AuthorityChangeHolder {
     copy.setSourceRecord(sourceRecord);
     return copy;
   }
+
+  private record HeadingChange(String headingNew, String headingOld, String headingTypeNew, String headingTypeOld) { }
 }

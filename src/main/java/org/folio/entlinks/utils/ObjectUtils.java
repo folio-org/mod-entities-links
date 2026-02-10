@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -43,6 +44,10 @@ public class ObjectUtils {
       }
     }
     return false;
+  }
+
+  public static <O, T> T transformIfNotNull(O object, Function<O, T> transformer) {
+    return object != null ? transformer.apply(object) : null;
   }
 
   public record Difference(String fieldName, Object val1, Object val2) { }

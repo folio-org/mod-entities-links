@@ -7,13 +7,12 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.s3.client.FolioS3Client;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 /**
  * Code partially generated using GitHub Copilot.
- * */
+ */
 @Log4j2
 @Component
 @RequiredArgsConstructor
@@ -22,9 +21,8 @@ public class BulkAuthorityS3Client {
   private final FolioS3Client s3Client;
 
   @Retryable(
-    retryFor = Exception.class,
-    maxAttemptsExpression = "${folio.remote-storage.retryCount}",
-    backoff = @Backoff(delayExpression = "${folio.remote-storage.retryDelayMs}"))
+    maxRetriesString = "${folio.remote-storage.retryCount}",
+    delayString = "${folio.remote-storage.retryDelayMs}")
   public List<String> readFile(String remoteFileName) {
     log.info("readFile::Reading lines from the file [filename: {}]", remoteFileName);
     try (var inputStream = s3Client.read(remoteFileName);
@@ -37,9 +35,8 @@ public class BulkAuthorityS3Client {
   }
 
   @Retryable(
-    retryFor = Exception.class,
-    maxAttemptsExpression = "${folio.remote-storage.retryCount}",
-    backoff = @Backoff(delayExpression = "${folio.remote-storage.retryDelayMs}"))
+    maxRetriesString = "${folio.remote-storage.retryCount}",
+    delayString = "${folio.remote-storage.retryDelayMs}")
   public void uploadErrorFiles(AuthoritiesBulkContext bulkContext) {
     log.info("uploadErrorFiles::Uploading [failedEntities: {}, errors: {}]",
       bulkContext.getFailedEntitiesFilePath(), bulkContext.getErrorsFilePath());

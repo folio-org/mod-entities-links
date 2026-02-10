@@ -4,7 +4,6 @@ import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.from;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 import static org.folio.support.TestDataUtils.links;
 import static org.folio.support.TestDataUtils.linksDto;
@@ -12,14 +11,12 @@ import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
 import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,8 +29,6 @@ import org.folio.entlinks.controller.converter.InstanceAuthorityLinkMapper;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.LinkStatus;
-import org.folio.entlinks.domain.dto.LinksCountDto;
-import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
@@ -210,6 +205,18 @@ class LinkingServiceDelegateTest {
 
     assertThat(actual)
       .isEqualTo(new BibStatsDtoCollection().stats(List.of()).next(null));
+  }
+
+  @Test
+  void getLinkedBibUpdateStats_positive_emptyInstanceData() {
+    var linksMock = links(3, "error");
+    var instanceIds = linksMock.stream()
+      .map(InstanceAuthorityLink::getInstanceId)
+      .map(UUID::toString)
+      .toList();
+    var instanceData = Map.<String, Pair<String, String>>of();
+
+    testGetLinkedBibUpdateStats_positive(linksMock, List.of(), instanceIds, instanceData, null);
   }
 
   @Test

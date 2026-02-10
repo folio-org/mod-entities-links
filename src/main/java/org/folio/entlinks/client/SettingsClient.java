@@ -4,17 +4,18 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.util.List;
 import java.util.UUID;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient("settings")
+@HttpExchange("settings")
+@Deprecated(forRemoval = true)
 public interface SettingsClient {
 
-  @GetMapping(value = "/entries", produces = APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/entries", accept = APPLICATION_JSON_VALUE)
   SettingsEntries getSettingsEntries(@RequestParam("query") String query, @RequestParam("limit") int limit);
 
-  record SettingsEntries(List<SettingEntry> items, ResultInfo resultInfo) {}
+  record SettingsEntries(List<SettingEntry> items, ResultInfo resultInfo) { }
 
   record SettingEntry(UUID id, String scope, String key, AuthoritiesExpirationSettingValue value, UUID userId) {
     public SettingEntry(UUID id, String scope, String key, AuthoritiesExpirationSettingValue value) {
@@ -22,7 +23,7 @@ public interface SettingsClient {
     }
   }
 
-  record AuthoritiesExpirationSettingValue(Boolean expirationEnabled, Integer retentionInDays) {}
+  record AuthoritiesExpirationSettingValue(Boolean expirationEnabled, Integer retentionInDays) { }
 
-  record ResultInfo(Integer totalRecords) {}
+  record ResultInfo(Integer totalRecords) { }
 }

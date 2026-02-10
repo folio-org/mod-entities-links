@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -211,7 +210,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .baseUrl("http://url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority Source File with the given 'id' already exists.")))
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
 
@@ -228,7 +227,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .baseUrl("http://url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority source file with the given 'name' already exists.")))
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
 
@@ -245,7 +244,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .baseUrl(createdEntities.getFirst().getFullBaseUrl()).type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority source file with the given 'baseUrl' already exists.")))
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
 
@@ -261,7 +260,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var dto = new AuthoritySourceFilePostDto("new name", "co").baseUrl("http://new/url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority source file with the given 'code' already exists.")))
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
 
@@ -277,7 +276,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     for (var code : List.of("123", "0x123", "abc ", "$")) {
       dto.setCode(code);
       tryPost(authoritySourceFilesEndpoint(), dto)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isUnprocessableContent())
         .andExpect(errorMessageMatch(
           containsString("Authority Source File prefix should be non-empty sequence of letters")))
         .andExpect(exceptionMatch(RequestBodyValidationException.class));
@@ -287,7 +286,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     for (var code : List.of("", "abcdefghijklmnopqrstuvwxyz")) {
       dto.setCode(code);
       tryPost(authoritySourceFilesEndpoint(), dto)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isUnprocessableContent())
         .andExpect(errorMessageMatch(is(
           "size must be between 1 and 25")))
         .andExpect(exceptionMatch(MethodArgumentNotValidException.class));
@@ -303,7 +302,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var dto = new AuthoritySourceFilePostDto(null, "code").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(exceptionMatch(MethodArgumentNotValidException.class))
       .andExpect(jsonPath("$.errors.[0].parameters[0].key", is("name")))
       .andExpect(jsonPath("$.errors.[0].parameters[0].value", is("null")))
@@ -353,33 +352,33 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var createDto = new AuthoritySourceFilePostDto("name1", "newCode").type("type1").baseUrl("http://url");
     var hridStartNumber = 125;
     var partiallyModified = new AuthoritySourceFilePatchDto()
-        .version(1)
-        .name("name2")
-        .type("type2")
-        .baseUrl("")
-        .selectable(false)
-        .code("replacedCode")
-        .hridManagement(new AuthoritySourceFilePatchDtoHridManagement().startNumber(hridStartNumber));
+      .version(1)
+      .name("name2")
+      .type("type2")
+      .baseUrl("")
+      .selectable(false)
+      .code("replacedCode")
+      .hridManagement(new AuthoritySourceFilePatchDtoHridManagement().startNumber(hridStartNumber));
 
     doPostAndReturn(authoritySourceFilesEndpoint(), createWithEmptyBaseUrlDto, AuthoritySourceFileDto.class);
     var created = doPostAndReturn(authoritySourceFilesEndpoint(), createDto, AuthoritySourceFileDto.class);
 
     doPatch(authoritySourceFilesEndpoint(created.getId()), partiallyModified)
-        .andExpect(status().isNoContent());
+      .andExpect(status().isNoContent());
 
     doGet(authoritySourceFilesEndpoint(created.getId()))
-        .andExpect(jsonPath("$.baseUrl").doesNotExist())
-        .andExpect(jsonPath("source", is(SourceEnum.LOCAL.getValue())))
-        .andExpect(jsonPath("name", is(partiallyModified.getName())))
-        .andExpect(jsonPath("type", is(partiallyModified.getType())))
-        .andExpect(jsonPath("selectable", is(partiallyModified.getSelectable())))
-        .andExpect(jsonPath("codes", is(List.of("replacedCode"))))
-        .andExpect(jsonPath("_version", is(1)))
-        .andExpect(jsonPath("hridManagement.startNumber", is(hridStartNumber)))
-        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
-        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
+      .andExpect(jsonPath("$.baseUrl").doesNotExist())
+      .andExpect(jsonPath("source", is(SourceEnum.LOCAL.getValue())))
+      .andExpect(jsonPath("name", is(partiallyModified.getName())))
+      .andExpect(jsonPath("type", is(partiallyModified.getType())))
+      .andExpect(jsonPath("selectable", is(partiallyModified.getSelectable())))
+      .andExpect(jsonPath("codes", is(List.of("replacedCode"))))
+      .andExpect(jsonPath("_version", is(1)))
+      .andExpect(jsonPath("hridManagement.startNumber", is(hridStartNumber)))
+      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
   }
 
   @Test
@@ -396,11 +395,8 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var created = doPostAndReturn(authoritySourceFilesEndpoint(), createDto, AuthoritySourceFileDto.class);
     var authorityPostDto = authorityDto(0, 0);
     authorityPostDto.setSourceFileId(created.getId());
-    doPost(authorityEndpoint(), authorityPostDto, AuthorityDto.class)
-        .andExpect(status().isCreated());
-
-    doPatch(authoritySourceFilesEndpoint(created.getId()), partiallyModified)
-      .andExpect(status().isNoContent());
+    doPost(authorityEndpoint(), authorityPostDto, AuthorityDto.class).andExpect(status().isCreated());
+    doPatch(authoritySourceFilesEndpoint(created.getId()), partiallyModified).andExpect(status().isNoContent());
 
     var content = doGet(authoritySourceFilesEndpoint(created.getId()))
       .andExpect(jsonPath("source", is(SourceEnum.LOCAL.getValue())))
@@ -429,14 +425,15 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var patchDto = new AuthoritySourceFilePatchDto();
     patchDto.setVersion(0);
     doPatch(authoritySourceFilesEndpoint(created.getId()), patchDto)
-        .andExpect(status().isNoContent());
+      .andExpect(status().isNoContent());
 
     var expectedError = String.format("Cannot update record %s because it has been changed (optimistic locking):"
-        + " Stored _version is %d, _version of request is %d", created.getId().toString(), 1, 0);
+                                      + " Stored _version is %d, _version of request is %d", created.getId().toString(),
+      1, 0);
     tryPatch(authoritySourceFilesEndpoint(created.getId()), patchDto)
-        .andExpect(status().isConflict())
-        .andExpect(errorMessageMatch(is(expectedError)))
-        .andExpect(exceptionMatch(OptimisticLockingException.class));
+      .andExpect(status().isConflict())
+      .andExpect(errorMessageMatch(is(expectedError)))
+      .andExpect(exceptionMatch(OptimisticLockingException.class));
   }
 
   @Test
@@ -446,10 +443,10 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var code = "abcdf";
     var startNumber = 10;
     var dto = new AuthoritySourceFilePostDto()
-        .id(id)
-        .name("name")
-        .code(code)
-        .hridManagement(new AuthoritySourceFilePostDtoHridManagement().startNumber(startNumber));
+      .id(id)
+      .name("name")
+      .code(code)
+      .hridManagement(new AuthoritySourceFilePostDtoHridManagement().startNumber(startNumber));
 
     doPost(authoritySourceFilesEndpoint(), dto);
     var expectedSequenceName = "hrid_authority_local_file_abcdf_seq";
@@ -459,14 +456,14 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
 
     var hridStartNumber = 9;
     var partiallyModified = new AuthoritySourceFilePatchDto()
-        .version(1)
-        .hridManagement(new AuthoritySourceFilePatchDtoHridManagement().startNumber(hridStartNumber));
+      .version(1)
+      .hridManagement(new AuthoritySourceFilePatchDtoHridManagement().startNumber(hridStartNumber));
 
     doPatch(authoritySourceFilesEndpoint(id), partiallyModified)
-        .andExpect(status().isNoContent());
+      .andExpect(status().isNoContent());
 
     doGet(authoritySourceFilesEndpoint(id))
-        .andExpect(jsonPath("hridManagement.startNumber", is(hridStartNumber)));
+      .andExpect(jsonPath("hridManagement.startNumber", is(hridStartNumber)));
 
     assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
     assertEquals(expectedSequenceName, databaseHelper.queryAuthoritySourceFileSequenceName(TENANT_ID, id));
@@ -483,10 +480,10 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var code = "abc";
     var startNumber = 1;
     var dto = new AuthoritySourceFilePostDto()
-        .id(id)
-        .name("name")
-        .code(code)
-        .hridManagement(new AuthoritySourceFilePostDtoHridManagement().startNumber(startNumber));
+      .id(id)
+      .name("name")
+      .code(code)
+      .hridManagement(new AuthoritySourceFilePostDtoHridManagement().startNumber(startNumber));
 
     doPost(authoritySourceFilesEndpoint(), dto);
     doDelete(authoritySourceFilesEndpoint(id));
@@ -504,7 +501,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     createAuthoritySourceFile(entity);
 
     tryDelete(authoritySourceFilesEndpoint(entity.getId()))
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(exceptionMatch(RequestBodyValidationException.class))
       .andExpect(errorMessageMatch(containsString(
         "Cannot delete Authority source file with source 'folio'")));
@@ -548,10 +545,10 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       assertEquals(1, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, TENANT_ID)));
 
     tryDelete(authoritySourceFilesEndpoint(authoritySrcFile.getId()))
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(exceptionMatch(DataIntegrityViolationException.class))
       .andExpect(errorMessageMatch(is("Cannot complete operation on the entity due to it's relation with"
-        + " Authority Archive/Authority.")));
+                                      + " Authority Archive/Authority.")));
 
     assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
   }
@@ -582,53 +579,82 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   // Tests for Consortium cases
 
   @Test
-  void patchAndDeleteAuthoritySourceFile_negative_whenExistReferencedAuthorityFromMemberTenant()
-      throws Exception {
+  void patchAuthoritySourceFile_negative_whenExistReferencedAuthorityFromMemberTenant() throws Exception {
     setUpConsortiumMemberTenants(TENANT_ID, List.of(COLLEGE_TENANT_ID), false);
     var id = UUID.randomUUID();
-    var dto = new AuthoritySourceFilePostDto()
-        .id(id).name("name").code("no").type("type");
+    var dto = new AuthoritySourceFilePostDto().id(id).name("name").code("no").type("type");
 
     // create source file
     doPost(authoritySourceFilesEndpoint(), dto, tenantHeaders(TENANT_ID));
     var sourceFileCentral = requestAuthoritySourceFile(id, TENANT_ID);
     assertThat(sourceFileCentral).extracting(AuthoritySourceFileDto::getId, AuthoritySourceFileDto::getName)
-        .containsExactly(id, dto.getName());
+      .containsExactly(id, dto.getName());
 
     // should be also created in member tenants
     awaitUntilAsserted(() -> {
       var sourceFileMember = requestAuthoritySourceFile(id, COLLEGE_TENANT_ID);
       assertThat(sourceFileMember).extracting(AuthoritySourceFileDto::getId, AuthoritySourceFileDto::getName)
-          .containsExactly(id, dto.getName());
+        .containsExactly(id, dto.getName());
     });
 
     // create local authority in member tenant
     var authorityDto = new AuthorityDto()
-        .id(UUID.randomUUID()).source("MARC").naturalId("ns12345").personalName("Nikola Tesla").sourceFileId(id);
+      .id(UUID.randomUUID()).source("MARC").naturalId("ns12345").personalName("Nikola Tesla").sourceFileId(id);
     doPost(authorityEndpoint(), authorityDto, tenantHeaders(COLLEGE_TENANT_ID));
     var memberAuthority = requestAuthority(authorityDto.getId(), COLLEGE_TENANT_ID);
     assertThat(memberAuthority)
-        .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
-            AuthorityDto::getPersonalName, AuthorityDto::getSourceFileId)
-        .containsExactly(authorityDto.getId(), authorityDto.getSource(), authorityDto.getNaturalId(),
-            authorityDto.getPersonalName(), authorityDto.getSourceFileId());
+      .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
+        AuthorityDto::getPersonalName, AuthorityDto::getSourceFileId)
+      .containsExactly(authorityDto.getId(), authorityDto.getSource(), authorityDto.getNaturalId(),
+        authorityDto.getPersonalName(), authorityDto.getSourceFileId());
 
     var patchDto = new AuthoritySourceFilePatchDto(0)
-        .code("updated").hridManagement(new AuthoritySourceFilePatchDtoHridManagement().startNumber(5));
+      .code("updated").hridManagement(new AuthoritySourceFilePatchDtoHridManagement().startNumber(5));
 
     // patch source file
     tryPatch(authoritySourceFilesEndpoint(id), patchDto)
-        .andExpect(status().isUnprocessableEntity())
-        .andExpect(exceptionMatch(RequestBodyValidationException.class))
-        .andExpect(errorMessageMatch(containsString(
-            "Unable to patch. Authority source file source is FOLIO or it has authority references")));
+      .andExpect(status().isUnprocessableContent())
+      .andExpect(exceptionMatch(RequestBodyValidationException.class))
+      .andExpect(errorMessageMatch(containsString(
+        "Unable to patch. Authority source file source is FOLIO or it has authority references")));
+  }
+
+  @Test
+  void deleteAuthoritySourceFile_negative_whenExistReferencedAuthorityFromMemberTenant() throws Exception {
+    setUpConsortiumMemberTenants(TENANT_ID, List.of(COLLEGE_TENANT_ID), false);
+    var id = UUID.randomUUID();
+    var dto = new AuthoritySourceFilePostDto().id(id).name("name").code("no").type("type");
+
+    // create source file
+    doPost(authoritySourceFilesEndpoint(), dto, tenantHeaders(TENANT_ID));
+    var sourceFileCentral = requestAuthoritySourceFile(id, TENANT_ID);
+    assertThat(sourceFileCentral).extracting(AuthoritySourceFileDto::getId, AuthoritySourceFileDto::getName)
+      .containsExactly(id, dto.getName());
+
+    // should be also created in member tenants
+    awaitUntilAsserted(() -> {
+      var sourceFileMember = requestAuthoritySourceFile(id, COLLEGE_TENANT_ID);
+      assertThat(sourceFileMember).extracting(AuthoritySourceFileDto::getId, AuthoritySourceFileDto::getName)
+        .containsExactly(id, dto.getName());
+    });
+
+    // create local authority in member tenant
+    var authorityDto = new AuthorityDto()
+      .id(UUID.randomUUID()).source("MARC").naturalId("ns12345").personalName("Nikola Tesla").sourceFileId(id);
+    doPost(authorityEndpoint(), authorityDto, tenantHeaders(COLLEGE_TENANT_ID));
+    var memberAuthority = requestAuthority(authorityDto.getId(), COLLEGE_TENANT_ID);
+    assertThat(memberAuthority)
+      .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
+        AuthorityDto::getPersonalName, AuthorityDto::getSourceFileId)
+      .containsExactly(authorityDto.getId(), authorityDto.getSource(), authorityDto.getNaturalId(),
+        authorityDto.getPersonalName(), authorityDto.getSourceFileId());
 
     // delete source file
     tryDelete(authoritySourceFilesEndpoint(id))
-        .andExpect(status().isUnprocessableEntity())
-        .andExpect(exceptionMatch(RequestBodyValidationException.class))
-        .andExpect(errorMessageMatch(containsString(
-            "Unable to delete. Authority source file has referenced authorities")));
+      .andExpect(status().isUnprocessableContent())
+      .andExpect(exceptionMatch(RequestBodyValidationException.class))
+      .andExpect(errorMessageMatch(containsString(
+        "Unable to delete. Authority source file has referenced authorities")));
   }
 
   private List<AuthoritySourceFile> createAuthoritySourceTypes() {
@@ -703,19 +729,18 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     return jsonPath("$.errors.[0].message", errorMessageMatcher);
   }
 
-  private AuthorityDto requestAuthority(UUID id, String tenantId)
-      throws UnsupportedEncodingException, JsonProcessingException {
+  private AuthorityDto requestAuthority(UUID id, String tenantId) throws UnsupportedEncodingException {
     var response = doGet(authorityEndpoint(id), tenantHeaders(tenantId)).andReturn()
-        .getResponse()
-        .getContentAsString();
+      .getResponse()
+      .getContentAsString();
     return objectMapper.readValue(response, AuthorityDto.class);
   }
 
   private AuthoritySourceFileDto requestAuthoritySourceFile(UUID id, String tenantId)
-      throws UnsupportedEncodingException, JsonProcessingException {
+    throws UnsupportedEncodingException {
     var response = doGet(authoritySourceFilesEndpoint(id), tenantHeaders(tenantId)).andReturn()
-        .getResponse()
-        .getContentAsString();
+      .getResponse()
+      .getContentAsString();
     return objectMapper.readValue(response, AuthoritySourceFileDto.class);
   }
 }

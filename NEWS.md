@@ -1,26 +1,34 @@
-## v4.1.0 YYYY-mm-DD
+## v5.0.0 YYYY-mm-DD
 ### Breaking changes
+* Use internal module configuration instead of shared configuration from mod-settings ([MODELINKS-376](https://folio-org.atlassian.net/browse/MODELINKS-376))
+* Migrate to Spring Boot 4.0.x ([MODELINKS-349](https://folio-org.atlassian.net/browse/MODELINKS-349))
 * Remove Authority, AuthorityDataStat propagation ([MODELINKS-383](https://folio-org.atlassian.net/browse/MODELINKS-383))
 
 ### New APIs versions
 * Provides `instance-authority-links-statistics v3.0`
-* Requires `API_NAME vX.Y`
+* Provides `instance-authority-links v2.2`
+* Change `instance-storage` from required to optional ([MODELINKS-378](https://folio-org.atlassian.net/browse/MODELINKS-378))
+* Change `mapping-rules-provider` from required to optional ([MODELINKS-379](https://folio-org.atlassian.net/browse/MODELINKS-379))
 
 ### Features
 * Pass userId from authority kafka event to link update events ([MODELINKS-322](https://folio-org.atlassian.net/browse/MODELINKS-322))
 * Allow updating controlled subfields ([MODELINKS-326](https://folio-org.atlassian.net/browse/MODELINKS-326))
 * Extend Authority Statistics model with shared flag. Filter out shared records from bib report ([MODELINKS-312](https://folio-org.atlassian.net/browse/MODELINKS-312))
+* Pass userId to folioExecutionContext on authority update propagation ([MODELINKS-364](https://folio-org.atlassian.net/browse/MODELINKS-364))
 
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))
 * Fix instance-authority link record propagation to member tenants ([MODELINKS-319](https://folio-org.atlassian.net/browse/MODELINKS-319))
 * Fix outdated linking rules by removing the cache for linking rules ([MODELINKS-333](https://folio-org.atlassian.net/browse/MODELINKS-333))
 * Remove unused search.authorities.collection.get permission ([MODELINKS-336](https://folio-org.atlassian.net/browse/MODELINKS-336))
-* Update Authority source file name FROM LC Demographic Group Terms (LCFGT) TO LC Demographic Group Terms (LCDGT)
-  ([MODELINKS-342](https://folio-org.atlassian.net/browse/MODELINKS-342))
+* Update Authority source file name FROM LC Demographic Group Terms (LCFGT) TO LC Demographic Group Terms (LCDGT) ([MODELINKS-342](https://folio-org.atlassian.net/browse/MODELINKS-342))
 
 ### Tech Dept
 * Re-work all s3 related envs var and standardization ([MODELINKS-324](https://folio-org.atlassian.net/browse/MODELINKS-324))
+* Refactor code to comply with Checkstyle method length limit (max 50 lines) ([MODELINKS-356](https://folio-org.atlassian.net/browse/MODELINKS-356))
+* Refactor ModuleDescriptor for eureka ([MODELINKS-251](https://folio-org.atlassian.net/browse/MODELINKS-251))
+* Improve Docker Compose setup for local development ([MODELINKS-343](https://folio-org.atlassian.net/browse/MODELINKS-343))
+* Use GitHub Workflow` for build ([MODELINKS-381](https://folio-org.atlassian.net/browse/MODELINKS-381))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -12,7 +13,6 @@ import org.folio.entlinks.client.InstanceStorageClient;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDto;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDtoCollection;
 import org.folio.entlinks.config.properties.InstanceStorageProperties;
-import org.folio.entlinks.exception.FolioIntegrationException;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -30,7 +30,9 @@ public class InstanceStorageService {
     log.info("Fetching instance data [count: {}, with batch size: {}]", instanceIds.size(), batchSize);
     log.trace("Fetching instance data for [instance ids: {}]", instanceIds);
     return Lists.partition(instanceIds, batchSize).stream()
-      .map(ids -> fetchInstances(buildCql(ids), ids.size()).instances())
+      .map(ids -> fetchInstances(buildCql(ids), ids.size()))
+      .filter(Optional::isPresent)
+      .map(collection -> collection.get().instances())
       .flatMap(Collection::stream)
       .collect(Collectors.toMap(InventoryInstanceDto::id, dto -> Pair.of(dto.title(), dto.source())));
   }
@@ -40,12 +42,13 @@ public class InstanceStorageService {
     return String.format(CQL_TEMPLATE, instanceIdsString);
   }
 
-  private InventoryInstanceDtoCollection fetchInstances(String query, int limit) {
+  private Optional<InventoryInstanceDtoCollection> fetchInstances(String query, int limit) {
     try {
       log.info("Fetching instances for query: {}, limit: {}", query, limit);
-      return client.getInstanceStorageInstances(query, limit);
+      return Optional.of(client.getInstanceStorageInstances(query, limit));
     } catch (Exception e) {
-      throw new FolioIntegrationException("Failed to fetch instances", e);
+      log.warn("Failed to fetch instances for query: {}, limit: {}", query, limit, e);
+      return Optional.empty();
     }
   }
 }

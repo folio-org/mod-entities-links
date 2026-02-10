@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import jakarta.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -50,7 +51,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 @IntegrationTest
@@ -102,8 +103,8 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
     container.stop();
   }
 
-  @SneakyThrows
   @Test
+  @SneakyThrows
   void shouldHandleDeleteEvent_positive_whenAuthorityLinkExists() {
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
@@ -143,16 +144,12 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
     assertions.then(value.getSubfieldsChanges()).as("Subfield changes").isEmpty();
     assertions.then(value.getJobId()).as("Job ID").isNotNull();
     assertions.then(value.getTs()).as("Timestamp").isNotNull();
-
     assertions.assertAll();
 
     // check that links were deleted
-    doGet(linksInstanceEndpoint(), instanceId1)
-      .andExpect(jsonPath("$.links", hasSize(0)));
-    doGet(linksInstanceEndpoint(), instanceId2)
-      .andExpect(jsonPath("$.links", hasSize(0)));
-    doGet(linksInstanceEndpoint(), instanceId3)
-      .andExpect(jsonPath("$.links", hasSize(0)));
+    doGet(linksInstanceEndpoint(), instanceId1).andExpect(jsonPath("$.links", hasSize(0)));
+    doGet(linksInstanceEndpoint(), instanceId2).andExpect(jsonPath("$.links", hasSize(0)));
+    doGet(linksInstanceEndpoint(), instanceId3).andExpect(jsonPath("$.links", hasSize(0)));
   }
 
   @SneakyThrows
@@ -246,12 +243,9 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
       ));
     assertions.then(value.getSubfieldsChanges()).as("Subfield changes")
       .isEqualTo(List.of(
-        new FieldChange()
-          .field(link1.tag())
-          .subfields(List.of(expectedSubfieldChange)),
-        new FieldChange()
-          .field(link2.tag())
-          .subfields(List.of(expectedSubfieldChange))));
+        new FieldChange().field(link1.tag()).subfields(List.of(expectedSubfieldChange)),
+        new FieldChange().field(link2.tag()).subfields(List.of(expectedSubfieldChange))
+      ));
     assertions.then(value.getJobId()).as("Job ID").isNotNull();
     assertions.then(value.getTs()).as("Timestamp").isNotNull();
 
@@ -303,93 +297,90 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
         updateTarget(link.tag(), instanceId)
       ));
     assertions.then(value.getSubfieldsChanges()).as("Subfield changes").containsExactlyInAnyOrder(
-      new FieldChange().field("100").subfields(List.of(
-        subfieldChange("a", "Lansing, John"),
-        subfieldChange("d", "1756-1791."),
-        subfieldChange("q", "(Jules)"),
-        subfieldChangeEmpty("b"),
-        subfieldChangeEmpty("c"),
-        subfieldChangeEmpty("j")
-      )),
-      new FieldChange().field("600").subfields(List.of(
-        subfieldChange("a", "Lansing, John"),
-        subfieldChange("d", "1756-1791."),
-        subfieldChange("t", "Black Eagles"),
-        subfieldChange("q", "(Jules)"),
-        subfieldChange("l", "book"),
-        subfieldChangeEmpty("b"),
-        subfieldChangeEmpty("c"),
-        subfieldChangeEmpty("g"),
-        subfieldChangeEmpty("j"),
-        subfieldChangeEmpty("f"),
-        subfieldChangeEmpty("h"),
-        subfieldChangeEmpty("k"),
-        subfieldChangeEmpty("m"),
-        subfieldChangeEmpty("n"),
-        subfieldChangeEmpty("o"),
-        subfieldChangeEmpty("p"),
-        subfieldChangeEmpty("r"),
-        subfieldChangeEmpty("s")
-      )),
-      new FieldChange().field("700").subfields(List.of(
-        subfieldChange("a", "Lansing, John"),
-        subfieldChange("d", "1756-1791."),
-        subfieldChange("t", "Black Eagles"),
-        subfieldChange("q", "(Jules)"),
-        subfieldChange("l", "book"),
-        subfieldChangeEmpty("b"),
-        subfieldChangeEmpty("c"),
-        subfieldChangeEmpty("j"),
-        subfieldChangeEmpty("f"),
-        subfieldChangeEmpty("h"),
-        subfieldChangeEmpty("k"),
-        subfieldChangeEmpty("m"),
-        subfieldChangeEmpty("n"),
-        subfieldChangeEmpty("o"),
-        subfieldChangeEmpty("p"),
-        subfieldChangeEmpty("r"),
-        subfieldChangeEmpty("s"),
-        subfieldChangeEmpty("g")
-        )),
-      new FieldChange().field("800").subfields(List.of(
-        subfieldChange("a", "Lansing, John"),
-        subfieldChange("d", "1756-1791."),
-        subfieldChange("t", "Black Eagles"),
-        subfieldChange("q", "(Jules)"),
-        subfieldChange("l", "book"),
-        subfieldChangeEmpty("b"),
-        subfieldChangeEmpty("c"),
-        subfieldChangeEmpty("j"),
-        subfieldChangeEmpty("f"),
-        subfieldChangeEmpty("h"),
-        subfieldChangeEmpty("k"),
-        subfieldChangeEmpty("m"),
-        subfieldChangeEmpty("n"),
-        subfieldChangeEmpty("o"),
-        subfieldChangeEmpty("p"),
-        subfieldChangeEmpty("r"),
-        subfieldChangeEmpty("s"),
-        subfieldChangeEmpty("g")
-        )),
-      new FieldChange().field("240").subfields(List.of(
-        subfieldChange("a", "Black Eagles"),
-        subfieldChange("l", "book"),
-        subfieldChangeEmpty("f"),
-        subfieldChangeEmpty("g"),
-        subfieldChangeEmpty("h"),
-        subfieldChangeEmpty("k"),
-        subfieldChangeEmpty("m"),
-        subfieldChangeEmpty("n"),
-        subfieldChangeEmpty("o"),
-        subfieldChangeEmpty("p"),
-        subfieldChangeEmpty("r"),
-        subfieldChangeEmpty("s")
-      ))
+      new FieldChange().field("100").subfields(field100SubfieldChanges()),
+      new FieldChange().field("600").subfields(field600SubfieldChanges()),
+      new FieldChange().field("700").subfields(field700800SubfieldChanges()),
+      new FieldChange().field("800").subfields(field700800SubfieldChanges()),
+      new FieldChange().field("240").subfields(field240SubfieldChanges())
     );
     assertions.then(value.getJobId()).as("Job ID").isNotNull();
     assertions.then(value.getTs()).as("Timestamp").isNotNull();
 
     assertions.assertAll();
+  }
+
+  private @NotNull List<@Valid SubfieldChange> field240SubfieldChanges() {
+    return List.of(
+      subfieldChange("a", "Black Eagles"),
+      subfieldChange("l", "book"),
+      subfieldChangeEmpty("f"),
+      subfieldChangeEmpty("g"),
+      subfieldChangeEmpty("h"),
+      subfieldChangeEmpty("k"),
+      subfieldChangeEmpty("m"),
+      subfieldChangeEmpty("n"),
+      subfieldChangeEmpty("o"),
+      subfieldChangeEmpty("p"),
+      subfieldChangeEmpty("r"),
+      subfieldChangeEmpty("s")
+    );
+  }
+
+  private @NotNull List<@Valid SubfieldChange> field700800SubfieldChanges() {
+    return List.of(
+      subfieldChange("a", "Lansing, John"),
+      subfieldChange("d", "1756-1791."),
+      subfieldChange("t", "Black Eagles"),
+      subfieldChange("q", "(Jules)"),
+      subfieldChange("l", "book"),
+      subfieldChangeEmpty("b"),
+      subfieldChangeEmpty("c"),
+      subfieldChangeEmpty("j"),
+      subfieldChangeEmpty("f"),
+      subfieldChangeEmpty("h"),
+      subfieldChangeEmpty("k"),
+      subfieldChangeEmpty("m"),
+      subfieldChangeEmpty("n"),
+      subfieldChangeEmpty("o"),
+      subfieldChangeEmpty("p"),
+      subfieldChangeEmpty("r"),
+      subfieldChangeEmpty("s"),
+      subfieldChangeEmpty("g")
+    );
+  }
+
+  private @NotNull List<@Valid SubfieldChange> field600SubfieldChanges() {
+    return List.of(
+      subfieldChange("a", "Lansing, John"),
+      subfieldChange("d", "1756-1791."),
+      subfieldChange("t", "Black Eagles"),
+      subfieldChange("q", "(Jules)"),
+      subfieldChange("l", "book"),
+      subfieldChangeEmpty("b"),
+      subfieldChangeEmpty("c"),
+      subfieldChangeEmpty("g"),
+      subfieldChangeEmpty("j"),
+      subfieldChangeEmpty("f"),
+      subfieldChangeEmpty("h"),
+      subfieldChangeEmpty("k"),
+      subfieldChangeEmpty("m"),
+      subfieldChangeEmpty("n"),
+      subfieldChangeEmpty("o"),
+      subfieldChangeEmpty("p"),
+      subfieldChangeEmpty("r"),
+      subfieldChangeEmpty("s")
+    );
+  }
+
+  private @NotNull List<@Valid SubfieldChange> field100SubfieldChanges() {
+    return List.of(
+      subfieldChange("a", "Lansing, John"),
+      subfieldChange("d", "1756-1791."),
+      subfieldChange("q", "(Jules)"),
+      subfieldChangeEmpty("b"),
+      subfieldChangeEmpty("c"),
+      subfieldChangeEmpty("j")
+    );
   }
 
   @NotNull

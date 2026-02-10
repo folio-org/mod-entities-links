@@ -11,13 +11,14 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Log4j2
+@Deprecated(forRemoval = true)
 public class SettingsService {
 
   public static final String AUTHORITIES_EXPIRE_SETTING_KEY = "authority-archives-expiration";
-  public static final String AUTHORITIES_EXPIRE_SETTING_SCOPE = "authority-storage";
+  public static final String AUTHORITIES_EXPIRE_SETTING_SCOPE = "authority-storage.manage";
 
   private static final String AUTHORITIES_EXPIRE_SETTING_FETCH_QUERY =
-      "(scope=authority-storage AND key=authority-archives-expiration)";
+      "(scope=authority-storage.manage AND key=authority-archives-expiration)";
 
   private static final int DEFAULT_REQUEST_LIMIT = 10000;
 

@@ -4,12 +4,14 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.entlinks.client.UsersClient;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
@@ -19,8 +21,6 @@ import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.utils.DateUtils;
-import org.folio.spring.client.UsersClient;
-import org.folio.spring.model.ResultList;
 import org.springframework.stereotype.Component;
 
 @Log4j2
@@ -38,7 +38,6 @@ public class InstanceAuthorityStatServiceDelegate {
                                                              LinkAction action, Integer limit) {
     var authorityStatsCollection = new AuthorityStatsDtoCollection();
     var dataStatList = dataStatService.fetchDataStats(fromDate, toDate, action, limit + 1);
-
     log.debug("Retrieved data stat count {}", dataStatList.size());
 
     if (dataStatList.size() > limit) {
@@ -62,31 +61,31 @@ public class InstanceAuthorityStatServiceDelegate {
     return authorityStatsCollection.stats(stats);
   }
 
-  private AuthorityControlMetadata getMetadata(ResultList<UsersClient.User> userResultList, AuthorityDataStat source) {
+  private AuthorityControlMetadata getMetadata(UsersClient.UserCollection userCollection, AuthorityDataStat source) {
     var startedByUserId = source.getStartedByUserId();
     var metadata = new AuthorityControlMetadata();
     metadata.setStartedByUserId(startedByUserId);
     metadata.setStartedAt(DateUtils.fromTimestamp(source.getStartedAt()));
-    if (userResultList == null || userResultList.getResult() == null) {
+    if (userCollection == null || userCollection.users() == null) {
       return metadata;
     }
 
-    var user = userResultList.getResult()
+    var user = userCollection.users()
       .stream()
-      .filter(u -> UUID.fromString(u.getId()).equals(startedByUserId))
+      .filter(u -> UUID.fromString(u.id()).equals(startedByUserId))
       .findFirst().orElse(null);
     if (user == null) {
       return metadata;
     }
 
-    metadata.setStartedByUserFirstName(user.getPersonal().firstName());
-    metadata.setStartedByUserLastName(user.getPersonal().lastName());
+    metadata.setStartedByUserFirstName(user.personal().firstName());
+    metadata.setStartedByUserLastName(user.personal().lastName());
     return metadata;
   }
 
-  private ResultList<UsersClient.User> getUsers(List<AuthorityDataStat> dataStatList) {
+  private UsersClient.UserCollection getUsers(List<AuthorityDataStat> dataStatList) {
     String query = getUsersQueryString(dataStatList);
-    return query.isEmpty() ? ResultList.empty() : usersClient.query(query);
+    return query.isEmpty() ? new UsersClient.UserCollection(Collections.emptyList()) : usersClient.query(query);
   }
 
   private String getUsersQueryString(List<AuthorityDataStat> dataStatList) {

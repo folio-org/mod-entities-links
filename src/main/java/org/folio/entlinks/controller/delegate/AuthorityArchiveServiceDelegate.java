@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.entlinks.client.SettingsClient;
-import org.folio.entlinks.config.properties.AuthorityArchiveProperties;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
 import org.folio.entlinks.domain.dto.AuthorityFullDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityIdDto;
@@ -13,10 +11,15 @@ import org.folio.entlinks.domain.dto.AuthorityIdDtoCollection;
 import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
-import org.folio.entlinks.exception.FolioIntegrationException;
-import org.folio.entlinks.integration.SettingsService;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityArchivePropagationService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
+import org.folio.entlinks.service.settings.TenantSetting;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.tenant.domain.dto.Setting;
+import org.folio.tenant.domain.dto.SettingCollection;
+import org.folio.tenant.settings.service.TenantSettingsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,11 +29,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthorityArchiveServiceDelegate {
 
   private final AuthorityArchiveService authorityArchiveService;
-  private final SettingsService settingsService;
   private final AuthorityArchiveRepository authorityArchiveRepository;
-  private final AuthorityArchiveProperties authorityArchiveProperties;
   private final AuthorityDomainEventPublisher eventPublisher;
   private final AuthorityMapper authorityMapper;
+  private final TenantSettingsService tenantSettingsService;
 
   public AuthorityFullDtoCollection retrieveAuthorityArchives(Integer offset, Integer limit, String cqlQuery,
                                                               Boolean idOnly) {
@@ -66,27 +68,27 @@ public class AuthorityArchiveServiceDelegate {
   }
 
   private Optional<Integer> fetchAuthoritiesRetentionDuration() {
-    Optional<SettingsClient.SettingEntry> expireSetting;
-    try {
-      expireSetting = settingsService.getAuthorityExpireSetting();
-    } catch (FolioIntegrationException e) {
-      log.warn("Exception during settings fetching: ", e);
-      expireSetting = Optional.empty();
+    var groupSettings = tenantSettingsService.getGroupSettings(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getGroup());
+    if (groupSettings.isEmpty()) {
+      log.warn("No settings were found for the tenant");
+      return Optional.empty();
     }
 
-    if (expireSetting.isPresent() && expireSetting.get().value() != null
-      && Boolean.FALSE.equals(expireSetting.get().value().expirationEnabled())) {
+    var expirationEnabledSetting = getSetting(groupSettings.get(), TenantSetting.ARCHIVES_EXPIRATION_ENABLED);
+
+    if (Boolean.FALSE.equals(expirationEnabledSetting.getValue())) {
       log.info("Authority archives expiration is disabled for the tenant through setting");
       return Optional.empty();
     }
 
-    return expireSetting
-      .map(SettingsClient.SettingEntry::value)
-      .map(SettingsClient.AuthoritiesExpirationSettingValue::retentionInDays)
-      .or(() -> {
-        log.warn("No Retention setting was defined for Authorities Expiration, using the default one: {} days",
-          authorityArchiveProperties.getRetentionPeriodInDays());
-        return Optional.of(authorityArchiveProperties.getRetentionPeriodInDays());
-      });
+    var expirationPeriodSetting = getSetting(groupSettings.get(), TenantSetting.ARCHIVES_EXPIRATION_PERIOD);
+    return Optional.ofNullable((Integer) expirationPeriodSetting.getValue());
+  }
+
+  private Setting getSetting(SettingCollection groupSettings, TenantSetting tenantSetting) {
+    return groupSettings.getSettings().stream()
+      .filter(setting -> tenantSetting.getKey().equals(setting.getKey()))
+      .findFirst()
+      .orElseThrow(() -> new IllegalStateException("No %s setting was found".formatted(tenantSetting.getKey())));
   }
 }

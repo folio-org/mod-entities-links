@@ -2,7 +2,6 @@ package org.folio.entlinks.integration.internal;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -15,6 +14,7 @@ import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.marc4j.MarcJsonReader;
 import org.marc4j.marc.Record;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 @Log4j2
 @Service

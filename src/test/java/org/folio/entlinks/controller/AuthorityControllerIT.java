@@ -1,15 +1,12 @@
 package org.folio.entlinks.controller;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_ID;
 import static org.folio.entlinks.integration.dto.event.DomainEventType.CREATE;
 import static org.folio.entlinks.integration.dto.event.DomainEventType.DELETE;
 import static org.folio.entlinks.integration.dto.event.DomainEventType.UPDATE;
+import static org.folio.entlinks.service.settings.TenantSetting.ARCHIVES_EXPIRATION_PERIOD;
 import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
@@ -20,9 +17,11 @@ import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authorityArchive;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authorityDto;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceFile;
+import static org.folio.support.TestDataUtils.modifiedAuthorityDto;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.UPDATER_USER_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
+import static org.folio.support.base.TestConstants.authorityConfigEndpoint;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authorityExpireEndpoint;
 import static org.folio.support.base.TestConstants.authoritySourceFilesEndpoint;
@@ -35,17 +34,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -71,6 +69,7 @@ import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
 import org.folio.support.base.IntegrationTestBase;
+import org.folio.tenant.domain.dto.SettingUpdateRequest;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
@@ -79,17 +78,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import tools.jackson.core.JacksonException;
 
 @IntegrationTest
 @DatabaseCleanup(tables = {
@@ -262,21 +263,9 @@ class AuthorityControllerIT extends IntegrationTestBase {
   }
 
   @ParameterizedTest
-  @CsvSource({
-    "headingType=personalName, personalName, 1",
-    "authoritySourceFile.id=51243be4-27cb-4d78-9206-c956299483b1, personalName, 2",
-    "authoritySourceFile.id=51243be4-27cb-4d78-9206-c956299483b1 and headingType=corporateName, corporateName, 1",
-    "authoritySourceFile.name=name2, genreTerm, 1",
-    "cql.allRecords=1 NOT authoritySourceFile=\"\", genreTerm, 1",
-    "subjectHeadingCode=d NOT authoritySourceFile=\"\", genreTerm, 1",
-    "subjectHeadingCode=d NOT authoritySourceFile.id=\"\", genreTerm, 1",
-    "subjectHeadingCode=d NOT authoritySourceFile.name=\"\", genreTerm, 1",
-    "createdDate>2021-10-25T12:00:00.0 and createdDate<=2021-10-30T12:00:00.0, genreTerm, 3",
-    "updatedDate>=2021-10-24T12:00:00.0 and updatedDate<=2021-10-28T12:00:00.0, corporateName, 1",
-    "authoritySourceFile.name=name1 and createdDate>2021-10-28T12:00:00.0, corporateName, 1",
-  })
-  @DisplayName("Get Collection: return list of authorities and archives for the given query")
-  void getCollection_positive_filterAuthoritiesAndArchivesByQuery(String query, String heading, int numberOfRecords)
+  @MethodSource("authorityArchivesQueryProvider")
+  @DisplayName("Get Collection: return list of authorities for the given query")
+  void getCollection_positive_filterAuthoritiesByQuery(String query, String heading, int numberOfRecords)
     throws Exception {
     createSourceFile(0);
     createSourceFile(1);
@@ -300,15 +289,24 @@ class AuthorityControllerIT extends IntegrationTestBase {
     doGet(authorityEndpoint() + "?query={cql}", cqlQuery)
       .andExpect(jsonPath("authorities[0]." + heading, notNullValue()))
       .andExpect(jsonPath("totalRecords").value(numberOfRecords));
+  }
+
+  @ParameterizedTest
+  @MethodSource("authorityArchivesQueryProvider")
+  @DisplayName("Get Collection: return list of authority archives for the given query")
+  void getCollection_positive_filterAuthorityArchivesByQuery(String query, String heading, int numberOfRecords)
+    throws Exception {
+    createSourceFile(0);
+    createSourceFile(1);
 
     // query and filter authority archives
     var archive1 = authorityArchive(0, 0);
-    archive1.setCreatedDate(authority1.getCreatedDate());
-    archive1.setUpdatedDate(authority1.getUpdatedDate());
+    archive1.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE).minus(5, ChronoUnit.DAYS)));
+    archive1.setUpdatedDate(Timestamp.from(Instant.parse(UPDATED_DATE).minus(2, ChronoUnit.DAYS)));
     var archive2 = authorityArchive(1, 0);
-    archive2.setCreatedDate(authority2.getCreatedDate());
+    archive2.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE).plus(2, ChronoUnit.DAYS)));
     var archive3 = authorityArchive(2, 1);
-    archive3.setUpdatedDate(authority3.getUpdatedDate());
+    archive3.setUpdatedDate(Timestamp.from(Instant.parse(UPDATED_DATE).plus(4, ChronoUnit.DAYS)));
     databaseHelper.saveAuthorityArchive(TENANT_ID, archive1);
     databaseHelper.saveAuthorityArchive(TENANT_ID, archive2);
     databaseHelper.saveAuthorityArchive(TENANT_ID, archive3);
@@ -317,6 +315,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     archive4.setUpdatedDate(Timestamp.from(Instant.parse(UPDATED_DATE).minus(2, ChronoUnit.DAYS)));
     databaseHelper.saveAuthorityArchive(TENANT_ID, archive4);
 
+    var cqlQuery = "(" + query + ")sortby createdDate";
     doGet(authorityEndpoint() + "?query={cql}&deleted=true", cqlQuery)
       .andExpect(jsonPath("authorities[0]." + heading, notNullValue()))
       .andExpect(jsonPath("totalRecords").value(numberOfRecords));
@@ -336,8 +335,6 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(exceptionMatch(InvalidDataAccessApiUsageException.class));
   }
 
-  // Tests for Get By ID
-
   @Test
   @DisplayName("Get By ID: return authority by given ID")
   void getById_positive_foundByIdForExistingEntity() throws Exception {
@@ -351,7 +348,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
   }
 
-  // Tests for POST
+  // Tests for Get By ID
 
   @Test
   @DisplayName("POST: create new Authority with defined ID")
@@ -388,6 +385,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
     assertEquals(dto.getSaftPersonalName(), created.getSaftPersonalName());
   }
 
+  // Tests for POST
+
   @Test
   @DisplayName("POST: create new Authority without defined ID")
   void createAuthority_positive_entityCreatedWithNewId() throws Exception {
@@ -402,7 +401,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("source", is(dto.getSource())))
       .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
       .andExpect(jsonPath("personalName", is(dto.getPersonalName())))
-      .andExpect(jsonPath("sourceFileId", is(dto.getSourceFileId().toString())))
+      .andExpect(jsonPath("sourceFileId", is(Objects.requireNonNull(dto.getSourceFileId()).toString())))
       .andExpect(jsonPath("_version", is(0)))
       .andExpect(jsonPath("metadata.createdDate", notNullValue()))
       .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
@@ -456,7 +455,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     dto.setSourceFileId(sourceFileId);
 
     tryPost(authorityEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority Source File with the given 'id' does not exists.")))
       .andExpect(exceptionMatch(InvalidDataAccessApiUsageException.class));
   }
@@ -474,12 +473,10 @@ class AuthorityControllerIT extends IntegrationTestBase {
     getConsumedEvent();
 
     tryPost(authorityEndpoint(), dto)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is(DUPLICATE_AUTHORITY_ID.getMessage())))
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
   }
-
-  // Tests for PUT
 
   @Test
   @DisplayName("PUT: update existing Authority entity")
@@ -490,27 +487,14 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     doPost(authorityEndpoint(), dto);
     getConsumedEvent();
-    var existingAsString = doGet(authorityEndpoint()).andReturn().getResponse().getContentAsString();
-    var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
-    var expected = collection.getAuthorities().getFirst();
-    expected.setSource("updated source");
-    expected.setPersonalName(null);
-    expected.setCorporateName("headingCorporateName");
-    expected.setSftCorporateName(List.of("sftCorporateName"));
-    expected.setSaftCorporateName(List.of("saftCorporateName"));
-    expected.setSaftCorporateNameTrunc(List.of("saftCorporateNameTrunc"));
+    var expected = modifiedAuthorityDto(0, 0);
 
     var headers = defaultHeaders();
     headers.put(XOkapiHeaders.USER_ID, List.of(UPDATER_USER_ID));
     tryPut(authorityEndpoint(expected.getId()), expected, headers)
-        .andExpect(status().isNoContent());
+      .andExpect(status().isNoContent());
 
     var content = doGet(authorityEndpoint(expected.getId()))
-      .andExpect(jsonPath("source", is(expected.getSource())))
-      .andExpect(jsonPath("naturalId", is(expected.getNaturalId())))
-      .andExpect(jsonPath("sourceFileId", is(expected.getSourceFileId().toString())))
-      .andExpect(jsonPath("personalName").doesNotExist())
-      .andExpect(jsonPath("corporateName", is(expected.getCorporateName())))
       .andExpect(jsonPath("_version", is(1)))
       .andExpect(jsonPath("metadata.createdDate", notNullValue()))
       .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
@@ -519,28 +503,17 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andReturn().getResponse().getContentAsString();
 
     var resultDto = objectMapper.readValue(content, AuthorityDto.class);
-    assertEquals(expected.getNotes(), resultDto.getNotes());
-    assertEquals(expected.getIdentifiers(), resultDto.getIdentifiers());
-    assertEquals(expected.getSftPersonalName(), resultDto.getSftPersonalName());
-    assertEquals(expected.getSaftPersonalName(), resultDto.getSaftPersonalName());
-    assertEquals(expected.getSftCorporateName(), resultDto.getSftCorporateName());
-    assertEquals(expected.getSaftCorporateName(), resultDto.getSaftCorporateName());
-    assertEquals(expected.getSaftCorporateNameTrunc(), resultDto.getSaftCorporateNameTrunc());
-    assertEquals(dto.getSaftNarrowerTerm(), resultDto.getSaftNarrowerTerm());
-    assertEquals(dto.getSaftBroaderTerm(), resultDto.getSaftBroaderTerm());
+    assertAuthorityCollectionFields(expected, resultDto);
 
     var event = getConsumedEvent();
-    awaitUntilAsserted(() ->
-      assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
 
     verifyConsumedAuthorityEvent(event, UPDATE, resultDto);
-    collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
-    var oldDto = collection.getAuthorities().getFirst();
     assertThat(event).isNotNull();
     assertThat(event.value().getOldEntity())
-        .usingRecursiveComparison()
-        .ignoringFields(IGNORED_FIELDS_FOR_VERIFICATION)
-        .isEqualTo(oldDto);
+      .usingRecursiveComparison()
+      .ignoringFields(IGNORED_FIELDS_FOR_VERIFICATION)
+      .isEqualTo(dto);
   }
 
   @Test
@@ -567,8 +540,13 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andReturn().getResponse().getContentAsString();
     var resultDto = objectMapper.readValue(content, AuthorityDto.class);
 
-    assertTrue(resultDto.getMetadata().getUpdatedDate().isAfter(putDto.getMetadata().getUpdatedDate()));
+    assertNotNull(resultDto.getMetadata());
+    assertNotNull(resultDto.getMetadata().getUpdatedDate());
+    assertTrue(resultDto.getMetadata().getUpdatedDate()
+      .isAfter(Objects.requireNonNull(putDto.getMetadata()).getUpdatedDate()));
   }
+
+  // Tests for PUT
 
   @Test
   @DisplayName("PUT: update Authority with non-existing source file id")
@@ -626,8 +604,6 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(errorMessageMatch(containsString("was not found")));
   }
 
-  // Tests for DELETE
-
   @Test
   @DisplayName("DELETE: Should delete existing authority and put it into archive table")
   void deleteAuthority_positive_deleteExistingEntity() throws Exception {
@@ -655,8 +631,9 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("DELETE: Should delete existing authority archives by retention in settings")
   void expireAuthorityArchives_positive_shouldExpireExistingArchives()
-    throws JsonProcessingException, UnsupportedEncodingException {
-    mockSuccessfulSettingsRequest();
+    throws JacksonException, UnsupportedEncodingException {
+    var body = new SettingUpdateRequest().value(1);
+    doPatch(authorityConfigEndpoint(ARCHIVES_EXPIRATION_PERIOD), body, tenantHeaders(TENANT_ID));
 
     createSourceFile(0);
     var authority1 = createAuthority(0, 0);
@@ -670,49 +647,16 @@ class AuthorityControllerIT extends IntegrationTestBase {
     getConsumedEvent();
     awaitUntilAsserted(() ->
       assertEquals(2, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID, "deleted = true")));
-    awaitUntilAsserted(() ->
-      assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID)));
+    awaitUntilAsserted(() -> assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID)));
 
     var dateInPast = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS));
     databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority1.getId(), dateInPast);
     databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority2.getId(), dateInPast);
 
-    doPost(authorityExpireEndpoint(), null);
-
-    getConsumedEvent();
-    var consumedEvent = getConsumedEvent();
-    assertAll(() -> {
-      assertNotNull(consumedEvent);
-      assertNotNull(consumedEvent.value());
-    });
-    var content = authority1.getId().equals(consumedEvent.value().getId()) ? content1 : content2;
-    var dto = objectMapper.readValue(content, AuthorityDto.class);
-    dto.setVersion(dto.getVersion() + 1);
-
-    verifyConsumedAuthorityEvent(consumedEvent, DELETE, dto);
-    assertEquals(AuthorityDeleteEventSubType.HARD_DELETE, consumedEvent.value().getDeleteEventSubType());
-    assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, TENANT_ID));
+    verifyExpiredArchivesDeleted(authority1, content1, content2);
   }
 
-  @Test
-  @DisplayName("DELETE: Should delete existing authority archives by default retention")
-  void expireAuthorityArchives_negative_settingsUnfetchable_shouldUseDefaultRetentionValue() {
-    mockFailedSettingsRequest();
-    createSourceFile(0);
-    var authority1 = createAuthority(0, 0);
-    var authority2 = createAuthority(1, 0);
-
-    doDelete(authorityEndpoint(authority1.getId()));
-    doDelete(authorityEndpoint(authority2.getId()));
-
-    var dateInPast = Timestamp.from(Instant.now().minus(10, ChronoUnit.DAYS));
-    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority1.getId(), dateInPast);
-    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority2.getId(), dateInPast);
-
-    doPost(authorityExpireEndpoint(), null);
-
-    assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, TENANT_ID));
-  }
+  // Tests for DELETE
 
   @Test
   @DisplayName("DELETE: Return 404 for non-existing entity")
@@ -749,40 +693,61 @@ class AuthorityControllerIT extends IntegrationTestBase {
     assertEquals(dto.getSourceFileId(), expected.getSourceFileId());
 
     tryDelete(authoritySourceFilesEndpoint(expected.getSourceFileId()))
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Unable to delete. Authority source file has referenced authorities")))
       .andExpect(exceptionMatch(RequestBodyValidationException.class));
   }
 
-  private void mockSuccessfulSettingsRequest() {
-    okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-      .withQueryParam("query", equalTo("(scope=authority-storage AND key=authority-archives-expiration)"))
-      .withQueryParam("limit", equalTo("10000"))
-      .willReturn(aResponse()
-        .withStatus(200)
-        .withHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-        .withBody("""
-          {
-              "items": [
-                  {
-                      "id": "1e01066d-4bee-4cf7-926c-ba2c9c6c0001",
-                      "scope": "authority-storage",
-                      "key": "authority-archives-expiration",
-                      "value": {
-                          "expirationEnabled":true,
-                          "retentionInDays":1
-                      }
-                  }
-              ]
-          }
-          """)));
+  private void verifyExpiredArchivesDeleted(Authority authority1, String content1, String content2) {
+    doPost(authorityExpireEndpoint(), null);
+
+    getConsumedEvent();
+    var consumedEvent = getConsumedEvent();
+    assertAll(() -> {
+      assertNotNull(consumedEvent);
+      assertNotNull(consumedEvent.value());
+    });
+    var content = authority1.getId().equals(consumedEvent.value().getId()) ? content1 : content2;
+    var dto = objectMapper.readValue(content, AuthorityDto.class);
+    dto.setVersion(dto.getVersion() + 1);
+
+    verifyConsumedAuthorityEvent(consumedEvent, DELETE, dto);
+    assertEquals(AuthorityDeleteEventSubType.HARD_DELETE, consumedEvent.value().getDeleteEventSubType());
+    assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, TENANT_ID));
   }
 
-  private void mockFailedSettingsRequest() {
-    okapi.wireMockServer().stubFor(get(urlPathEqualTo("/settings/entries"))
-      .withQueryParam("query", equalTo("(scope=authority-storage AND key=authority-archives-expiration)"))
-      .withQueryParam("limit", equalTo("10000"))
-      .willReturn(aResponse().withStatus(500)));
+  private void assertAuthorityCollectionFields(AuthorityDto expected, AuthorityDto actual) {
+    assertEquals(expected.getSource(), actual.getSource());
+    assertEquals(expected.getNaturalId(), actual.getNaturalId());
+    assertEquals(expected.getSourceFileId(), actual.getSourceFileId());
+    assertEquals(expected.getPersonalName(), actual.getPersonalName());
+    assertEquals(expected.getCorporateName(), actual.getCorporateName());
+    assertEquals(expected.getNotes(), actual.getNotes());
+    assertEquals(expected.getIdentifiers(), actual.getIdentifiers());
+    assertEquals(expected.getSftPersonalName(), actual.getSftPersonalName());
+    assertEquals(expected.getSaftPersonalName(), actual.getSaftPersonalName());
+    assertEquals(expected.getSftCorporateName(), actual.getSftCorporateName());
+    assertEquals(expected.getSaftCorporateName(), actual.getSaftCorporateName());
+    assertEquals(expected.getSaftCorporateNameTrunc(), actual.getSaftCorporateNameTrunc());
+    assertEquals(expected.getSaftNarrowerTerm(), actual.getSaftNarrowerTerm());
+    assertEquals(expected.getSaftBroaderTerm(), actual.getSaftBroaderTerm());
+  }
+
+  private static List<Arguments> authorityArchivesQueryProvider() {
+    return List.of(
+      Arguments.of("headingType=personalName", "personalName", 1),
+      Arguments.of("authoritySourceFile.id=51243be4-27cb-4d78-9206-c956299483b1", "personalName", 2),
+      Arguments.of("authoritySourceFile.id=51243be4-27cb-4d78-9206-c956299483b1 and headingType=corporateName",
+        "corporateName", 1),
+      Arguments.of("authoritySourceFile.name=name2", "genreTerm", 1),
+      Arguments.of("cql.allRecords=1 NOT authoritySourceFile=\"\"", "genreTerm", 1),
+      Arguments.of("subjectHeadingCode=d NOT authoritySourceFile=\"\"", "genreTerm", 1),
+      Arguments.of("subjectHeadingCode=d NOT authoritySourceFile.id=\"\"", "genreTerm", 1),
+      Arguments.of("subjectHeadingCode=d NOT authoritySourceFile.name=\"\"", "genreTerm", 1),
+      Arguments.of("createdDate>2021-10-25T12:00:00.0 and createdDate<=2021-10-30T12:00:00.0", "genreTerm", 3),
+      Arguments.of("updatedDate>=2021-10-24T12:00:00.0 and updatedDate<=2021-10-28T12:00:00.0", "corporateName", 1),
+      Arguments.of("authoritySourceFile.name=name1 and createdDate>2021-10-28T12:00:00.0", "corporateName", 1)
+    );
   }
 
   private List<Authority> createAuthorities() {

@@ -19,14 +19,6 @@
       "version": "3.2"
     },
     {
-      "id": "instance-storage",
-      "version": "10.0 11.0"
-    },
-    {
-      "id": "mapping-rules-provider",
-      "version": "2.0"
-    },
-    {
       "id": "settings",
       "version": "1.0"
     },
@@ -47,12 +39,20 @@
     {
       "id": "specification-storage",
       "version": "1.0"
+    },
+    {
+      "id": "instance-storage",
+      "version": "10.0 11.0"
+    },
+    {
+      "id": "mapping-rules-provider",
+      "version": "2.0"
     }
   ],
   "provides": [
     {
       "id": "instance-authority-links",
-      "version": "2.1",
+      "version": "2.2",
       "handlers": [
         {
           "methods": [
@@ -77,15 +77,6 @@
             "inventory-storage.instances.item.get",
             "inventory-storage.instances.item.put",
             "user-tenants.collection.get"
-          ]
-        },
-        {
-          "methods": [
-            "POST"
-          ],
-          "pathPattern": "/links/authorities/bulk/count",
-          "permissionsRequired": [
-            "instance-authority-links.authorities.bulk.post"
           ]
         }
       ]
@@ -374,6 +365,39 @@
       ]
     },
     {
+      "id": "authorities-config",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authorities/config/groups",
+          "permissionsRequired": [
+            "authorities.config.groups.collection.get"
+          ]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authorities/config/groups/{groupId}/settings",
+          "permissionsRequired": [
+            "authorities.config.groups.settings.collection.get"
+          ],
+          "permissionsDesired": [
+            "authorities.config.groups.settings.*"
+          ]
+        },
+        {
+          "methods": ["PATCH"],
+          "pathPattern": "/authorities/config/groups/{groupId}/settings/{settingId}",
+          "permissionsRequired": [
+            "authorities.config.groups.settings.item.patch"
+          ],
+          "permissionsDesired": [
+            "authorities.config.groups.settings.*"
+          ]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "2.0",
       "interfaceType": "system",
@@ -393,7 +417,9 @@
             "perms.users.get",
             "perms.users.item.post",
             "perms.users.assign.immutable",
-            "perms.users.assign.mutable"
+            "perms.users.assign.mutable",
+            "mod-settings.entries.collection.get",
+            "mod-settings.global.read.authority-storage.manage"
           ]
         },
         {
@@ -459,8 +485,6 @@
           "unit": "day",
           "delay": "1",
           "modulePermissions": [
-            "mod-settings.entries.collection.get",
-            "mod-settings.global.read.authority-storage",
             "user-tenants.collection.get"
           ]
         }
@@ -469,12 +493,14 @@
   ],
   "permissionSets": [
     {
-      "permissionName": "mod-settings.global.write.authority-storage",
+      "permissionName": "mod-settings.global.write.authority-storage.manage",
+      "replaces": [ "mod-settings.global.write.authority-storage" ],
       "displayName": "Entities links settings - Create configuration",
       "description": "To create new configuration in mod settings"
     },
     {
-      "permissionName": "mod-settings.global.read.authority-storage",
+      "permissionName": "mod-settings.global.read.authority-storage.manage",
+      "replaces": [ "mod-settings.global.read.authority-storage" ],
       "displayName": "Entities links settings - Read configuration",
       "description": "To read the configuration from mod settings."
     },
@@ -487,11 +513,6 @@
       "permissionName": "instance-authority-links.instances.collection.put",
       "displayName": "Entities Links - update instance-authority links",
       "description": "Update instance-authority links collection"
-    },
-    {
-      "permissionName": "instance-authority-links.authorities.bulk.post",
-      "displayName": "Entities Links - count instance-authority links for each authority",
-      "description": "Count instance-authority links for each authority"
     },
     {
       "permissionName": "instance-authority.linking-rules.collection.get",
@@ -530,7 +551,6 @@
       "subPermissions": [
         "instance-authority-links.instances.collection.get",
         "instance-authority-links.instances.collection.put",
-        "instance-authority-links.authorities.bulk.post",
         "instance-authority.linking-rules.collection.get",
         "instance-authority.linking-rules.item.get",
         "instance-authority.linking-rules.item.patch",
@@ -672,6 +692,55 @@
         "inventory-storage.authority-source-files.item.patch",
         "inventory-storage.authority-source-files.item.delete",
         "inventory-storage.authority-source-files.hrid.post"
+      ]
+    },
+    {
+      "permissionName": "authorities.config.groups.collection.get",
+      "displayName": "Authorities Configuration - get settings groups",
+      "description": "Get settings groups"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.collection.get",
+      "displayName": "Authorities Configuration - get settings for a group",
+      "description": "Get settings for a group"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.authorities.collection.get",
+      "displayName": "Authorities Configuration - get settings for a authorities group",
+      "description": "Get settings for a authorities group"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.item.patch",
+      "displayName": "Authorities Configuration - update setting for a group",
+      "description": "Update setting for a group"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.authorities.mapping.extended.item.patch",
+      "displayName": "Authorities Configuration - update setting for a authorities mapping extended",
+      "description": "Update setting for a authorities mapping extended"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.authorities.archives.expiration.enabled.item.patch",
+      "displayName": "Authorities Configuration - update setting for a authorities archives expiration enabled",
+      "description": "Update setting for a authorities archives expiration enabled"
+    },
+    {
+      "permissionName": "authorities.config.groups.settings.authorities.archives.expiration.period.item.patch",
+      "displayName": "Authorities Configuration - update setting for a authorities archives expiration period",
+      "description": "Update setting for a authorities archives expiration period"
+    },
+    {
+      "permissionName": "authorities.config.all",
+      "displayName": "all authorities config permissions",
+      "description": "Entire set of permissions needed to use authorities configuration",
+      "subPermissions": [
+        "authorities.config.groups.collection.get",
+        "authorities.config.groups.settings.collection.get",
+        "authorities.config.groups.settings.authorities.collection.get",
+        "authorities.config.groups.settings.item.patch",
+        "authorities.config.groups.settings.authorities.mapping.extended.item.patch",
+        "authorities.config.groups.settings.authorities.archives.expiration.enabled.item.patch",
+        "authorities.config.groups.settings.authorities.archives.expiration.period.item.patch"
       ]
     }
   ],

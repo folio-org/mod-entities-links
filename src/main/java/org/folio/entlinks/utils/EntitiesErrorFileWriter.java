@@ -1,11 +1,11 @@
 package org.folio.entlinks.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.function.Function;
+import tools.jackson.databind.ObjectMapper;
 
 public class EntitiesErrorFileWriter implements AutoCloseable {
 

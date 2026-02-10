@@ -62,13 +62,11 @@ spring:
   sql:
     init:
       continue-on-error: true
-  cloud:
-    openfeign:
-      okhttp:
-        enabled: true
 folio:
   environment: ${ENV:folio}
   okapi-url: ${OKAPI_URL:http://localhost:9130}
+  exchange:
+    enabled: true
   system-user:
     enabled: ${SYSTEM_USER_ENABLED:true}
     username: ${SYSTEM_USER_USERNAME:mod-entities-links}
@@ -125,13 +123,19 @@ folio:
 
   retry:
     enabled: true
+
+  jpa:
+    repository:
+      base-packages: org.folio.entlinks.domain
   tenant:
+    settings:
+      domain: authorities
     validation:
       enabled: true
   logging:
     request:
       enabled: true
-    feign:
+    exchange:
       enabled: true
 
 management:

@@ -1,7 +1,5 @@
 package org.folio.entlinks.service.authority;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -17,6 +15,8 @@ import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.exception.FolioIntegrationException;
 import org.folio.entlinks.utils.EntitiesErrorFileWriter;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Log4j2
 @Service
@@ -120,7 +120,7 @@ public class AuthorityS3Service {
   private AuthorityDto toAuthorityDto(String s) {
     try {
       return objectMapper.readValue(s, AuthorityDto.class);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new FolioIntegrationException("Unexpected json parsing exception", e);
     }
   }

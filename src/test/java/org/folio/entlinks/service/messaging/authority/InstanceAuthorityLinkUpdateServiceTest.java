@@ -2,7 +2,7 @@ package org.folio.entlinks.service.messaging.authority;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.support.base.TestConstants.TENANT_ID;
-import static org.folio.support.base.TestConstants.TEST_ID;
+import static org.folio.support.base.TestConstants.USER_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -227,7 +228,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
     when(sourceRecordService.getAuthoritySourceRecordById(any())).thenReturn(sourceRecord);
     when(updateHandler.handle(changeHolderCaptor.capture())).thenReturn(List.of(expected));
     when(folioExecutionContext.getTenantId()).thenReturn(TENANT_ID);
-    when(folioExecutionContext.getUserId()).thenReturn(TEST_ID);
+    when(folioExecutionContext.getUserId()).thenReturn(UUID.fromString(USER_ID));
     when(consortiumTenantsService.getConsortiumTenants(TENANT_ID)).thenReturn(memberTenants);
     when(authorityDataStatService.createInBatch(anyList())).thenReturn(List.of(new AuthorityDataStat()));
     mockExecutionService();
@@ -235,8 +236,8 @@ class InstanceAuthorityLinkUpdateServiceTest {
     service.handleAuthoritiesChanges(authorityEvents);
 
     verify(eventProducer, times(3)).sendMessages(eventCaptor.capture());
-    verify(executionService).executeSystemUserScoped(eq(memberTenants.get(0)), anyString(), any());
-    verify(executionService).executeSystemUserScoped(eq(memberTenants.get(1)), anyString(), any());
+    verify(executionService).executeSystemUserScoped(eq(memberTenants.get(0)), eq(USER_ID), any());
+    verify(executionService).executeSystemUserScoped(eq(memberTenants.get(1)), eq(USER_ID), any());
 
     var messages = eventCaptor.getAllValues().stream().flatMap(Collection::stream).toList();
     assertThat(messages).hasSize(3);

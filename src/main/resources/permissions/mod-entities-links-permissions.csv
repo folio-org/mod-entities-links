@@ -1,7 +1,5 @@
 inventory-storage.instances.item.get
 inventory-storage.instances.item.put
-mapping-metadata.type.item.get
-mapping-rules.get
 source-storage.source-records.item.get
 users.collection.get
 user-tenants.collection.get

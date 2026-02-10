@@ -135,7 +135,7 @@ documentation [Spring Boot Externalized Configuration](https://docs.spring.io/sp
 | mod-source-record-storage | source-storage-source-records | For fetching Authority source records in MARC format                       |
 | mod-inventory-storage     | authority-source-files        | For fetching Authority source file reference data                          |
 | mod-inventory-storage     | instance-storage              | For fetching Instance data for statistic                                   |
-| mod-settings              | settings                      | For fetching the tenant-specific retention period for archived authorities |
+
 
 ### Consuming Kafka messages
 
@@ -164,7 +164,6 @@ reflected on them.
 |:-------|:--------------------------------|:-------------------------------------------------|:--------------------------------------------|
 | GET    | `/links/instances/{instanceId}` | `entities-links.instances.collection.get`        | Get links collection related to Instance    |
 | PUT    | `/links/instances/{instanceId}` | `entities-links.instances.collection.put`        | Update links collection related to Instance |
-| POST   | `/links/authorities/bulk/count` | `instance-authority-links.authorities.bulk.post` | Retrieve number of links by authority IDs   |
 
 **Examples**
 
@@ -208,38 +207,6 @@ Request body:
       "authorityNaturalId": "mp96352145",
       "instanceId": "b2658a84-912b-4ed9-83d7-e8201f4d27ec",
       "linkingRuleId": 1
-    }
-  ]
-}
-```
-
-<a name='count-number-of-links-for-each-authority-id'></a>
-
-_Count number of links for each authority id:_
-
-`POST /links/authorities/bulk/count`
-
-Request body:
-```json
-{
-  "ids": [
-    "611d2938-9824-4817-a737-7ff26ab26d03",
-    "8e6a8a67-dd6b-4b40-899e-9b9167e9ad20"
-  ]
-}
-```
-
-Response:
-```json
-{
-  "links": [
-    {
-      "id": "8e6a8a67-dd6b-4b40-899e-9b9167e9ad20",
-      "totalLinks": 11
-    },
-    {
-      "id": "611d2938-9824-4817-a737-7ff26ab26d03",
-      "totalLinks": 0
     }
   ]
 }
@@ -627,50 +594,88 @@ Endpoint `GET /authority-storage/authorities` support CQL queries.
 
 **CQL queries examples**
 
-| Example                                                    | Description                                                                                                                                                                                                                                                   |
-|:-----------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `headingType = personalName`                               | Matches authorities with `Personal Name` heading type                                                                                                                                                                                                         |
-| `authoritySourceFile.id = 12345`                           | Matches authorities with `12345` source file id                                                                                                                                                                                                               |
-| `authoritySourceFile.name = LC Genre/Form Terms`           | Matches authorities with source file name `LC Genre/Form Terms`                                                                                                                                                                                               |
-| `authoritySourceFile = ""`                                 | Matches authorities with any defined authority source file, queries `authoritySourceFile.id = ""` and `authoritySourceFile.name = ""` gives the identical result as `id` and `name` are required attributes of source file                                    |
+| Example                                                    | Description                                                                                                                                                                                                                                                    |
+|:-----------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `headingType = personalName`                               | Matches authorities with `Personal Name` heading type                                                                                                                                                                                                          |
+| `authoritySourceFile.id = 12345`                           | Matches authorities with `12345` source file id                                                                                                                                                                                                                |
+| `authoritySourceFile.name = LC Genre/Form Terms`           | Matches authorities with source file name `LC Genre/Form Terms`                                                                                                                                                                                                |
+| `authoritySourceFile = ""`                                 | Matches authorities with any defined authority source file, queries `authoritySourceFile.id = ""` and `authoritySourceFile.name = ""` gives the identical result as `id` and `name` are required attributes of source file                                     |
 | `headingType = corporateName NOT authoritySourceFile = ""` | Matches authorities with `Corporate Name` heading type and without any defined authority source file, same like in a previous query `NOT authoritySourceFile = ""` can be replaced by `NOT authoritySourceFile.id = ""` or `NOT authoritySourceFile.name = ""` |
-| `createdDate > 2021-10-25T12:00:00.0`                      | Matches authorities that were created after `2021-10-25 12:00:00`                                                                                                                                                                                             |
-| `updatedDate <= 2021-10-28T12:00:00.0`                     | Matches authorities that were updated before or at `2021-10-28 12:00:00`                                                                                                                                                                                      |
+| `createdDate > 2021-10-25T12:00:00.0`                      | Matches authorities that were created after `2021-10-25 12:00:00`                                                                                                                                                                                              |
+| `updatedDate <= 2021-10-28T12:00:00.0`                     | Matches authorities that were updated before or at `2021-10-28 12:00:00`                                                                                                                                                                                       |
 
 #### Retention policy for archived authorities
-In order to provide an ability for a tenant to have specific retention period of authority archives, we need to add the below configuration in mod-settings.
-If no setting is provided by a tenant the retention period value would be taken from `AUTHORITY_ARCHIVES_EXPIRATION_PERIOD` environment variable.
+The module provides internal tenant-specific settings to manage the retention period for authority archives. These settings are managed through the `/authorities/config` API endpoints.
+
+**Default Settings**
+On tenant initialization, the following default settings are created:
+- `archives.expiration.enabled`: `true` - Indicates whether expiration of authority archives is enabled
+- `archives.expiration.period`: `7` days - Retention period for deleted authorities
+
+**Settings Migration**
+During module upgrade, if the tenant previously used mod-settings for archive expiration configuration, these settings will be automatically migrated to the internal configuration storage.
+
+**Configuration API**
+
+To view available settings groups:
+```
+GET /authorities/config/groups
+```
+
+To view settings for the archives-expiration group:
+```
+GET /authorities/config/groups/archives-expiration/settings
+```
+
+To update a specific setting:
+```
+PATCH /authorities/config/groups/archives-expiration/settings/{settingId}
+```
 
 **Permissions**
-To make a post call to mod-settings, user should have below permissions.
-```
-  mod-settings.entries.item.post
-  mod-settings.global.write.mod-entities-links
-```
+To manage authorities configuration settings, users need both required and desired permissions.
 
-**Example request**
+_Required permissions (base access):_
+
+| Permission                                          | Description                |
+|-----------------------------------------------------|----------------------------|
+| `authorities.config.groups.collection.get`          | Get all settings groups    |
+| `authorities.config.groups.settings.collection.get` | Get settings for any group |
+| `authorities.config.groups.settings.item.patch`     | Update any setting         |
+
+_Desired permissions (fine-grained access control):_
+
+The API uses desired permissions to control access to specific groups and individual settings. Users must have both the required permission AND the appropriate desired permission:
+
+| Permission                                                                              | Description                                     |
+|-----------------------------------------------------------------------------------------|-------------------------------------------------|
+| `authorities.config.groups.settings.authorities.collection.get`                         | Get settings for authorities group specifically |
+| `authorities.config.groups.settings.authorities.mapping.extended.item.patch`            | Update mapping.extended setting only            |
+| `authorities.config.groups.settings.authorities.archives.expiration.enabled.item.patch` | Update archives.expiration.enabled setting only |
+| `authorities.config.groups.settings.authorities.archives.expiration.period.item.patch`  | Update archives.expiration.period setting only  |
+
+**Note:** To access or update a specific setting, a user must have BOTH the required permission (e.g., `authorities.config.groups.settings.item.patch`) AND the corresponding desired permission (e.g., `authorities.config.groups.settings.authorities.archives.expiration.period.item.patch`).
+
+**Example: Update retention period**
 ```
-POST https://{okapi-location}/settings/entries
+PATCH /authorities/config/groups/archives-expiration/settings/archives.expiration.period
 {
-    "id":"1e01066d-4bee-4cf7-926c-ba2c9c6c0001",
-    "scope": "authority-storage",
-    "key": "authority-archives-expiration",
-    "value": {
-      "expirationEnabled":true,
-      "retentionInDays":10
-    }
+  "value": 14
 }
 ```
 
-| Field   | Type        | Description                                                                                                           |
-|---------|-------------|-----------------------------------------------------------------------------------------------------------------------|
-| `id`    | UUID        | id of type UUID should be provided.                                                                                   |
-| `scope` | String      | Scope should be the module name. Here, it will be "authority-storage"                                                 |
-| `key`   | String      | Feature or Identifier name matching the setting we are enabling for. Here, it will be "authority-archives-expiration" |
-| `value` | Json Object | Value object for this setting.                                                                                        |
+**Example: Disable expiration**
+```
+PATCH /authorities/config/groups/archives-expiration/settings/archives.expiration.enabled
+{
+  "value": false
+}
+```
 
+**Available Settings**
 
-| Value field         | Type    | Description                                                                                                                                                                           |
-|---------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `expirationEnabled` | boolean | Indicates whether or not to enable expiration of Authority Archives for the tenant.                                                                                                   |
-| `retentionInDays`   | int     | Retention period of Authority Archives provided in days. If not specified, the default value would be taken by the `AUTHORITY_ARCHIVES_DEFAULT_EXPIRATION_DAYS` environment variable. |
+| Setting Key                      | Type    | Default | Description                                                       |
+|----------------------------------|---------|---------|-------------------------------------------------------------------|
+| `archives.expiration.enabled`    | boolean | `true`  | Enable/disable expiration of authority archives for the tenant    |
+| `archives.expiration.period`     | integer | `7`     | Retention period in days for deleted authorities in archive table |
+| `mapping.extended`               | boolean | `false` | Enable/disable extended mapping for authorities                   |

@@ -24,6 +24,7 @@ import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
+import org.folio.entlinks.domain.repository.InstanceLinkJdbcRepository;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.service.authority.AuthorityService;
@@ -41,6 +42,7 @@ public class InstanceAuthorityLinkingService {
 
   private final InstanceLinkRepository instanceLinkRepository;
   private final AuthorityService authorityService;
+  private final InstanceLinkJdbcRepository instanceLinkJdbcRepository;
 
   public List<InstanceAuthorityLink> getLinksByInstanceId(UUID instanceId) {
     log.info("Loading links for [instanceId: {}]", instanceId);
@@ -101,6 +103,16 @@ public class InstanceAuthorityLinkingService {
     }
     return instanceLinkRepository.countLinksByAuthorityIds(authorityIds).stream()
       .collect(Collectors.toMap(LinkCountView::getId, LinkCountView::getTotalLinks));
+  }
+
+  public Map<UUID, Integer> countLinksByAuthorityIds(Set<UUID> authorityIds, String tenantId) {
+    if (log.isDebugEnabled()) {
+      log.info("Count links for [authority ids: {}, tenantId: {}]", authorityIds, tenantId);
+    } else {
+      log.info("Count links for [authority ids amount: {}, tenantId: {}]", authorityIds.size(), tenantId);
+    }
+    return instanceLinkJdbcRepository.countLinksByAuthorityIds(authorityIds, tenantId).stream()
+        .collect(Collectors.toMap(LinkCountView::getId, LinkCountView::getTotalLinks));
   }
 
   @Transactional

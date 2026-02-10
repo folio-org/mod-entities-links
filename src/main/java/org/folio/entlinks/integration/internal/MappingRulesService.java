@@ -4,11 +4,12 @@ import static org.folio.entlinks.config.constants.CacheNames.AUTHORITY_MAPPING_R
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.client.MappingRulesClient;
-import org.folio.entlinks.exception.FolioIntegrationException;
+import org.folio.entlinks.controller.converter.LinkingRulesMapper;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -16,25 +17,27 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class MappingRulesService {
+  private final LinkingRulesMapper linkingRulesMapper;
 
   private final MappingRulesClient client;
 
   @Cacheable(cacheNames = AUTHORITY_MAPPING_RULES_CACHE,
              key = "@folioExecutionContext.tenantId",
              unless = "#result.isEmpty()")
-  public Map<String, List<String>> getFieldTargetsMappingRelations() {
+  public Optional<Map<String, List<String>>> getFieldTargetsMappingRelations() {
     log.info("Fetching authority mapping rules");
     var mappingRules = fetchMappingRules();
-    return mappingRules.entrySet().stream()
+    return mappingRules.map(stringListMap -> stringListMap.entrySet().stream()
       .collect(Collectors.toMap(Map.Entry::getKey, rulesList ->
-        rulesList.getValue().stream().map(MappingRulesClient.MappingRule::target).toList()));
+        rulesList.getValue().stream().map(MappingRulesClient.MappingRule::target).toList())));
   }
 
-  private Map<String, List<MappingRulesClient.MappingRule>> fetchMappingRules() {
+  private Optional<Map<String, List<MappingRulesClient.MappingRule>>> fetchMappingRules() {
     try {
-      return client.fetchAuthorityMappingRules();
+      return Optional.of(client.fetchAuthorityMappingRules());
     } catch (Exception e) {
-      throw new FolioIntegrationException("Failed to fetch authority mapping rules", e);
+      log.warn("Failed to fetch authority mapping rules", e);
+      return Optional.empty();
     }
   }
 }

@@ -9,6 +9,7 @@ import lombok.experimental.UtilityClass;
 import org.folio.entlinks.domain.dto.AuthoritySearchParameter;
 import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.dto.LinkStatus;
+import org.folio.entlinks.service.settings.TenantSetting;
 
 @UtilityClass
 public class TestConstants {
@@ -40,7 +41,6 @@ public class TestConstants {
   public static final String TEST_STRING = "test, ";
 
   private static final String INSTANCE_LINKS_ENDPOINT_PATH = "/links/instances/{id}";
-  private static final String AUTHORITY_LINKS_COUNT_ENDPOINT_PATH = "/links/authorities/bulk/count";
   private static final String LINKS_SUGGESTIONS_ENDPOINT = "/links-suggestions/marc";
   private static final String LINKS_STATS_INSTANCE_ENDPOINT_PATH = "/links/stats/instance";
   private static final String LINKS_STATS_INSTANCE_ENDPOINT_PARAMS = "?status=%s&fromDate=%s&toDate=%s";
@@ -52,6 +52,7 @@ public class TestConstants {
   private static final String AUTHORITY_STORAGE_ENDPOINT = "/authority-storage/authorities";
   private static final String AUTHORITY_STORAGE_EXPIRE_ENDPOINT = "/authority-storage/expire/authorities";
   private static final String AUTHORITY_STORAGE_REINDEX_ENDPOINT = "/authority-storage/reindex";
+  private static final String AUTHORITIES_CONFIG_SETTING_ENDPOINT = "/authorities/config/groups/%s/settings/%s";
 
   public static String authorityTopic() {
     return fullTopicName(AUTHORITY_TOPIC, TENANT_ID);
@@ -87,10 +88,6 @@ public class TestConstants {
 
   public static String linkingRulesEndpoint(Integer id) {
     return LINKING_RULES_ENDPOINT + "/" + id;
-  }
-
-  public static String authoritiesLinksCountEndpoint() {
-    return AUTHORITY_LINKS_COUNT_ENDPOINT_PATH;
   }
 
   public static String linksStatsInstanceEndpoint() {
@@ -146,5 +143,9 @@ public class TestConstants {
 
   public static String authorityReindexEndpoint(UUID id) {
     return AUTHORITY_STORAGE_REINDEX_ENDPOINT + "/" + id;
+  }
+
+  public static String authorityConfigEndpoint(TenantSetting setting) {
+    return AUTHORITIES_CONFIG_SETTING_ENDPOINT.formatted(setting.getGroup(), setting.getKey());
   }
 }

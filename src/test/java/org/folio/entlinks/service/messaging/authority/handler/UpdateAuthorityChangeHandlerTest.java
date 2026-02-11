@@ -22,7 +22,6 @@ import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
-import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
@@ -109,7 +108,6 @@ class UpdateAuthorityChangeHandlerTest {
   void handle_positive_whenNaturalIdChanged() {
     var authorityId = UUID.randomUUID();
     var instanceId = UUID.randomUUID();
-    var authority = Authority.builder().id(authorityId).build();
 
     when(instanceAuthorityChangeProperties.getNumPartitions()).thenReturn(2);
     when(linkingService.getLinksByAuthorityId(eq(authorityId), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(

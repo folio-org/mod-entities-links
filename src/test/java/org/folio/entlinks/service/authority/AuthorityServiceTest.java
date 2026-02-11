@@ -302,7 +302,8 @@ class AuthorityServiceTest {
 
     when(repository.findAllByIdInAndDeletedFalse(ids)).thenReturn(List.of(existing));
 
-    assertThrows(OptimisticLockingException.class, () -> service.upsert(List.of(modified)));
+    var modifiedList = List.of(modified);
+    assertThrows(OptimisticLockingException.class, () -> service.upsert(modifiedList));
     verify(repository).findAllByIdInAndDeletedFalse(ids);
   }
 

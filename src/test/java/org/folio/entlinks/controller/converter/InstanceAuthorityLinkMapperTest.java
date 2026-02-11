@@ -6,6 +6,7 @@ import static org.folio.support.base.TestConstants.TEST_ID;
 import static org.folio.support.base.TestConstants.TEST_PROPERTY_VALUE;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;

@@ -5,7 +5,6 @@ import static org.folio.entlinks.utils.ObjectUtils.transformIfNotNull;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -109,12 +108,6 @@ public class AuthorityChangeHolder {
     }
 
     return authorityDataStat;
-  }
-
-  public AuthorityChangeHolder copy() {
-    var copy = new AuthorityChangeHolder(event, changes, fieldTagRelation);
-    copy.setSourceRecord(sourceRecord);
-    return copy;
   }
 
   private AuthorityDataStat prepareDataStat(HeadingChange result) {

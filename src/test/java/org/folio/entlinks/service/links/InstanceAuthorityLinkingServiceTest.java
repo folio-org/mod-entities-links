@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ERROR;
 import static org.folio.support.TestDataUtils.links;
-import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.TestDataUtils.report;
 import static org.folio.support.TestDataUtils.reports;
 import static org.mockito.ArgumentMatchers.any;
@@ -401,17 +400,6 @@ class InstanceAuthorityLinkingServiceTest {
   }
 
   @Test
-  void saveAll_positive() {
-    var instanceId = UUID.randomUUID();
-    var links = links(2);
-
-    service.saveAll(instanceId, links);
-
-    verify(instanceLinkRepository).saveAll(links);
-  }
-
-  @Test
-  @SuppressWarnings("unchecked")
   void getLinks_positive() {
     var status = LinkStatus.ACTUAL;
     var fromDate = OffsetDateTime.now();
@@ -451,11 +439,7 @@ class InstanceAuthorityLinkingServiceTest {
       .build();
     var linkView = instanceLinkView(link, "n67890");
 
-    when(instanceLinkRepository.findLinksWithAuthorityNaturalId(
-      eq(null),
-      eq(null),
-      eq(null),
-      eq(pageable)))
+    when(instanceLinkRepository.findLinksWithAuthorityNaturalId(null, null, null, pageable))
       .thenReturn(new PageImpl<>(List.of(linkView), pageable, 1));
 
     var links = service.getLinks(null, null, null, limit);

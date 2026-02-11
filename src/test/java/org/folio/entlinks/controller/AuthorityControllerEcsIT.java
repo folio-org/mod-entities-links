@@ -69,7 +69,6 @@ class AuthorityControllerEcsIT extends IntegrationTestBase {
 
   @Test
   void expireAuthorityArchives_positive() {
-    mockExpirationSettingsRequest();
     createSourceFile();
     var authority = createAuthority();
 

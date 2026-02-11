@@ -2,7 +2,7 @@
 ### Breaking changes
 * Use internal module configuration instead of shared configuration from mod-settings ([MODELINKS-376](https://folio-org.atlassian.net/browse/MODELINKS-376))
 * Migrate to Spring Boot 4.0.x ([MODELINKS-349](https://folio-org.atlassian.net/browse/MODELINKS-349))
-* Remove Authority, AuthorityDataStat propagation ([MODELINKS-383](https://folio-org.atlassian.net/browse/MODELINKS-383))
+* Remove Authority, AuthorityDataStat propagation, remove unused authority data stat properties ([MODELINKS-383](https://folio-org.atlassian.net/browse/MODELINKS-383))
 
 ### New APIs versions
 * Provides `instance-authority-links-statistics v3.0`

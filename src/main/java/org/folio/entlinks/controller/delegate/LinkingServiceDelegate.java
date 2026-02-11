@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.collections4.MapUtils;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.controller.converter.InstanceAuthorityLinkMapper;
 import org.folio.entlinks.domain.dto.BibStatsDto;
@@ -70,30 +69,6 @@ public class LinkingServiceDelegate {
     validateLinks(instanceId, links);
     var incomingLinks = mapper.convertDto(links);
     linkingService.updateLinks(instanceId, incomingLinks);
-  }
-
-  public LinksCountDtoCollection countLinksByAuthorityIds(UuidCollection authorityIdCollection) {
-    var ids = new HashSet<>(authorityIdCollection.getIds());
-    var countLinks = linkingService.countLinksByAuthorityIds(ids);
-    var countLinksForConsortiumCentral = executor.executeAsCentralTenantForMember(
-      () -> linkingService.countLinksByAuthorityIds(ids));
-
-    if (MapUtils.isNotEmpty(countLinksForConsortiumCentral)) {
-      countLinksForConsortiumCentral.forEach((key, value) ->
-        countLinks.merge(key, value, Integer::sum));
-    }
-
-    var linkCountMap = fillInMissingIdsWithZeros(countLinks, ids);
-
-    return new LinksCountDtoCollection(mapper.convert(linkCountMap));
-  }
-
-  private Map<UUID, Integer> fillInMissingIdsWithZeros(Map<UUID, Integer> linksCountMap, HashSet<UUID> ids) {
-    var result = new HashMap<>(linksCountMap);
-    for (UUID id : ids) {
-      result.putIfAbsent(id, 0);
-    }
-    return result;
   }
 
   private void validateLinks(UUID instanceId, List<InstanceLinkDto> links) {

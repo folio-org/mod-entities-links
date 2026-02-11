@@ -105,16 +105,6 @@ public class InstanceAuthorityLinkingService {
       .collect(Collectors.toMap(LinkCountView::getId, LinkCountView::getTotalLinks));
   }
 
-  public Map<UUID, Integer> countLinksByAuthorityIds(Set<UUID> authorityIds, String tenantId) {
-    if (log.isDebugEnabled()) {
-      log.info("Count links for [authority ids: {}, tenantId: {}]", authorityIds, tenantId);
-    } else {
-      log.info("Count links for [authority ids amount: {}, tenantId: {}]", authorityIds.size(), tenantId);
-    }
-    return instanceLinkJdbcRepository.countLinksByAuthorityIds(authorityIds, tenantId).stream()
-        .collect(Collectors.toMap(LinkCountView::getId, LinkCountView::getTotalLinks));
-  }
-
   @Transactional
   public void deleteByAuthorityIdIn(Set<UUID> authorityIds) {
     if (log.isDebugEnabled()) {

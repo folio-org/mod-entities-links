@@ -10,7 +10,6 @@ import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
 import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -286,46 +285,6 @@ class LinkingServiceDelegateTest {
       .hasMessage("Link should have instanceId = " + INSTANCE_ID)
       .extracting(RequestBodyValidationException::getInvalidParameters)
       .returns(4, from(List::size));
-  }
-
-  @Test
-  void countLinksByAuthorityIds_positive() {
-    var ids = List.of(randomUUID(), randomUUID(), randomUUID());
-
-    when(linkingService.countLinksByAuthorityIds(new HashSet<>(ids))).thenReturn(
-      Map.of(ids.get(0), 2, ids.get(1), 1));
-    when(mapper.convert(anyMap())).thenCallRealMethod();
-
-    var actual = delegate.countLinksByAuthorityIds(new UuidCollection().ids(ids));
-
-    assertThat(actual.getLinks())
-      .hasSize(ids.size())
-      .extracting(LinksCountDto::getId, LinksCountDto::getTotalLinks)
-      .containsExactlyInAnyOrder(tuple(ids.get(0), 2), tuple(ids.get(1), 1), tuple(ids.get(2), 0));
-
-    verify(executor).executeAsCentralTenantForMember(any());
-  }
-
-  @Test
-  void countLinksByAuthorityIds_positive_withConsortiumCentralLinks() {
-    var ids = List.of(randomUUID(), randomUUID(), randomUUID());
-    var localLinks = new HashMap<UUID, Integer>();
-    localLinks.put(ids.get(0), 2);
-    localLinks.put(ids.get(1), 1);
-    var consortiumLinks = Map.of(ids.get(0), 3, ids.get(2), 2);
-
-    when(linkingService.countLinksByAuthorityIds(new HashSet<>(ids))).thenReturn(localLinks);
-    when(executor.executeAsCentralTenantForMember(any())).thenReturn(consortiumLinks);
-    when(mapper.convert(anyMap())).thenCallRealMethod();
-
-    var actual = delegate.countLinksByAuthorityIds(new UuidCollection().ids(ids));
-
-    assertThat(actual.getLinks())
-      .hasSize(ids.size())
-      .extracting(LinksCountDto::getId, LinksCountDto::getTotalLinks)
-      .containsExactlyInAnyOrder(tuple(ids.get(0), 5), tuple(ids.get(1), 1), tuple(ids.get(2), 2));
-
-    verify(executor).executeAsCentralTenantForMember(any());
   }
 
   private void testGetLinkedBibUpdateStats_positive(List<InstanceAuthorityLink> linksMock,

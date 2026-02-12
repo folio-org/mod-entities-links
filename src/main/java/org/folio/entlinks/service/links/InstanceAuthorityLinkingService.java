@@ -116,13 +116,13 @@ public class InstanceAuthorityLinkingService {
   }
 
   @Transactional
-  public void updateStatusByAuthorityIds(Collection<UUID> authorityIds, InstanceAuthorityLinkStatus status) {
+  public void setActualStatusByAuthorityIds(Collection<UUID> authorityIds) {
     if (log.isDebugEnabled()) {
-      log.info("Update links status for [authorityIds: {}, status: {}]", authorityIds, status);
+      log.info("Set actual status for links with [authorityIds: {}]", authorityIds);
     } else {
-      log.info("Update links status for [authorityIds amount: {}, status: {}]", authorityIds.size(), status);
+      log.info("Set actual status for links with [authorityIds amount: {}]", authorityIds.size());
     }
-    instanceLinkRepository.updateStatusByAuthorityIds(authorityIds, status);
+    instanceLinkRepository.updateStatusByAuthorityIds(authorityIds, InstanceAuthorityLinkStatus.ACTUAL, null);
   }
 
   public List<InstanceAuthorityLink> getLinks(LinkStatus status, OffsetDateTime fromDate,

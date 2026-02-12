@@ -16,7 +16,6 @@ import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.SubfieldChange;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
-import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityBatchProcessingException;
@@ -80,7 +79,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     var authorityIds = linksEvents.stream().map(LinksChangeEvent::getAuthorityId).collect(Collectors.toSet());
 
     //update status to actual for links in case they have fail status from previous updates
-    linkingService.updateStatusByAuthorityIds(authorityIds, InstanceAuthorityLinkStatus.ACTUAL);
+    linkingService.setActualStatusByAuthorityIds(authorityIds);
     return linksEvents;
   }
 

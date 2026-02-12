@@ -138,7 +138,7 @@ class UpdateAuthorityChangeHandlerTest {
       .extracting("code", "value")
       .containsExactly("0", "1010101");
 
-    verify(linkingService).updateStatusByAuthorityIds(Set.of(authorityId), InstanceAuthorityLinkStatus.ACTUAL);
+    verify(linkingService).setActualStatusByAuthorityIds(Set.of(authorityId));
   }
 
   @Test

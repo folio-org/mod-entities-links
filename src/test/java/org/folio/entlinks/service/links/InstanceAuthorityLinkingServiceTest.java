@@ -400,15 +400,14 @@ class InstanceAuthorityLinkingServiceTest {
   }
 
   @Test
-  void updateStatusByAuthorityIds_positive() {
+  void setActualStatusByAuthorityIds_positive() {
     var authorityId1 = randomUUID();
     var authorityId2 = randomUUID();
     var authorityIds = Set.of(authorityId1, authorityId2);
-    var status = ACTUAL;
 
-    service.updateStatusByAuthorityIds(authorityIds, status);
+    service.setActualStatusByAuthorityIds(authorityIds);
 
-    verify(instanceLinkRepository).updateStatusByAuthorityIds(authorityIds, status);
+    verify(instanceLinkRepository).updateStatusByAuthorityIds(authorityIds, ACTUAL, null);
   }
 
   @Test

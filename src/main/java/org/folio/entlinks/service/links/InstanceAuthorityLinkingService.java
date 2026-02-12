@@ -115,6 +115,16 @@ public class InstanceAuthorityLinkingService {
     instanceLinkRepository.deleteByAuthorityIds(authorityIds);
   }
 
+  @Transactional
+  public void updateStatusByAuthorityIds(Collection<UUID> authorityIds, InstanceAuthorityLinkStatus status) {
+    if (log.isDebugEnabled()) {
+      log.info("Update links status for [authorityIds: {}, status: {}]", authorityIds, status);
+    } else {
+      log.info("Update links status for [authorityIds amount: {}, status: {}]", authorityIds.size(), status);
+    }
+    instanceLinkRepository.updateStatusByAuthorityIds(authorityIds, status);
+  }
+
   public List<InstanceAuthorityLink> getLinks(LinkStatus status, OffsetDateTime fromDate,
                                               OffsetDateTime toDate, int limit) {
     log.info("Fetching links for [status: {}, fromDate: {}, toDate: {}, limit: {}]",

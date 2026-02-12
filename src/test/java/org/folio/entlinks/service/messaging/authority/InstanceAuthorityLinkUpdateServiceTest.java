@@ -156,6 +156,25 @@ class InstanceAuthorityLinkUpdateServiceTest {
   }
 
   @Test
+  void handleAuthoritiesChanges_positive_updateEventWhenNoLinksExist() {
+    final var id = UUID.randomUUID();
+    final var authorityEvents = List.of(
+      new AuthorityDomainEvent(id, null, new AuthorityDto().naturalId("new").personalName("test"),
+        DomainEventType.UPDATE, TENANT_ID));
+    final var sourceRecord = new AuthoritySourceRecord(null, null, null);
+
+    when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Collections.emptyMap());
+    when(sourceRecordService.getAuthoritySourceRecordById(any())).thenReturn(sourceRecord);
+
+    service.handleAuthoritiesChanges(authorityEvents);
+
+    verify(eventProducer, never()).sendMessages(eventCaptor.capture());
+    verify(authorityDataStatService).createInBatch(anyList());
+    verifyNoMoreInteractions(authorityDataStatService);
+    verify(sourceRecordService).getAuthoritySourceRecordById(id);
+  }
+
+  @Test
   void handleAuthoritiesChanges_positive_deleteEvent() {
     final var id = UUID.randomUUID();
     final var authorityEvents = List.of(

@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.FieldChange;
@@ -15,6 +16,7 @@ import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.SubfieldChange;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
+import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityBatchProcessingException;
@@ -37,6 +39,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   private final AuthorityMappingRulesProcessingService mappingRulesProcessingService;
   private final InstanceAuthorityLinkingRulesService linkingRulesService;
   private final EventProducer<LinkUpdateReport> eventProducer;
+  private final InstanceAuthorityLinkingService linkingService;
 
   public UpdateAuthorityChangeHandler(InstanceAuthorityChangeProperties instanceAuthorityChangeProperties,
                                       AuthoritySourceFileRepository sourceFileRepository,
@@ -49,6 +52,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.linkingRulesService = linkingRulesService;
     this.eventProducer = eventProducer;
+    this.linkingService = linkingService;
   }
 
   @Override
@@ -73,6 +77,10 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
       }
     }
 
+    var authorityIds = linksEvents.stream().map(LinksChangeEvent::getAuthorityId).collect(Collectors.toSet());
+
+    //update status to actual for links in case they have fail status from previous updates
+    linkingService.updateStatusByAuthorityIds(authorityIds, InstanceAuthorityLinkStatus.ACTUAL);
     return linksEvents;
   }
 

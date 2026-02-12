@@ -59,4 +59,9 @@ public interface InstanceLinkRepository extends JpaRepository<InstanceAuthorityL
   @Modifying
   @Query("delete from InstanceAuthorityLink i where i.authorityId in :authorityIds")
   void deleteByAuthorityIds(@Param("authorityIds") Collection<UUID> authorityIds);
+
+  @Modifying
+  @Query("update InstanceAuthorityLink i set i.status = :status where i.authorityId in :authorityIds")
+  void updateStatusByAuthorityIds(@Param("authorityIds") Collection<UUID> authorityIds,
+                                   @Param("status") InstanceAuthorityLinkStatus status);
 }

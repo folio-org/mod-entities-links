@@ -136,6 +136,8 @@ class UpdateAuthorityChangeHandlerTest {
     assertThat(actual.getFirst().getSubfieldsChanges().getFirst().getSubfields().getFirst())
       .extracting("code", "value")
       .containsExactly("0", "1010101");
+
+    verify(linkingService).updateStatusByAuthorityIds(java.util.Set.of(authorityId), InstanceAuthorityLinkStatus.ACTUAL);
   }
 
   @Test

@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.AuthorityDto;
@@ -137,7 +138,7 @@ class UpdateAuthorityChangeHandlerTest {
       .extracting("code", "value")
       .containsExactly("0", "1010101");
 
-    verify(linkingService).updateStatusByAuthorityIds(java.util.Set.of(authorityId), InstanceAuthorityLinkStatus.ACTUAL);
+    verify(linkingService).updateStatusByAuthorityIds(Set.of(authorityId), InstanceAuthorityLinkStatus.ACTUAL);
   }
 
   @Test

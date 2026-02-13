@@ -1,6 +1,5 @@
 package org.folio.entlinks.domain.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,6 +11,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 import java.util.UUID;
@@ -43,11 +43,10 @@ public class InstanceAuthorityLink extends AuditableEntity {
   @Column(name = "id", nullable = false)
   private Long id;
 
+  @NotNull
   @ToString.Exclude
-  @ManyToOne(optional = false,
-      cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE, CascadeType.DETACH})
-  @JoinColumn(name = "authority_id", nullable = false)
-  private Authority authority;
+  @Column(name = "authority_id", nullable = false)
+  private UUID authorityId;
 
   @NotNull
   @Column(name = "instance_id", nullable = false)
@@ -67,13 +66,9 @@ public class InstanceAuthorityLink extends AuditableEntity {
   @Column(name = "error_cause")
   private String errorCause;
 
-  public InstanceAuthorityLink(InstanceAuthorityLink other) {
-    this.authority = other.authority;
-    this.instanceId = other.instanceId;
-    this.linkingRule = other.linkingRule;
-    this.status = other.status;
-    this.errorCause = other.errorCause;
-  }
+  @ToString.Exclude
+  @Transient
+  private String authorityNaturalId;
 
   @Override
   public int hashCode() {
@@ -93,7 +88,7 @@ public class InstanceAuthorityLink extends AuditableEntity {
   }
 
   public boolean isSameLink(InstanceAuthorityLink link) {
-    return authority.getId().equals(link.getAuthority().getId())
+    return authorityId.equals(link.getAuthorityId())
       && instanceId.equals(link.instanceId)
       && linkingRule.equals(link.getLinkingRule());
   }

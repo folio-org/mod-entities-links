@@ -16,7 +16,6 @@ import org.mapstruct.Mapping;
 public interface DataStatsMapper {
 
   @Mapping(target = "metadata", ignore = true)
-  @Mapping(target = "authorityId", source = "authority.id")
   @Mapping(target = "naturalIdOld", source = "authorityNaturalIdOld")
   @Mapping(target = "naturalIdNew", source = "authorityNaturalIdNew")
   @Mapping(target = "sourceFileOld", source = "authoritySourceFileOld")
@@ -24,7 +23,6 @@ public interface DataStatsMapper {
   AuthorityStatsDto convertToDto(AuthorityDataStat source);
 
   @Mapping(target = "instanceTitle", ignore = true)
-  @Mapping(target = "authorityNaturalId", source = "authority.naturalId")
   @Mapping(target = "bibRecordTag", source = "linkingRule.bibField")
   BibStatsDto convertToDto(InstanceAuthorityLink source);
 

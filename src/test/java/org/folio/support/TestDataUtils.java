@@ -7,8 +7,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authorityDto;
-import static org.folio.support.base.TestConstants.AUTHORITY_CONSORTIUM_SOURCE;
-import static org.folio.support.base.TestConstants.AUTHORITY_SOURCE;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 
@@ -25,7 +23,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.folio.entlinks.client.UsersClient;
@@ -46,13 +43,11 @@ import org.folio.entlinks.domain.dto.ParsedRecordContent;
 import org.folio.entlinks.domain.dto.RecordType;
 import org.folio.entlinks.domain.dto.RelatedHeading;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
-import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordParsedRecord;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
-import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
@@ -116,7 +111,7 @@ public class TestDataUtils {
           .linkingRule(InstanceAuthorityLinkingRule.builder()
             .bibField("100")
             .build())
-          .authority(authority)
+          .authorityNaturalId(authority.getNaturalId())
           .errorCause(error)
           .build();
         link.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
@@ -147,12 +142,18 @@ public class TestDataUtils {
 
   public static LinkUpdateReport report(String tenant, UUID jobId, LinkUpdateReport.StatusEnum status,
                                         String failCause) {
+    return report(tenant, jobId, status, failCause,
+      List.of(RandomUtils.insecure().randomInt(), RandomUtils.insecure().randomInt()));
+  }
+
+  public static LinkUpdateReport report(String tenant, UUID jobId, LinkUpdateReport.StatusEnum status,
+                                        String failCause, List<Integer> linkIds) {
     return new LinkUpdateReport()
       .tenant(tenant)
       .jobId(jobId)
       .instanceId(UUID.randomUUID())
       .status(status)
-      .linkIds(List.of(RandomUtils.insecure().randomInt(), RandomUtils.insecure().randomInt()))
+      .linkIds(linkIds)
       .failCause(failCause);
   }
 
@@ -161,7 +162,7 @@ public class TestDataUtils {
       .map(link -> new BibStatsDto()
         .instanceId(link.getInstanceId())
         .bibRecordTag(link.getLinkingRule().getBibField())
-        .authorityNaturalId(link.getAuthority().getNaturalId())
+        .authorityNaturalId(link.getAuthorityNaturalId())
         .updatedAt(fromTimestamp(link.getUpdatedAt()))
         .errorCause(link.getErrorCause()))
       .toList();
@@ -186,31 +187,22 @@ public class TestDataUtils {
       .next(next);
   }
 
-  public static AuthorityDataStat authorityDataStat(UUID userId, UUID sourceFileId, AuthorityDataStatAction action,
-                                                    boolean shared) {
-    var authority = new Authority();
-    authority.setNaturalId("naturalId");
-    authority.setId(UUID.randomUUID());
-    authority.setSource(shared ? AUTHORITY_CONSORTIUM_SOURCE : AUTHORITY_SOURCE);
+  public static AuthorityDataStat authorityDataStat(UUID userId, UUID sourceFileId, UUID authorityId,
+                                                    AuthorityDataStatAction action) {
     return AuthorityDataStat.builder()
       .id(randomUUID())
       .action(action)
-      .authority(authority)
+      .authorityId(authorityId)
       .authorityNaturalIdOld("naturalIdOld")
       .authorityNaturalIdNew("naturalIdNew")
       .authoritySourceFileNew(sourceFileId)
       .authoritySourceFileOld(UUID.randomUUID())
-      .completedAt(Timestamp.from(Instant.now()))
       .headingNew("headingNew")
       .headingOld("headingOld")
       .headingTypeNew("headingTypeNew")
       .headingTypeOld("headingTypeOld")
-      .lbUpdated(2)
-      .lbFailed(1)
-      .lbTotal(5)
       .startedAt(Timestamp.from(Instant.now().minus(4, ChronoUnit.DAYS)))
       .startedByUserId(userId)
-      .status(AuthorityDataStatStatus.COMPLETED_SUCCESS)
       .build();
   }
 
@@ -222,44 +214,25 @@ public class TestDataUtils {
   }
 
   public static AuthorityStatsDto getStatDataDto(AuthorityDataStat dataStat, UsersClient.User user) {
-    AuthorityStatsDto dto = new AuthorityStatsDto();
+    var dto = new AuthorityStatsDto();
     dto.setId(dataStat.getId());
-    dto.setAuthorityId(dataStat.getAuthority().getId());
+    dto.setAuthorityId(dataStat.getAuthorityId());
     dto.setAction(LinkAction.fromValue(dataStat.getAction().name()));
     dto.setHeadingNew(dataStat.getHeadingNew());
     dto.setHeadingOld(dataStat.getHeadingOld());
     dto.setHeadingTypeNew(dataStat.getHeadingTypeNew());
     dto.setHeadingTypeOld(dataStat.getHeadingTypeOld());
-    dto.setLbUpdated(dataStat.getLbUpdated());
-    dto.setLbFailed(dataStat.getLbFailed());
-    dto.setLbTotal(dataStat.getLbTotal());
     dto.setNaturalIdNew(dataStat.getAuthorityNaturalIdNew());
     dto.setNaturalIdOld(dataStat.getAuthorityNaturalIdOld());
-    AuthorityControlMetadata metadata = new AuthorityControlMetadata();
+    var metadata = new AuthorityControlMetadata();
     metadata.setStartedByUserId(dataStat.getStartedByUserId());
     metadata.setStartedByUserFirstName(user.personal().firstName());
     metadata.setStartedByUserLastName(user.personal().lastName());
     metadata.setStartedAt(fromTimestamp(dataStat.getStartedAt()));
-    metadata.setCompletedAt(fromTimestamp(dataStat.getCompletedAt()));
     dto.setMetadata(metadata);
     dto.setSourceFileNew(dataStat.getAuthoritySourceFileNew().toString());
     dto.setSourceFileOld(dataStat.getAuthoritySourceFileOld().toString());
     return dto;
-  }
-
-  public static StrippedParsedRecordCollection getAuthorityRecordsCollection(List<InstanceAuthorityLink> validLinks,
-                                                                             List<InstanceAuthorityLink> invalidLinks) {
-    var authorityRecords = ListUtils.union(
-      getAuthorityRecords(validLinks, true),
-      getAuthorityRecords(invalidLinks, false)
-    );
-
-    return new StrippedParsedRecordCollection(authorityRecords, authorityRecords.size());
-  }
-
-  public static StrippedParsedRecordCollection getAuthorityRecordsCollection(List<InstanceAuthorityLink> links) {
-    var authorityRecords = getAuthorityRecords(links, true);
-    return new StrippedParsedRecordCollection(authorityRecords, authorityRecords.size());
   }
 
   public static List<StrippedParsedRecord> getAuthorityRecords(List<InstanceAuthorityLink> links, Boolean valid) {
@@ -277,7 +250,7 @@ public class TestDataUtils {
         var parsedRecord = new StrippedParsedRecordParsedRecord(recordContent);
 
         return new StrippedParsedRecord(UUID.randomUUID(), RecordType.MARC_AUTHORITY, parsedRecord)
-          .externalIdsHolder(new ExternalIdsHolder().authorityId(link.getAuthority().getId()));
+          .externalIdsHolder(new ExternalIdsHolder().authorityId(link.getAuthorityId()));
       })
       .toList();
   }
@@ -430,6 +403,7 @@ public class TestDataUtils {
                      InstanceAuthorityLinkStatus status, String errorCause) {
     public static final String[] TAGS = new String[] {"100", "240", "700", "710"};
     public static final String[] AUTHORITY_TAGS = new String[] {"100", "110"};
+    public static final Integer[] RULE_IDS = new Integer[] {1, 5, 15, 16};
     public static final Map<String, Map<String, Boolean>> SUBFIELD_VALIDATIONS_BY_TAG = Map.of(
       TAGS[0], Map.of("t", false),
       TAGS[1], Map.of("t", true),
@@ -442,14 +416,14 @@ public class TestDataUtils {
       TAGS[2], 15,
       TAGS[3], 16
     );
-    public static final Map<Integer, String> RULE_IDS_TO_TAGS = TAGS_TO_RULE_IDS.entrySet().stream()
-      .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     public static final Map<String, String> TAGS_TO_AUTHORITY_TAGS = Map.of(
       TAGS[0], AUTHORITY_TAGS[0],
       TAGS[1], AUTHORITY_TAGS[0],
       TAGS[2], AUTHORITY_TAGS[0],
       TAGS[3], AUTHORITY_TAGS[1]
     );
+    public static final Map<Integer, String> RULE_IDS_TO_TAGS = TAGS_TO_RULE_IDS.entrySet().stream()
+      .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     public static final Map<String, String> TAGS_TO_SUBFIELDS = Map.of(
       TAGS[0], "abcdjq",
       TAGS[1], "fghklmnoprsa",
@@ -459,6 +433,10 @@ public class TestDataUtils {
 
     public Link(UUID authorityId, String tag) {
       this(authorityId, tag, authorityId.toString(), TAGS_TO_SUBFIELDS.get(tag).toCharArray());
+    }
+
+    public Link(UUID authorityId, String tag, String naturalId) {
+      this(authorityId, tag, naturalId, TAGS_TO_SUBFIELDS.get(tag).toCharArray());
     }
 
     public Link(UUID authorityId, String tag, String naturalId, char[] subfields) {
@@ -494,8 +472,9 @@ public class TestDataUtils {
       authority.setNaturalId(naturalId);
       authority.setId(authorityId);
       return InstanceAuthorityLink.builder()
-        .instanceId(instanceId)
-        .authority(authority)
+          .instanceId(instanceId)
+          .authorityId(authorityId)
+          .authorityNaturalId(naturalId)
         .linkingRule(InstanceAuthorityLinkingRule.builder()
           .id(TAGS_TO_RULE_IDS.get(tag))
           .bibField(tag)

@@ -1,9 +1,5 @@
 package org.folio.entlinks.controller.delegate;
 
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.CREATE;
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.DELETE;
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.UPDATE;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -27,7 +23,7 @@ import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.authority.AuthorityS3Service;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.consortium.UserTenantsService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
+import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
@@ -42,27 +38,25 @@ public class AuthorityServiceDelegate {
 
   private final AuthorityService service;
   private final AuthorityMapper mapper;
-  private final FolioExecutionContext context;
   private final AuthorityDomainEventPublisher eventPublisher;
-  private final ConsortiumAuthorityPropagationService propagationService;
   private final AuthorityS3Service authorityS3Service;
   private final LocalStorageProperties localStorageProperties;
+  private final AuthorityDataStatService dataStatService;
 
   public AuthorityServiceDelegate(@Qualifier("authorityService") AuthorityService service,
                                   @Qualifier("consortiumAuthorityService") AuthorityService consortiumService,
                                   AuthorityMapper mapper, FolioExecutionContext context,
                                   AuthorityDomainEventPublisher eventPublisher,
-                                  ConsortiumAuthorityPropagationService propagationService,
                                   AuthorityS3Service authorityS3Service,
                                   LocalStorageProperties localStorageProperties,
-                                  UserTenantsService userTenantsService) {
+                                  UserTenantsService userTenantsService,
+                                  AuthorityDataStatService dataStatService) {
+    this.dataStatService = dataStatService;
     this.service = userTenantsService.getCentralTenant(context.getTenantId()).isEmpty()
                    ? service
                    : consortiumService;
     this.mapper = mapper;
-    this.context = context;
     this.eventPublisher = eventPublisher;
-    this.propagationService = propagationService;
     this.authorityS3Service = authorityS3Service;
     this.localStorageProperties = localStorageProperties;
   }
@@ -102,10 +96,15 @@ public class AuthorityServiceDelegate {
     updateConsumer().accept(updateResult.newEntity(), updateResult.oldEntity());
   }
 
+  /**
+   * Deletes authority by id.
+   * Deletes and propagates deletion for associated data stats.
+   * */
   public void deleteAuthorityById(UUID id) {
     var authority = service.deleteById(id);
+    dataStatService.deleteByAuthorityId(id);
+
     eventPublisher.publishSoftDeleteEvent(mapper.toDto(authority));
-    propagationService.propagate(authority, DELETE, context.getTenantId());
   }
 
   @SneakyThrows
@@ -136,17 +135,12 @@ public class AuthorityServiceDelegate {
 
   @NotNull
   private Consumer<Authority> createConsumer() {
-    return authority -> {
-      eventPublisher.publishCreateEvent(mapper.toDto(authority));
-      propagationService.propagate(authority, CREATE, context.getTenantId());
-    };
+    return authority -> eventPublisher.publishCreateEvent(mapper.toDto(authority));
   }
 
   @NotNull
   private BiConsumer<Authority, Authority> updateConsumer() {
-    return (newAuthority, oldAuthority) -> {
-      eventPublisher.publishUpdateEvent(mapper.toDto(oldAuthority), mapper.toDto(newAuthority));
-      propagationService.propagate(newAuthority, UPDATE, context.getTenantId());
-    };
+    return (newAuthority, oldAuthority) ->
+        eventPublisher.publishUpdateEvent(mapper.toDto(oldAuthority), mapper.toDto(newAuthority));
   }
 }

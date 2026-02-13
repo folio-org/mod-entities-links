@@ -16,13 +16,13 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
-import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
@@ -109,13 +109,12 @@ class UpdateAuthorityChangeHandlerTest {
   void handle_positive_whenNaturalIdChanged() {
     var authorityId = UUID.randomUUID();
     var instanceId = UUID.randomUUID();
-    var authority = Authority.builder().id(authorityId).build();
 
     when(instanceAuthorityChangeProperties.getNumPartitions()).thenReturn(2);
     when(linkingService.getLinksByAuthorityId(eq(authorityId), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(
-      new InstanceAuthorityLink(1L, authority, instanceId,
+      new InstanceAuthorityLink(1L, authorityId, instanceId,
         new InstanceAuthorityLinkingRule(1, "100", "100", new char[] {'a'}, null, null, true),
-        InstanceAuthorityLinkStatus.ACTUAL, null)
+        InstanceAuthorityLinkStatus.ACTUAL, null, null)
     )));
 
     var changeHolder = new AuthorityChangeHolder(new AuthorityDomainEvent(authorityId,
@@ -138,6 +137,8 @@ class UpdateAuthorityChangeHandlerTest {
     assertThat(actual.getFirst().getSubfieldsChanges().getFirst().getSubfields().getFirst())
       .extracting("code", "value")
       .containsExactly("0", "1010101");
+
+    verify(linkingService).setActualStatusByAuthorityIds(Set.of(authorityId));
   }
 
   @Test

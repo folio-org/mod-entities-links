@@ -13,8 +13,10 @@ import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.ParsedSubfield;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionsService;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +37,10 @@ class LinksSuggestionsByAuthorityNaturalIdTest {
   private SourceStorageClient sourceStorageClient;
   @Mock
   private SourceContentMapper contentMapper;
+  @Mock
+  private FolioExecutionContext folioExecutionContext;
+  @Mock
+  private UserTenantsService userTenantsService;
 
   @InjectMocks
   private LinksSuggestionsByAuthorityNaturalId delegate;

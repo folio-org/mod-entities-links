@@ -31,4 +31,6 @@
   <include file="/changes/v4.1/update-authority-source-file-name.xml" relativeToChangelogFile="true"/>
   <include file="classpath:db/tenant-settings/changelog.xml"/>
   <include file="/changes/v5.0/populate-default-tenant-settings.xml" relativeToChangelogFile="true" />
+  <include file="/changes/v4.1/delete-instance-authority-link-constraint.xml" relativeToChangelogFile="true"/>
+  <include file="/changes/v4.1/remove-data-stat-columns.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

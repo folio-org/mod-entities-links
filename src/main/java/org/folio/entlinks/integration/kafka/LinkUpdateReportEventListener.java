@@ -9,7 +9,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.logging.log4j.message.FormattedMessageFactory;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
-import org.folio.entlinks.service.links.AuthorityDataStatService;
+import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,11 +18,11 @@ import org.springframework.stereotype.Component;
 @Log4j2
 @Component
 @RequiredArgsConstructor
-public class InstanceAuthorityStatsEventListener {
+public class LinkUpdateReportEventListener {
 
   private final SystemUserScopedExecutionService executionService;
   private final MessageBatchProcessor messageBatchProcessor;
-  private final AuthorityDataStatService dataStatService;
+  private final InstanceAuthorityLinkingService linkingService;
 
   @KafkaListener(id = "mod-entities-links-instance-authority-stats-listener",
     containerFactory = "statsListenerFactory",
@@ -50,7 +50,7 @@ public class InstanceAuthorityStatsEventListener {
   private void handleReportEventsByJobId(List<LinkUpdateReport> events) {
     events.stream()
       .collect(Collectors.groupingBy(LinkUpdateReport::getJobId))
-      .forEach(dataStatService::updateForReports);
+      .forEach(linkingService::updateForReports);
   }
 
   private void logFailedEvent(LinkUpdateReport event, Throwable e) {

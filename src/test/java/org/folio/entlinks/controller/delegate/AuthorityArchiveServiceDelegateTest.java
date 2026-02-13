@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.service.settings.TenantSetting.ARCHIVES_EXPIRATION_ENABLED;
 import static org.folio.entlinks.service.settings.TenantSetting.ARCHIVES_EXPIRATION_PERIOD;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -25,9 +24,6 @@ import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityArchivePropagationService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.tenant.domain.dto.Setting;
 import org.folio.tenant.domain.dto.SettingCollection;
@@ -44,28 +40,11 @@ import org.springframework.data.domain.Pageable;
 @ExtendWith(MockitoExtension.class)
 class AuthorityArchiveServiceDelegateTest {
 
-  private static final String TENANT_ID = "tenantId";
-
-  @Mock
-  private AuthorityArchiveService service;
-
-  @Mock
-  private AuthorityArchiveRepository authorityArchiveRepository;
-
-  @Mock
-  private AuthorityDomainEventPublisher eventPublisher;
-
-  @Mock
-  private ConsortiumAuthorityArchivePropagationService propagationService;
-
-  @Mock
-  private AuthorityMapper authorityMapper;
-
-  @Mock
-  private TenantSettingsService tenantSettingsService;
-
-  @Mock
-  private FolioExecutionContext context;
+  @Mock private AuthorityArchiveService service;
+  @Mock private TenantSettingsService tenantSettingsService;
+  @Mock private AuthorityArchiveRepository authorityArchiveRepository;
+  @Mock private AuthorityDomainEventPublisher eventPublisher;
+  @Mock private AuthorityMapper authorityMapper;
 
   @InjectMocks
   private AuthorityArchiveServiceDelegate delegate;
@@ -137,15 +116,12 @@ class AuthorityArchiveServiceDelegateTest {
     when(authorityMapper.toDto(archive)).thenReturn(dto);
     when(tenantSettingsService.getGroupSettings(ARCHIVES_EXPIRATION_ENABLED.getGroup()))
       .thenReturn(Optional.of(settingCollection));
-    when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class), anyString()))
+    when(authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(any(LocalDateTime.class)))
         .thenReturn(Stream.of(archive));
-    when(context.getTenantId()).thenReturn(TENANT_ID);
 
     delegate.expire();
 
     verify(service).delete(archive);
     verify(eventPublisher).publishHardDeleteEvent(dto);
-    verify(propagationService)
-        .propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, TENANT_ID);
   }
 }

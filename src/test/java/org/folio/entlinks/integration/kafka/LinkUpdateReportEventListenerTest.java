@@ -1,20 +1,24 @@
 package org.folio.entlinks.integration.kafka;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomStringUtils.insecure;
 import static org.folio.support.MockingTestUtils.mockBatchFailedHandling;
 import static org.folio.support.MockingTestUtils.mockBatchSuccessHandling;
 import static org.folio.support.TestDataUtils.report;
+import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
+import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import org.folio.entlinks.service.links.AuthorityDataStatService;
+import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
@@ -28,21 +32,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
-class InstanceAuthorityStatsEventListenerTest {
+class LinkUpdateReportEventListenerTest {
 
-  @Mock
-  private SystemUserScopedExecutionService executionService;
-  @Mock
-  private AuthorityDataStatService dataStatService;
-  @Mock
-  private MessageBatchProcessor messageBatchProcessor;
+  @Mock private SystemUserScopedExecutionService executionService;
+  @Mock private MessageBatchProcessor messageBatchProcessor;
+  @Mock private InstanceAuthorityLinkingService linkingService;
 
   @InjectMocks
-  private InstanceAuthorityStatsEventListener listener;
+  private LinkUpdateReportEventListener listener;
 
   @BeforeEach
   void setUp() {
-    when(executionService.executeSystemUserScoped(any(), any())).thenAnswer(invocation -> {
+    lenient().when(executionService.executeSystemUserScoped(any(), any())).thenAnswer(invocation -> {
       var argument = invocation.getArgument(1, Callable.class);
       return argument.call();
     });
@@ -51,15 +52,13 @@ class InstanceAuthorityStatsEventListenerTest {
   // Test that multiple tenants processed in different batches and jobIds in different sub-batches
   @Test
   void shouldHandleEvent_positive() {
-    var tenant1 = insecure().nextAlphabetic(10);
-    var tenant2 = insecure().nextAlphabetic(10);
     var job1Id = UUID.randomUUID();
     var job2Id = UUID.randomUUID();
     var reports = List.of(
-      report(tenant1, job1Id),
-      report(tenant1, job2Id),
-      report(tenant2, job1Id),
-      report(tenant2, job1Id)
+      report(TENANT_ID, job1Id),
+      report(TENANT_ID, job2Id),
+      report(CENTRAL_TENANT_ID, job1Id),
+      report(CENTRAL_TENANT_ID, job1Id)
     );
     var consumerRecords = KafkaTestUtils.consumerRecords(reports);
 
@@ -67,15 +66,46 @@ class InstanceAuthorityStatsEventListenerTest {
 
     listener.handleEvents(consumerRecords);
 
+    verify(executionService).executeSystemUserScoped(eq(TENANT_ID), any());
+    verify(executionService).executeSystemUserScoped(eq(CENTRAL_TENANT_ID), any());
     verify(messageBatchProcessor, times(2))
       .consumeBatchWithFallback(any(), any(), any(), any());
 
-    verify(dataStatService)
+    verify(linkingService)
       .updateForReports(job1Id, singletonList(reports.get(0)));
-    verify(dataStatService)
+    verify(linkingService)
       .updateForReports(job2Id, singletonList(reports.get(1)));
-    verify(dataStatService)
+    verify(linkingService)
       .updateForReports(job1Id, List.of(reports.get(2), reports.get(3)));
+  }
+
+  @Test
+  void shouldHandleEvent_singleTenantAndJob() {
+    var jobId = UUID.randomUUID();
+    var reports = List.of(
+      report(TENANT_ID, jobId),
+      report(TENANT_ID, jobId)
+    );
+    var consumerRecords = KafkaTestUtils.consumerRecords(reports);
+
+    mockBatchSuccessHandling(messageBatchProcessor);
+
+    listener.handleEvents(consumerRecords);
+
+    verify(executionService).executeSystemUserScoped(eq(TENANT_ID), any());
+    verify(messageBatchProcessor).consumeBatchWithFallback(any(), any(), any(), any());
+    verify(linkingService).updateForReports(jobId, reports);
+  }
+
+  @Test
+  void shouldHandleEmptyList() {
+    var consumerRecords = KafkaTestUtils.consumerRecords(emptyList());
+
+    listener.handleEvents(consumerRecords);
+
+    verifyNoInteractions(executionService);
+    verifyNoInteractions(messageBatchProcessor);
+    verifyNoInteractions(linkingService);
   }
 
   @Test
@@ -87,6 +117,6 @@ class InstanceAuthorityStatsEventListenerTest {
 
     listener.handleEvents(consumerRecords);
 
-    verifyNoInteractions(dataStatService);
+    verifyNoInteractions(linkingService);
   }
 }

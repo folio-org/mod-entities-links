@@ -13,13 +13,7 @@ public class DataImportEventHandlerUtils {
   public static final String JOB_EXECUTION_ID_HEADER = "jobExecutionId";
   public static final String MARC_SOURCE = "MARC";
 
-  private static final String AUTHORITY_EXTENDED = "AUTHORITY_EXTENDED";
   private static final String DI_LOG_TEMPLATE = "{} [jobExecutionId: {}, chunkId: {}, recordId: {}]";
-
-  public static boolean isAuthorityExtendedMode() {
-    return Boolean.parseBoolean(
-      System.getenv().getOrDefault(AUTHORITY_EXTENDED, "false"));
-  }
 
   public static void logDataImport(Logger logger, Level level, String message, DataImportEventPayload payload) {
     var jobExecutionId = getJobExecutionId(payload);

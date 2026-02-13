@@ -58,8 +58,10 @@ spring:
       - authority-mapping-metadata-cache
       - consortium-tenants-cache
       - consortium-central-tenant-cache
+      - authority-extended-mapping-enabled-cache
     caffeine:
       spec: maximumSize=500,expireAfterWrite=3600s
+    type: caffeine
   sql:
     init:
       continue-on-error: true

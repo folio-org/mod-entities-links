@@ -18,15 +18,19 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDSoftAssertions;
 import org.awaitility.Durations;
 import org.folio.rest.jaxrs.model.Event;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
@@ -95,12 +99,18 @@ class DataImportDeleteEventListenerIT extends IntegrationTestBase {
     var event = TestDataUtils.diAuthorityEvent(DI_DELETED_TYPE,
         eventPayload, AUTHORITY_DELETE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityDeletedTopic(), AUTHORITY_DELETE_ID.toString(), event,
-        geKafkaHeaders(AUTHORITY_DELETE_ID.toString()));
+        getDataImportKafkaHeaders(AUTHORITY_DELETE_ID.toString()));
 
     // check sent DI completed event
     var received = getReceivedEvent();
 
+    var receivedHeaderKeys = Arrays.stream(received.headers().toArray())
+      .map(Header::key)
+      .collect(Collectors.toSet());
+
     var assertions = new BDDSoftAssertions();
+    assertions.then(receivedHeaderKeys).as("headers")
+      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.USER_ID, XOkapiHeaders.URL);
     assertions.then(received).isNotNull();
     assertions.then(received.key()).as("key").isEqualTo(AUTHORITY_DELETE_ID.toString());
     assertions.then(received.topic()).as("topic").contains(DI_COMPLETED_TOPIC);
@@ -119,7 +129,7 @@ class DataImportDeleteEventListenerIT extends IntegrationTestBase {
     var event = TestDataUtils.diAuthorityEvent(DI_DELETED_TYPE,
         eventPayload, AUTHORITY_DELETE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityDeletedTopic(), AUTHORITY_DELETE_ID.toString(), event,
-        geKafkaHeaders(AUTHORITY_DELETE_ID.toString()));
+        getDataImportKafkaHeaders(AUTHORITY_DELETE_ID.toString()));
 
     // check sent DI error event
     var received = getReceivedEvent();

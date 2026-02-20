@@ -9,6 +9,7 @@ import static org.folio.spring.integration.XOkapiHeaders.PERMISSIONS;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.folio.spring.integration.XOkapiHeaders.TOKEN;
 import static org.folio.spring.integration.XOkapiHeaders.URL;
+import static org.folio.spring.integration.XOkapiHeaders.USER_ID;
 import static org.folio.spring.tools.kafka.FolioKafkaProperties.TENANT_ID;
 
 import java.nio.charset.StandardCharsets;
@@ -122,6 +123,7 @@ public class DataImportEventPublisher implements EventPublisher {
     if (context != null) {
       addHeaderIfPresent(headers, PERMISSIONS, context.get(PERMISSIONS));
       addHeaderIfPresent(headers, USER_ID_HEADER, context.get(USER_ID_HEADER));
+      addHeaderIfPresent(headers, USER_ID, context.get(USER_ID_HEADER));
       addHeaderIfPresent(headers, RECORD_ID_HEADER, context.get(RECORD_ID_HEADER));
       addHeaderIfPresent(headers, CHUNK_ID_HEADER, context.get(CHUNK_ID_HEADER));
     }

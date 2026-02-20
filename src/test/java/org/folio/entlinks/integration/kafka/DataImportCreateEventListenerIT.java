@@ -10,6 +10,7 @@ import static org.folio.support.base.TestConstants.DI_CREATED_TYPE;
 import static org.folio.support.base.TestConstants.DI_CREATE_AUTHORITY_PATH;
 import static org.folio.support.base.TestConstants.DI_ERROR_TOPIC;
 import static org.folio.support.base.TestConstants.TENANT_ID;
+import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.dataImportAuthorityCreatedTopic;
 import static org.folio.support.base.TestConstants.diAuthorityCreatedPostProcessingTopic;
@@ -18,16 +19,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDSoftAssertions;
 import org.awaitility.Durations;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.rest.jaxrs.model.Event;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
@@ -85,7 +90,7 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
     var event = TestDataUtils.diAuthorityEvent(DI_CREATED_TYPE,
         eventPayload, AUTHORITY_CREATE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityCreatedTopic(), AUTHORITY_CREATE_ID.toString(), event,
-        geKafkaHeaders(AUTHORITY_CREATE_ID.toString()));
+        getDataImportKafkaHeaders(AUTHORITY_CREATE_ID.toString()));
 
     // check sent event fields
     var received = getReceivedEvent();
@@ -93,6 +98,11 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
     var assertions = new BDDSoftAssertions();
     assertions.then(received).isNotNull();
     var authorityPayload = received.value().getEventPayload();
+    var receivedHeaderKeys = Arrays.stream(received.headers().toArray())
+        .map(Header::key)
+        .collect(Collectors.toSet());
+    assertions.then(receivedHeaderKeys).as("headers")
+      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.USER_ID, XOkapiHeaders.URL);
     assertions.then(received.key()).as("key").isEqualTo(AUTHORITY_CREATE_ID.toString());
     assertions.then(received.topic()).as("topic").contains(DI_AUTHORITY_CREATED_POST_PROCESSING_TOPIC);
     assertions.then(authorityPayload).as("eventPayload").contains(AUTHORITY_CREATE_ID.toString());
@@ -108,6 +118,9 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
     var authorityDto = objectMapper.readValue(content, AuthorityDto.class);
     assertNotNull(authorityDto);
     assertEquals(AUTHORITY_CREATE_ID, authorityDto.getId());
+    assertNotNull(authorityDto.getMetadata());
+    assertEquals(UUID.fromString(USER_ID), authorityDto.getMetadata().getCreatedByUserId());
+    assertEquals(UUID.fromString(USER_ID), authorityDto.getMetadata().getUpdatedByUserId());
   }
 
   @SneakyThrows
@@ -128,7 +141,7 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
     var event = TestDataUtils.diAuthorityEvent(DI_CREATED_TYPE,
         eventPayload, AUTHORITY_CREATE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityCreatedTopic(), AUTHORITY_CREATE_ID.toString(), event,
-        geKafkaHeaders(AUTHORITY_CREATE_ID.toString()));
+        getDataImportKafkaHeaders(AUTHORITY_CREATE_ID.toString()));
 
     // check sent DI error event
     var received = getReceivedEvent();

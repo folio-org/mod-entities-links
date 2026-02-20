@@ -10,6 +10,7 @@ import static org.folio.support.base.TestConstants.DI_ERROR_TOPIC;
 import static org.folio.support.base.TestConstants.DI_UPDATED_TYPE;
 import static org.folio.support.base.TestConstants.DI_UPDATE_AUTHORITY_PATH;
 import static org.folio.support.base.TestConstants.TENANT_ID;
+import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.dataImportAuthorityModifiedTopic;
 import static org.folio.support.base.TestConstants.diAuthorityErrorTopic;
@@ -21,16 +22,21 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDSoftAssertions;
 import org.awaitility.Durations;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.rest.jaxrs.model.Event;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
@@ -101,13 +107,21 @@ class DataImportUpdateEventListenerIT extends IntegrationTestBase {
     var eventPayload = readFile(DI_UPDATE_AUTHORITY_PATH);
     var event = TestDataUtils.diAuthorityEvent(DI_UPDATED_TYPE,
         eventPayload, AUTHORITY_UPDATE_ID.toString(), TENANT_ID);
-    sendKafkaMessage(dataImportAuthorityModifiedTopic(), AUTHORITY_UPDATE_ID.toString(), event,
-        geKafkaHeaders(AUTHORITY_UPDATE_ID.toString()));
+    var updaterUserId = UUID.randomUUID();
+    var headers = new HashMap<>(getDataImportKafkaHeaders(AUTHORITY_UPDATE_ID.toString()));
+    headers.put(XOkapiHeaders.USER_ID, updaterUserId.toString());
+    headers.put("userId", updaterUserId.toString());
+    sendKafkaMessage(dataImportAuthorityModifiedTopic(), AUTHORITY_UPDATE_ID.toString(), event, headers);
 
     // check sent DI update event
     var received = getReceivedEvent();
+    var receivedHeaderKeys = Arrays.stream(received.headers().toArray())
+      .map(Header::key)
+      .collect(Collectors.toSet());
 
     var assertions = new BDDSoftAssertions();
+    assertions.then(receivedHeaderKeys).as("headers")
+      .contains(XOkapiHeaders.TENANT, XOkapiHeaders.USER_ID, XOkapiHeaders.URL);
     assertions.then(received).isNotNull();
     assertions.then(received.key()).as("key").isEqualTo(AUTHORITY_UPDATE_ID.toString());
     assertions.then(received.topic()).as("topic").contains(DI_AUTHORITY_UPDATED_TOPIC);
@@ -117,8 +131,12 @@ class DataImportUpdateEventListenerIT extends IntegrationTestBase {
     var content = doGet(authorityEndpoint(AUTHORITY_UPDATE_ID)).andReturn().getResponse().getContentAsString();
     var authorityDto = objectMapper.readValue(content, AuthorityDto.class);
     assertNotNull(authorityDto);
-    //check identifiers were added
+    // check identifiers were added
     assertEquals(3, authorityDto.getIdentifiers().size());
+    // verify metadata
+    assertNotNull(authorityDto.getMetadata());
+    assertEquals(UUID.fromString(USER_ID), authorityDto.getMetadata().getCreatedByUserId());
+    assertEquals(updaterUserId, authorityDto.getMetadata().getUpdatedByUserId());
   }
 
   @SneakyThrows
@@ -132,7 +150,7 @@ class DataImportUpdateEventListenerIT extends IntegrationTestBase {
     var event = TestDataUtils.diAuthorityEvent(DI_UPDATED_TYPE,
         eventPayload, AUTHORITY_UPDATE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityModifiedTopic(), AUTHORITY_UPDATE_ID.toString(), event,
-        geKafkaHeaders(AUTHORITY_UPDATE_ID.toString()));
+        getDataImportKafkaHeaders(AUTHORITY_UPDATE_ID.toString()));
 
     // check sent DI error event
     var received = getReceivedEvent();

@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
-import static org.folio.spring.integration.XOkapiHeaders.TOKEN;
 import static org.folio.spring.integration.XOkapiHeaders.URL;
 import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.FOLIO_TENANT_ID;
@@ -188,16 +187,17 @@ public class IntegrationTestBase {
     return httpHeaders;
   }
 
-  public Map<String, String> geKafkaHeaders(String recordId) {
+  public Map<String, String> getDataImportKafkaHeaders(String recordId) {
     return Map.of(
-        FOLIO_TENANT_ID, TENANT_ID,
-        TENANT, TENANT_ID,
-        TOKEN, UUID.randomUUID().toString(),
-        URL, okapi.wireMockServer().baseUrl(),
-        USER_ID, USER_ID,
-        RECORD_ID, recordId,
-        JOB_EXECUTION_ID, UUID.randomUUID().toString()
-    );
+      RECORD_ID, recordId,
+      FOLIO_TENANT_ID, TENANT_ID,
+      XOkapiHeaders.URL, okapi.wireMockServer().baseUrl(),
+      JOB_EXECUTION_ID, UUID.randomUUID().toString(),
+      XOkapiHeaders.TENANT, TENANT_ID,
+      XOkapiHeaders.USER_ID, USER_ID,
+      "chunkId", UUID.randomUUID().toString(),
+      "userId", USER_ID
+      );
   }
 
   protected static Map<String, Collection<String>> okapiHeaders() {

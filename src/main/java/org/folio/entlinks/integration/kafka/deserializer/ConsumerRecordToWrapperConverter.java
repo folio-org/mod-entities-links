@@ -3,6 +3,7 @@ package org.folio.entlinks.integration.kafka.deserializer;
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.CHUNK_ID_HEADER;
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.JOB_EXECUTION_ID_HEADER;
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.RECORD_ID_HEADER;
+import static org.folio.rest.util.OkapiConnectionParams.USER_ID_HEADER;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -37,6 +38,7 @@ public class ConsumerRecordToWrapperConverter implements RecordMessageConverter 
     addHeaderToPayloadContext(payload, RECORD_ID_HEADER, headers);
     addHeaderToPayloadContext(payload, CHUNK_ID_HEADER, headers);
     addHeaderToPayloadContext(payload, JOB_EXECUTION_ID_HEADER, headers);
+    addHeaderToPayloadContext(payload, USER_ID_HEADER, headers);
 
     DataImportEventWrapper wrapper = new DataImportEventWrapper(payload, headers,
       headers.get(FolioKafkaProperties.TENANT_ID));

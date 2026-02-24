@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import lombok.SneakyThrows;
 import org.folio.entlinks.integration.internal.MappingRulesService;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeField;
@@ -27,10 +26,10 @@ class AuthorityMappingRulesProcessingServiceTest {
   @Test
   @SneakyThrows
   void getTagByAuthorityChange_positive() {
-    when(mappingRulesService.getFieldTargetsMappingRelations()).thenReturn(Optional.of(Map.of(
+    when(mappingRulesService.getFieldTargetsMappingRelations()).thenReturn(Map.of(
       "100", List.of("corporateName", "personalName"),
       "200", emptyList()
-    )));
+    ));
 
     var actual = service.getTagByAuthorityChangeField(AuthorityChangeField.PERSONAL_NAME);
     assertThat(actual).hasValue("100");

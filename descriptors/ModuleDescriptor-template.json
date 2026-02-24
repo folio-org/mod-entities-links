@@ -47,6 +47,10 @@
     {
       "id": "mapping-rules-provider",
       "version": "2.0"
+    },
+    {
+      "id": "mapping-metadata-provider",
+      "version": "1.1"
     }
   ],
   "provides": [
@@ -752,6 +756,7 @@
         "inventory-storage.instances.item.put",
         "mapping-metadata.type.item.get",
         "mapping-rules.get",
+        "mapping-metadata.item.get",
         "source-storage.source-records.item.get",
         "users.collection.get",
         "user-tenants.collection.get",
@@ -928,6 +933,26 @@
         "name": "KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_REPLICATION_FACTOR",
         "value": "",
         "description": "Replication factor for `links.instance-authority-stats` topic."
+      },
+      {
+        "name": "KAFKA_DI_INVENTORY_AUTHORITY_UPDATED_PARTITIONS",
+        "value": "1",
+        "description": "Amount of partitions for `DI_INVENTORY_AUTHORITY_UPDATED` topic."
+      },
+      {
+        "name": "KAFKA_DI_INVENTORY_AUTHORITY_UPDATED_REPLICATION_FACTOR",
+        "value": "",
+        "description": "Replication factor for `DI_INVENTORY_AUTHORITY_UPDATED` topic."
+      },
+      {
+        "name": "KAFKA_DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING_PARTITIONS",
+        "value": "1",
+        "description": "Amount of partitions for `DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING` topic."
+      },
+      {
+        "name": "KAFKA_DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING_REPLICATION_FACTOR",
+        "value": "",
+        "description": "Replication factor for `DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING` topic."
       },
       {
         "name": "KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY",

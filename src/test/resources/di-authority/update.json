@@ -1,0 +1,79 @@
+{
+    "eventType": "DI_SRS_MARC_AUTHORITY_RECORD_MODIFIED_READY_FOR_POST_PROCESSING",
+    "currentNode": {
+      "id": "9f16b890-7a6c-406c-8714-ec4249d5738a",
+      "profileId": "88980112-555d-460f-9105-ccbccf417c96",
+      "profileWrapperId": "ef4211f9-5bcc-490f-9f70-56e96cac47db",
+      "contentType": "MAPPING_PROFILE",
+      "content": {
+        "id": "88980112-555d-460f-9105-ccbccf417c96",
+        "name": "Update MARC authority records by matching 010 $a subfield value",
+        "hidden": false,
+        "metadata": {
+          "createdDate": "2023-05-05T07:26:17.042+00:00",
+          "updatedDate": "2023-05-05T07:26:17.042+00:00",
+          "createdByUserId": "9eb67301-6f6e-468f-9b1a-6134dc39a684",
+          "updatedByUserId": "9eb67301-6f6e-468f-9b1a-6134dc39a684"
+        },
+        "userInfo": {
+          "lastName": "Doe",
+          "userName": "mod-entities-links",
+          "firstName": "John"
+        },
+        "description": "",
+        "childProfiles": [],
+        "mappingDetails": {
+          "name": "marcAuthority",
+          "recordType": "MARC_AUTHORITY",
+          "mappingFields": [
+            {
+              "name": "discoverySuppress",
+              "path": "marcAuthority.discoverySuppress",
+              "enabled": "true",
+              "required": false,
+              "subfields": [],
+              "booleanFieldAction": "IGNORE"
+            },
+            {
+              "name": "hrid",
+              "path": "marcAuthority.hrid",
+              "value": "",
+              "enabled": "true",
+              "required": false,
+              "subfields": []
+            }
+          ],
+          "marcMappingOption": "UPDATE",
+          "marcMappingDetails": []
+        },
+        "parentProfiles": [],
+        "existingRecordType": "MARC_AUTHORITY",
+        "incomingRecordType": "MARC_AUTHORITY",
+        "marcFieldProtectionSettings": []
+      },
+      "order": 0,
+      "childSnapshotWrappers": []
+    },
+    "currentNodePath": [
+      "2afb9eea-584b-4cf1-bce2-12961bf736af"
+    ],
+    "eventsChain": [
+      "DI_MARC_FOR_UPDATE_RECEIVED",
+      "DI_SRS_MARC_AUTHORITY_RECORD_MATCHED"
+    ],
+    "jobExecutionId": "ee39dc50-6adb-44bb-b707-d85b14cbe201",
+    "tenant": "test",
+    "token": "",
+    "okapiUrl": "http://localhost:8082",
+    "context": {
+      "MARC_AUTHORITY": "{\"id\":\"2978c0d5-8bf8-449b-a155-e2d7da41a161\",\"snapshotId\":\"ee39dc50-6adb-44bb-b707-d85b14cbe201\",\"matchedId\":\"999beff2-05e2-4abc-aa93-ed4039476d60\",\"recordType\":\"MARC_AUTHORITY\",\"rawRecord\":{\"id\":\"999beff2-05e2-4abc-aa93-ed4039476d60\",\"content\":\"01055cz  a2200169n  4500001000800000005001700008008004100025010001700066035002300083040003300106111005900139411006100198511007100259667009500330670012200425675033800547\\u001E8979089\\u001E20120828074806.0\\u001E120502n| acannaabn          |a ana     c\\u001E  \\u001Fano2012061368\\u001E  \\u001Fa(OCoLC)oca09186965\\u001E  \\u001FaOkS\\u001Fbeng\\u001FcOkS\\u001FdOkS\\u001FdDLC\\u001FdOkS\\u001E2 \\u001FaWestern Region Agricultural Education Research Meeting\\u001E2 \\u001FaWestern Regional Agricultural Education Research Meeting\\u001E2 \\u001Fwb\\u001FaWestern Region Agricultural Education Research Seminar (1983- )\\u001E  \\u001FaTHIS 1XX FIELD CANNOT BE USED UNDER RDA UNTIL THIS RECORD HAS BEEN REVIEWED AND/OR UPDATED\\u001E  \\u001FaFirst annual Western Region Agricultural Education Research Meeting, 1982:\\u001Fbt.p. (held April 26, 1982, Austin, Texas)\\u001E  \\u001FaSecond annual Western Region Agricultural Education Research Seminar, 1983: t.p. (held April 19, 1983, Rio Rico, Arizona) p. [3] (2nd Western Regional Research Meeting)\\u001FaResearch in agricultural education, 1993: cover (Twelfth annual Western Regional Agricultural Education Research Meeting; held in Bozeman, Montana, April 14, 1993)\\u001E\\u001D\"},\"parsedRecord\":{\"id\":\"999beff2-05e2-4abc-aa93-ed4039476d60\",\"content\":\"{\\\"leader\\\":\\\"01145cz  a2200181n  4500\\\",\\\"fields\\\":[{\\\"001\\\":\\\"8979089\\\"},{\\\"008\\\":\\\"120502n| acannaabn          |a ana     c\\\"},{\\\"005\\\":\\\"20251104124711.1\\\"},{\\\"010\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"codeOne\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"035\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"(OCoLC)oca9186965\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"040\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"OkS\\\"},{\\\"b\\\":\\\"eng\\\"},{\\\"c\\\":\\\"OkS\\\"},{\\\"d\\\":\\\"OkS\\\"},{\\\"d\\\":\\\"DLC\\\"},{\\\"d\\\":\\\"OkS\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"111\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"Western Region Agricultural Education Research Meeting\\\"}],\\\"ind1\\\":\\\"2\\\",\\\"ind2\\\":\\\" \\\"}},{\\\"411\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"Western Regional Agricultural Education Research Meeting\\\"}],\\\"ind1\\\":\\\"2\\\",\\\"ind2\\\":\\\" \\\"}},{\\\"511\\\":{\\\"subfields\\\":[{\\\"w\\\":\\\"b\\\"},{\\\"a\\\":\\\"Western Region Agricultural Education Research Seminar (1983- )\\\"}],\\\"ind1\\\":\\\"2\\\",\\\"ind2\\\":\\\" \\\"}},{\\\"667\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"THIS 1XX FIELD CANNOT BE USED UNDER RDA UNTIL THIS RECORD HAS BEEN REVIEWED AND/OR UPDATED\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"670\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"First annual Western Region Agricultural Education Research Meeting, 1982:\\\"},{\\\"b\\\":\\\"t.p. (held April 26, 1982, Austin, Texas)\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"675\\\":{\\\"subfields\\\":[{\\\"a\\\":\\\"Second annual Western Region Agricultural Education Research Seminar, 1983: t.p. (held April 19, 1983, Rio Rico, Arizona) p. [3] (2nd Western Regional Research Meeting)\\\"},{\\\"a\\\":\\\"Research in agricultural education, 1993: cover (Twelfth annual Western Regional Agricultural Education Research Meeting; held in Bozeman, Montana, April 14, 1993)\\\"}],\\\"ind1\\\":\\\" \\\",\\\"ind2\\\":\\\" \\\"}},{\\\"999\\\":{\\\"subfields\\\":[{\\\"s\\\":\\\"999beff2-05e2-4abc-aa93-ed4039476d60\\\"},{\\\"i\\\":\\\"9e3745e6-2d48-4f22-825e-72f3338bfa36\\\"}],\\\"ind1\\\":\\\"f\\\",\\\"ind2\\\":\\\"f\\\"}}]}\"},\"deleted\":false,\"order\":0,\"externalIdsHolder\":{\"authorityId\":\"9e3745e6-2d48-4f22-825e-72f3338bfa36\",\"authorityHrid\":\"8979089\"},\"additionalInfo\":{\"suppressDiscovery\":false},\"state\":\"ACTUAL\",\"leaderRecordStatus\":\"c\",\"metadata\":{\"createdDate\":1762260385923,\"createdByUserId\":\"49699120-241e-458d-aae3-3b047bb8295b\",\"updatedDate\":1762260386801,\"updatedByUserId\":\"49699120-241e-458d-aae3-3b047bb8295b\"}}",
+      "INCOMING_RECORD_ID": "30c619c7-7231-4d79-9ccd-721c57b698d3",
+      "recordId": "30c619c7-7231-4d79-9ccd-721c57b698d3",
+      "JOB_PROFILE_SNAPSHOT_ID": "1978fc93-85a2-4cb0-a35e-51700aeea377",
+      "X-Okapi-Permissions": "[\"orders.acquisitions-units-assignments.manage\",\"orders.acquisitions-units-assignments.assign\",\"orders.item.reopen\",\"invoices.acquisitions-units-assignments.assign\",\"orders.item.approve\",\"orders.item.unopen\"]",
+      "chunkId": "d7e7dd2d-c322-46b8-a2b7-897fa86406b3",
+      "userId": "38d3a441-c100-5e8d-bd12-71bde492b723",
+      "POST_PROCESSING_RESULT_EVENT": "DI_SRS_MARC_AUTHORITY_RECORD_UPDATED"
+    },
+    "userId": "38d3a441-c100-5e8d-bd12-71bde492b723"
+}

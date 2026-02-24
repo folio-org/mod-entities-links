@@ -27,17 +27,21 @@ public class KafkaTestUtils {
     return String.format("%s.%s.%s", getFolioEnvName(), tenantId, topicName);
   }
 
+  public static String fullDiTopicName(String topicName, String tenantId) {
+    return String.format("%s.%s.%s.%s", getFolioEnvName(), "Default", tenantId, topicName);
+  }
+
   public static List<ConsumerRecord<String, LinkUpdateReport>> consumerRecords(List<LinkUpdateReport> reports) {
     return reports.stream()
-      .map(report -> new ConsumerRecord<>(EMPTY, 0, 0, EMPTY, report))
-      .toList();
+        .map(report -> new ConsumerRecord<>(EMPTY, 0, 0, EMPTY, report))
+        .toList();
   }
 
   public static <T> KafkaMessageListenerContainer<String, T> createAndStartTestConsumer(
-    String topicName,
-    BlockingQueue<ConsumerRecord<String, T>> queue,
-    KafkaProperties properties,
-    Class<T> eventClass) {
+      BlockingQueue<ConsumerRecord<String, T>> queue,
+      KafkaProperties properties,
+      Class<T> eventClass,
+      String... topicNames) {
     var deserializer = new JacksonJsonDeserializer<>(eventClass, false);
     properties.getConsumer().setGroupId("test-group");
     Map<String, Object> config = new HashMap<>(properties.buildConsumerProperties());
@@ -46,7 +50,7 @@ public class KafkaTestUtils {
 
     var consumer = new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
 
-    var containerProperties = new ContainerProperties(topicName);
+    var containerProperties = new ContainerProperties(topicNames);
     var container = new KafkaMessageListenerContainer<>(consumer, containerProperties);
     container.setupMessageListener((MessageListener<String, T>) queue::add);
     container.start();

@@ -13,6 +13,9 @@ import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.folio.spring.integration.XOkapiHeaders.URL;
 import static org.folio.support.JsonTestUtils.asJson;
+import static org.folio.support.base.TestConstants.FOLIO_TENANT_ID;
+import static org.folio.support.base.TestConstants.JOB_EXECUTION_ID;
+import static org.folio.support.base.TestConstants.RECORD_ID;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -41,6 +44,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.awaitility.Durations;
@@ -58,7 +62,6 @@ import org.folio.spring.testing.extension.EnableKafka;
 import org.folio.spring.testing.extension.EnableMinio;
 import org.folio.spring.testing.extension.EnablePostgres;
 import org.folio.spring.testing.extension.impl.OkapiConfiguration;
-import org.folio.spring.testing.extension.impl.OkapiExtension;
 import org.folio.support.DatabaseHelper;
 import org.folio.tenant.domain.dto.Parameter;
 import org.folio.tenant.domain.dto.TenantAttributes;
@@ -87,8 +90,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -102,8 +103,8 @@ import tools.jackson.databind.ObjectMapper;
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
-@Import(IntegrationTestBase.KafkaTemplateTestConfiguration.class)
+@Import({
+  IntegrationTestBase.KafkaTemplateTestConfiguration.class})
 public class IntegrationTestBase {
 
   protected static final String DOMAIN_EVENT_HEADER_KEY = "domain-event-type";
@@ -116,8 +117,9 @@ public class IntegrationTestBase {
   protected static ObjectMapper objectMapper;
   protected static DatabaseHelper databaseHelper;
 
+  // Okapi extension with HTTP/2 disabled to avoid issues with "IOException: GOAWAY received" errors in Http2Connection
   @RegisterExtension
-  static OkapiExtension okapiExtension = new OkapiExtension();
+  static OkapiExtensionHttp2Disabled okapiExtension = new OkapiExtensionHttp2Disabled();
 
   @SneakyThrows
   protected static void setUpTenant() {
@@ -183,6 +185,19 @@ public class IntegrationTestBase {
     httpHeaders.add(URL, okapi.getOkapiUrl());
 
     return httpHeaders;
+  }
+
+  public Map<String, String> getDataImportKafkaHeaders(String recordId) {
+    return Map.of(
+      RECORD_ID, recordId,
+      FOLIO_TENANT_ID, TENANT_ID,
+      XOkapiHeaders.URL, okapi.wireMockServer().baseUrl(),
+      JOB_EXECUTION_ID, UUID.randomUUID().toString(),
+      XOkapiHeaders.TENANT, TENANT_ID,
+      XOkapiHeaders.USER_ID, USER_ID,
+      "chunkId", UUID.randomUUID().toString(),
+      "userId", USER_ID
+      );
   }
 
   protected static Map<String, Collection<String>> okapiHeaders() {
@@ -321,6 +336,16 @@ public class IntegrationTestBase {
   @SneakyThrows
   protected static void sendKafkaMessage(String topic, String key, Object event) {
     var future = kafkaTemplate.send(topic, key, new ObjectMapper().writeValueAsString(event));
+    awaitUntilAsserted(() -> Assertions.assertTrue(future.isDone(), "Message was not sent"));
+  }
+
+  @SneakyThrows
+  protected static void sendKafkaMessage(String topic, String key, Object event, Map<String, String> headers) {
+    var producerRecord = new ProducerRecord<>(topic, key, new ObjectMapper().writeValueAsString(event));
+    if (headers != null) {
+      headers.forEach((k, v) -> producerRecord.headers().add(k, v.getBytes()));
+    }
+    var future = kafkaTemplate.send(producerRecord);
     awaitUntilAsserted(() -> Assertions.assertTrue(future.isDone(), "Message was not sent"));
   }
 

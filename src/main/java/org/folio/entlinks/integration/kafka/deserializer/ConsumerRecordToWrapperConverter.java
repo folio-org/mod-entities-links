@@ -9,10 +9,12 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.folio.DataImportEventPayload;
 import org.folio.entlinks.integration.kafka.model.DataImportEventWrapper;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.tools.kafka.FolioKafkaProperties;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -30,7 +32,7 @@ public class ConsumerRecordToWrapperConverter implements RecordMessageConverter 
                                        @Nullable Type payloadType) {
     var payload = (DataImportEventPayload) consumerRecord.value();
 
-    Map<String, String> headers = new HashMap<>();
+    var headers = new HashMap<String, String>();
     for (var header : consumerRecord.headers()) {
       headers.put(header.key(), new String(header.value(), StandardCharsets.UTF_8));
     }
@@ -39,6 +41,9 @@ public class ConsumerRecordToWrapperConverter implements RecordMessageConverter 
     addHeaderToPayloadContext(payload, CHUNK_ID_HEADER, headers);
     addHeaderToPayloadContext(payload, JOB_EXECUTION_ID_HEADER, headers);
     addHeaderToPayloadContext(payload, USER_ID_HEADER, headers);
+    //add okapi header to be picked up by FolioExecutionContext on handler
+    Optional.ofNullable(headers.get(USER_ID_HEADER))
+      .ifPresent(userId -> headers.put(XOkapiHeaders.USER_ID, userId));
 
     DataImportEventWrapper wrapper = new DataImportEventWrapper(payload, headers,
       headers.get(FolioKafkaProperties.TENANT_ID));

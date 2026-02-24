@@ -109,7 +109,8 @@ class DataImportUpdateEventListenerIT extends IntegrationTestBase {
         eventPayload, AUTHORITY_UPDATE_ID.toString(), TENANT_ID);
     var updaterUserId = UUID.randomUUID();
     var headers = new HashMap<>(getDataImportKafkaHeaders(AUTHORITY_UPDATE_ID.toString()));
-    headers.put(XOkapiHeaders.USER_ID, updaterUserId.toString());
+    //srs sends without this header
+    headers.remove(XOkapiHeaders.USER_ID);
     headers.put("userId", updaterUserId.toString());
     sendKafkaMessage(dataImportAuthorityModifiedTopic(), AUTHORITY_UPDATE_ID.toString(), event, headers);
 

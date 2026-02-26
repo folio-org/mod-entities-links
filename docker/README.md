@@ -271,6 +271,39 @@ mvn -f ../pom.xml clean package -DskipTests
 mvn -f ../pom.xml clean package
 ```
 
+### Consortium Tenant Setup
+
+After starting the module, register the required tenants by calling the `/_/tenant` API with `loadReference=true`.
+Run the following commands from **inside the module container**:
+
+```bash
+docker compose -f app-docker-compose.yml exec mod-entities-links /bin/sh
+```
+
+**1. Register the `consortium` (central) tenant:**
+
+```bash
+wget --no-check-certificate \
+  --header="X-Okapi-Tenant: consortium" \
+  --header="Content-Type: application/json" \
+  --header="X-Okapi-Url: http://wiremock:8080" \
+  --post-data='{"module_to":"mod-entities-links:5.0.0-SNAPSHOT","parameters":[{"key":"loadReference","value":"true"}]}' \
+  http://localhost:8081/_/tenant
+```
+
+**2. Register the `member` tenant:**
+
+```bash
+wget --no-check-certificate \
+  --header="X-Okapi-Tenant: member" \
+  --header="Content-Type: application/json" \
+  --header="X-Okapi-Url: http://wiremock:8080" \
+  --post-data='{"module_to":"mod-entities-links:5.0.0-SNAPSHOT","parameters":[{"key":"loadReference","value":"true"}]}' \
+  http://localhost:8081/_/tenant
+```
+
+> **Note**: Adjust `module_to` version to match the currently running module version if needed.
+
 ### Accessing Services
 
 ```bash
@@ -369,7 +402,16 @@ docker compose -f infra-docker-compose.yml ps postgres
 docker compose -f infra-docker-compose.yml logs postgres
 
 # Test database connection
-docker compose -f infra-docker-compose.yml exec postgres psql -U folio_admin -d okapi_modules -c "SELECT 1"
+docker compose -f infra-docker-compose.yml exec postgres psql -U folio_admin -d modules -c "SELECT 1"
+```
+
+**`FATAL: database "modules" does not exist`** — PostgreSQL only creates the database defined in `POSTGRES_DB` on the very first startup with an empty data directory. If the `postgres-data` volume already existed from a previous run (with different settings), the init is skipped. Fix by recreating the volume:
+
+```bash
+docker compose -f infra-docker-compose.yml stop postgres pgadmin
+docker compose -f infra-docker-compose.yml rm -f postgres pgadmin
+docker volume rm folio-mod-entities-links_postgres-data
+docker compose -f infra-docker-compose.yml up -d postgres pgadmin
 ```
 
 ### Kafka Issues

@@ -5,19 +5,16 @@ import static org.folio.entlinks.utils.ObjectUtils.transformIfNotNull;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.collections4.MapUtils;
 import org.folio.entlinks.domain.dto.AuthorityDto;
-import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
-import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,6 +43,7 @@ public class AuthorityChangeHolder {
     this.changes = changes;
     this.fieldTagRelation = fieldTagRelation;
     this.numberOfLinks = numberOfLinks;
+    this.authorityDataStatId = UUID.randomUUID();
   }
 
   public UUID getAuthorityId() {
@@ -104,11 +102,7 @@ public class AuthorityChangeHolder {
 
     var headingChange = getHeadingChange(changeMap);
 
-    var authority = new Authority();
-    authority.setId(getAuthorityId());
-    authority.setNaturalId(Objects.requireNonNullElse(getNewNaturalId(), getOldNaturalId()));
-    authority.setDeleted(event.getType().equals(DomainEventType.DELETE));
-    var authorityDataStat = prepareDataStat(authority, headingChange);
+    var authorityDataStat = prepareDataStat(headingChange);
     if (this.event.getNewEntity() != null && this.event.getNewEntity().getMetadata() != null) {
       authorityDataStat.setStartedByUserId(this.event.getNewEntity().getMetadata().getUpdatedByUserId());
     }
@@ -116,15 +110,10 @@ public class AuthorityChangeHolder {
     return authorityDataStat;
   }
 
-  public AuthorityChangeHolder copy() {
-    var copy = new AuthorityChangeHolder(event, changes, fieldTagRelation);
-    copy.setSourceRecord(sourceRecord);
-    return copy;
-  }
-
-  private AuthorityDataStat prepareDataStat(Authority authority, HeadingChange result) {
+  private AuthorityDataStat prepareDataStat(HeadingChange result) {
     return AuthorityDataStat.builder()
-      .authority(authority)
+      .id(authorityDataStatId)
+      .authorityId(getAuthorityId())
       .authorityNaturalIdOld(getOldNaturalId())
       .authorityNaturalIdNew(getNewNaturalId())
       .authoritySourceFileOld(getOldSourceFileId())
@@ -134,7 +123,6 @@ public class AuthorityChangeHolder {
       .headingTypeOld(result.headingTypeOld())
       .headingTypeNew(result.headingTypeNew())
       .action(getAuthorityDataStatAction())
-      .lbTotal(numberOfLinks)
       .build();
   }
 
@@ -191,6 +179,13 @@ public class AuthorityChangeHolder {
 
   private boolean isHeadingTypeChanged() {
     return changes.size() > 2 || changes.size() == 2 && !changes.containsKey(AuthorityChangeField.NATURAL_ID);
+  }
+
+  public AuthorityChangeHolder copy() {
+    var copy = new AuthorityChangeHolder(event, changes, fieldTagRelation);
+    copy.setAuthorityDataStatId(authorityDataStatId);
+    copy.setSourceRecord(sourceRecord);
+    return copy;
   }
 
   private record HeadingChange(String headingNew, String headingOld, String headingTypeNew, String headingTypeOld) { }

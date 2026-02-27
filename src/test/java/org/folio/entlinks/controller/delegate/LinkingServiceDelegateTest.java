@@ -10,9 +10,7 @@ import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
 import static org.folio.support.base.TestConstants.CONSORTIUM_SOURCE_PREFIX;
-import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,13 +31,11 @@ import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
-import org.folio.entlinks.service.consortium.UserTenantsService;
+import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -53,18 +49,12 @@ class LinkingServiceDelegateTest {
   private static final UUID INSTANCE_ID = randomUUID();
 
   private @Mock InstanceAuthorityLinkingService linkingService;
-  private @Mock InstanceAuthorityLinkMapper mapper;
   private @Mock InstanceStorageService instanceService;
+  private @Mock InstanceAuthorityLinkMapper mapper;
   private @Mock DataStatsMapper statsMapper;
-  private @Mock FolioExecutionContext context;
-  private @Mock UserTenantsService userTenantsService;
+  private @Mock ConsortiumTenantExecutor executor;
 
   private @InjectMocks LinkingServiceDelegate delegate;
-
-  @BeforeEach
-  void setUp() {
-    lenient().when(context.getTenantId()).thenReturn(TENANT_ID);
-  }
 
   @Test
   void getLinks_positive() {
@@ -86,6 +76,25 @@ class LinkingServiceDelegateTest {
     assertThat(actual.getLinks())
       .hasSize(1)
       .containsExactlyInAnyOrder(linkDto);
+
+    verify(linkingService).setNaturalIdForSharedAuthority(links);
+  }
+
+  @Test
+  void getLinks_positive_emptyLinks() {
+    var links = List.<InstanceAuthorityLink>of();
+
+    when(linkingService.getLinksByInstanceId(INSTANCE_ID)).thenReturn(links);
+    when(mapper.convertToDto(links)).thenReturn(
+      new InstanceLinkDtoCollection().links(List.of()).totalRecords(0));
+
+    var actual = delegate.getLinks(INSTANCE_ID);
+
+    assertThat(actual).isNotNull()
+      .extracting(InstanceLinkDtoCollection::getTotalRecords)
+      .isEqualTo(0);
+
+    assertThat(actual.getLinks()).isEmpty();
   }
 
   /**
@@ -149,6 +158,52 @@ class LinkingServiceDelegateTest {
     var instanceData = Map.of(instanceId.toString(), instanceData());
 
     testGetLinkedBibUpdateStats_positive(linksMock, singletonList(instanceId.toString()), instanceData);
+  }
+
+  @Test
+  void getLinkedBibUpdateStats_positive_blankTitleFiltered() {
+    var linksMock = links(3, "error");
+    var instanceIds = linksMock.stream()
+      .map(InstanceAuthorityLink::getInstanceId)
+      .map(UUID::toString)
+      .toList();
+    var instanceData = new HashMap<String, Pair<String, String>>();
+    instanceData.put(instanceIds.get(0), instanceData(false));
+    instanceData.put(instanceIds.get(1), Pair.of("", "source"));
+    instanceData.put(instanceIds.get(2), instanceData(false));
+    var expectedLinks = List.of(linksMock.get(0), linksMock.get(2));
+
+    testGetLinkedBibUpdateStats_positive(linksMock, expectedLinks, instanceIds, instanceData, null);
+  }
+
+  @Test
+  void getLinkedBibUpdateStats_positive_emptyLinks() {
+    var status = LinkStatus.ACTUAL;
+    var fromDate = OffsetDateTime.now();
+    var toDate = fromDate.plusDays(1);
+    var limit = 3;
+
+    when(linkingService.getLinks(status, fromDate, toDate, limit + 1))
+      .thenReturn(List.of());
+
+    var actual = delegate.getLinkedBibUpdateStats(fromDate, toDate, status, limit);
+
+    assertThat(actual)
+      .isEqualTo(new BibStatsDtoCollection().stats(List.of()).next(null));
+  }
+
+  @Test
+  void getLinkedBibUpdateStats_positive_nullDates() {
+    var status = LinkStatus.ACTUAL;
+    var limit = 3;
+
+    when(linkingService.getLinks(status, null, null, limit + 1))
+      .thenReturn(List.of());
+
+    var actual = delegate.getLinkedBibUpdateStats(null, null, status, limit);
+
+    assertThat(actual)
+      .isEqualTo(new BibStatsDtoCollection().stats(List.of()).next(null));
   }
 
   @Test
@@ -271,6 +326,8 @@ class LinkingServiceDelegateTest {
       .isEqualTo(new BibStatsDtoCollection()
         .stats(expectedStatsDtos)
         .next(next));
+
+    verify(linkingService).setNaturalIdForSharedAuthority(linksMock);
   }
 
   private static Pair<String, String> instanceData() {

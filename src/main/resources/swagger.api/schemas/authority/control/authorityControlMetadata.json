@@ -8,11 +8,6 @@
       "format": "date-time",
       "description": "Date-time when authority update was registered"
     },
-    "completedAt": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Date-time when update of all related links was completed"
-    },
     "startedByUserId": {
       "type": "string",
       "format": "uuid",

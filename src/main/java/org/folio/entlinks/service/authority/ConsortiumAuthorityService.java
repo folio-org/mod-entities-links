@@ -3,9 +3,12 @@ package org.folio.entlinks.service.authority;
 import java.util.Optional;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.ConsortiumIllegalActionException;
+import org.folio.entlinks.service.consortium.UserTenantsService;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
 @Service("consortiumAuthorityService")
@@ -14,8 +17,11 @@ public class ConsortiumAuthorityService extends AuthorityService {
   private final AuthorityRepository repository;
 
   public ConsortiumAuthorityService(AuthorityRepository repository,
-                                    AuthoritySourceFileRepository sourceFileRepository) {
-    super(repository, sourceFileRepository);
+                                    AuthorityJdbcRepository jdbcRepository,
+                                    AuthoritySourceFileRepository sourceFileRepository,
+                                    UserTenantsService tenantsService,
+                                    FolioExecutionContext context) {
+    super(repository, jdbcRepository, sourceFileRepository, tenantsService, context);
     this.repository = repository;
   }
 

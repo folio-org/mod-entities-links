@@ -3,14 +3,11 @@ package org.folio.entlinks.service.messaging.authority.model;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import lombok.Getter;
 import org.bouncycastle.util.Arrays;
 import org.folio.entlinks.domain.dto.FieldChange;
-import org.folio.entlinks.domain.dto.FieldContentValue;
 import org.folio.entlinks.domain.dto.SubfieldChange;
 import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
@@ -32,12 +29,6 @@ public class FieldChangeHolder {
     this.linkingRule = linkingRule;
     this.bibField = linkingRule.getBibField();
     this.authSubfields = getAuthSubfields(dataField.getSubfields());
-  }
-
-  public FieldChangeHolder(FieldContentValue fieldContent, InstanceAuthorityLinkingRule linkingRule) {
-    this.linkingRule = linkingRule;
-    this.bibField = linkingRule.getBibField();
-    this.authSubfields = getAuthSubfieldsForContent(fieldContent.getSubfields());
   }
 
   public void addExtraSubfieldChange(SubfieldChange change) {
@@ -96,18 +87,6 @@ public class FieldChangeHolder {
     newSubfields.addAll(modifiedSubfields);
     newSubfields.addAll(usualSubfields);
     return newSubfields;
-  }
-
-  private List<Subfield> getAuthSubfieldsForContent(List<Map<String, String>> subfields) {
-    return subfields.stream()
-      .flatMap(subfieldsMap -> subfieldsMap.entrySet().stream())
-      .filter(subfield -> Arrays.contains(linkingRule.getAuthoritySubfields(), subfield.getKey().charAt(0)))
-      .map(subfield -> {
-        var code = getCode(subfield.getKey().charAt(0));
-        return (Subfield) new SubfieldImpl(code, subfield.getValue());
-      })
-      .sorted(Comparator.comparing(Subfield::getCode))
-      .toList();
   }
 
   private char getCode(Subfield subfield) {

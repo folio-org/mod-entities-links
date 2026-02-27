@@ -24,9 +24,11 @@ import org.folio.entlinks.integration.dto.AuthorityParsedContent;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
 import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionsService;
 import org.folio.entlinks.service.links.model.AuthorityFieldConstants;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
 /**
@@ -45,24 +47,28 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
   private final SourceStorageClient sourceStorageClient;
   private final SourceContentMapper contentMapper;
   private final ConsortiumTenantExecutor executor;
+  private final UserTenantsService userTenantsService;
+  private final FolioExecutionContext folioExecutionContext;
 
   public ParsedRecordContentCollection suggestLinksForMarcRecords(
       ParsedRecordContentCollection contentCollection, Boolean ignoreAutoLinkingEnabled) {
-    log.info("{}: Links suggestion started for {} bibs",
-      this.getClass().getSimpleName(), contentCollection.getRecords().size());
+    log.info("suggestLinksForMarcRecords:: {}: started for [{} bibs, ignoreAutoLinkingEnabled: {}]",
+      this.getClass().getSimpleName(), contentCollection.getRecords().size(), ignoreAutoLinkingEnabled);
     var rules = rulesToBibFieldMap(linkingRulesService.getLinkingRules());
     var marcBibsContent = contentMapper.convertToParsedContent(contentCollection);
 
     var authoritySearchIds = extractIdsOfLinkableFields(marcBibsContent, rules, ignoreAutoLinkingEnabled);
-    log.info("{} authority search ids was extracted", authoritySearchIds.size());
+    log.info("suggestLinksForMarcRecords:: extracted [{} authority search ids]", authoritySearchIds.size());
 
-    var authorities = findExistingAuthorities(authoritySearchIds);
-    log.info("{} authorities to suggest found", authorities.size());
+    var localAuthorities = findExistingAuthorities(authoritySearchIds);
+    var sharedAuthorities = findExistingAuthoritiesForCentralIfOnMember(authoritySearchIds);
+    log.info("suggestLinksForMarcRecords:: authorities found [local: {}, shared: {}]",
+      localAuthorities.size(), sharedAuthorities == null ? 0 : sharedAuthorities.size());
 
-    if (isNotEmpty(authorities)) {
-      var marcAuthoritiesContent = getAuthoritiesParsedContent(authorities);
+    if (isNotEmpty(localAuthorities) || isNotEmpty(sharedAuthorities)) {
+      var marcAuthoritiesContent = getAuthoritiesParsedContent(localAuthorities, sharedAuthorities);
       suggestionService.fillLinkDetailsWithSuggestedAuthorities(marcBibsContent, marcAuthoritiesContent, rules,
-        getSearchSubfield(), ignoreAutoLinkingEnabled);
+          getSearchSubfield(), ignoreAutoLinkingEnabled);
     } else {
       suggestionService.fillErrorDetailsWithNoSuggestions(marcBibsContent, getSearchSubfield());
     }
@@ -74,21 +80,28 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
 
   protected abstract List<Authority> findExistingAuthorities(Set<T> ids);
 
+  protected abstract List<Authority> findExistingAuthoritiesForTenant(String tenantId, Set<T> ids);
+
   protected abstract T extractId(Authority authorityData);
 
-  private List<AuthorityParsedContent> getAuthoritiesParsedContent(List<Authority> authorities) {
-    var authoritiesBySource = authorities.stream()
-        .collect(groupingBy(Authority::isConsortiumShadowCopy));
+  private List<Authority> findExistingAuthoritiesForCentralIfOnMember(Set<T> ids) {
+    var tenant = folioExecutionContext.getTenantId();
+    var centralTenant = userTenantsService.getCentralTenant(tenant);
+    if (centralTenant.isEmpty() || centralTenant.get().equals(tenant)) {
+      return Collections.emptyList();
+    }
+    return findExistingAuthoritiesForTenant(centralTenant.get(), ids);
+  }
 
-    var shadowCopyAuthorities = authoritiesBySource.get(Boolean.TRUE);
-    var localCopyAuthorities = authoritiesBySource.get(Boolean.FALSE);
-    var marcRecordsForShadowCopyAuthorities = isEmpty(shadowCopyAuthorities) ? new StrippedParsedRecordCollection() :
-        executor.executeAsCentralTenant(() -> fetchAuthorityParsedRecords(shadowCopyAuthorities));
-    var marcRecordsForLocalCopyAuthorities = fetchAuthorityParsedRecords(localCopyAuthorities);
-
+  private List<AuthorityParsedContent> getAuthoritiesParsedContent(List<Authority> localAuthorities,
+                                                                   List<Authority> sharedAuthorities) {
+    var marcRecordsForShadowCopyAuthorities = isEmpty(sharedAuthorities) ? new StrippedParsedRecordCollection() :
+        executor.executeAsCentralTenant(() -> fetchAuthorityParsedRecords(sharedAuthorities));
+    var marcRecordsForLocalCopyAuthorities = isEmpty(localAuthorities) ? new StrippedParsedRecordCollection() :
+      fetchAuthorityParsedRecords(localAuthorities);
     return Stream.of(
-        contentMapper.convertToAuthorityParsedContent(marcRecordsForShadowCopyAuthorities, shadowCopyAuthorities),
-        contentMapper.convertToAuthorityParsedContent(marcRecordsForLocalCopyAuthorities, localCopyAuthorities)
+        contentMapper.convertToAuthorityParsedContent(marcRecordsForShadowCopyAuthorities, sharedAuthorities),
+        contentMapper.convertToAuthorityParsedContent(marcRecordsForLocalCopyAuthorities, localAuthorities)
     )
         .flatMap(List::stream)
         .toList();
@@ -101,9 +114,8 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
 
     var ids = authorities.stream().map(Authority::getId).collect(Collectors.toSet());
     var authorityFetchRequest = sourceStorageClient.buildBatchFetchRequestForAuthority(ids,
-      AuthorityFieldConstants.MIN_FIELD,
-      AuthorityFieldConstants.MAX_FIELD);
-
+        AuthorityFieldConstants.MIN_FIELD,
+        AuthorityFieldConstants.MAX_FIELD);
     return sourceStorageClient.fetchParsedRecords(authorityFetchRequest);
   }
 

@@ -12,13 +12,16 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.controller.converter.SourceContentMapper;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.ParsedSubfield;
 import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionsService;
 import org.folio.entlinks.utils.FieldUtils;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -26,15 +29,20 @@ import org.springframework.stereotype.Service;
 public class LinksSuggestionsByAuthorityNaturalId extends LinksSuggestionsServiceDelegateBase<String> {
 
   private final AuthorityRepository authorityRepository;
+  private final AuthorityJdbcRepository jdbcRepository;
 
   public LinksSuggestionsByAuthorityNaturalId(InstanceAuthorityLinkingRulesService linkingRulesService,
                                               LinksSuggestionsService suggestionService,
                                               AuthorityRepository repository,
                                               SourceStorageClient sourceStorageClient,
                                               SourceContentMapper contentMapper,
-                                              ConsortiumTenantExecutor executor) {
-    super(linkingRulesService, suggestionService, sourceStorageClient, contentMapper, executor);
+                                              ConsortiumTenantExecutor executor,
+                                              UserTenantsService tenantsService,
+                                              FolioExecutionContext context, AuthorityJdbcRepository jdbcRepository) {
+    super(linkingRulesService, suggestionService, sourceStorageClient,
+      contentMapper, executor, tenantsService, context);
     this.authorityRepository = repository;
+    this.jdbcRepository = jdbcRepository;
   }
 
   @Override
@@ -45,6 +53,11 @@ public class LinksSuggestionsByAuthorityNaturalId extends LinksSuggestionsServic
   @Override
   protected List<Authority> findExistingAuthorities(Set<String> ids) {
     return authorityRepository.findByNaturalIdInAndDeletedFalse(ids);
+  }
+
+  @Override
+  protected List<Authority> findExistingAuthoritiesForTenant(String tenantId, Set<String> ids) {
+    return jdbcRepository.findByNaturalIdInAndDeletedFalse(ids, tenantId);
   }
 
   @Override

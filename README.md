@@ -21,6 +21,22 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
 This module provides a storing and processing functionality for links between entities.
 
+## Module features
+### Consortium support
+#### Authorities
+Authorities are not propagated to member tenants. In cases when member tenants need some knowledge of shared authority - it queries the central tenant.
+#### Instance-authority links
+Instance-authority links are not propagated to member tenants.
+Links for local bib and shared authority could be saved. Natural id from central authority is filled on retrieval.
+#### Authority data statistics
+Authority data statistics are propagated to member tenants. This allows user to query authority update reports in member tenants
+including central tenant link count data.
+To reflect shared authority changes for linked bib records in member tenants - linked shared authority updates are also handled for
+member tenants. This means that link update events for local links are sent to member tenants when shared authority is updated in central tenant.
+To include success/failures for statistics from central tenant - link update report events are also propagated to
+member tenants. This allows member tenant reports to include success/failure counts from central tenant.
+Authorities delete on central tenant also trigger data statistics deletion on member tenants.
+
 ## Additional Information
 ### Issue tracker
 

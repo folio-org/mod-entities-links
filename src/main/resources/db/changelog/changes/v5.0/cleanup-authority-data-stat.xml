@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+  <changeSet id="MODELINKS-388@@cleanup-authority-data-stat" author="svitlana_kovalova">
+    <comment>
+      Cleanup authority_data_stat where there is no corresponding authority in the authority table
+      or where the authority is a shadow copy.
+    </comment>
+
+    <!-- Batch deletion -->
+    <sql splitStatements="false" endDelimiter="$$">
+      <![CDATA[
+        DO $$
+        DECLARE
+            arr UUID[] := ARRAY[
+                '10000000-0000-0000-0000-000000000000',
+                '20000000-0000-0000-0000-000000000000',
+                '30000000-0000-0000-0000-000000000000',
+                '40000000-0000-0000-0000-000000000000',
+                '50000000-0000-0000-0000-000000000000',
+                '60000000-0000-0000-0000-000000000000',
+                '70000000-0000-0000-0000-000000000000',
+                '80000000-0000-0000-0000-000000000000',
+                '90000000-0000-0000-0000-000000000000',
+                'a0000000-0000-0000-0000-000000000000',
+                'b0000000-0000-0000-0000-000000000000',
+                'c0000000-0000-0000-0000-000000000000',
+                'd0000000-0000-0000-0000-000000000000',
+                'e0000000-0000-0000-0000-000000000000',
+                'f0000000-0000-0000-0000-000000000000',
+                'ffffffff-ffff-ffff-ffff-ffffffffffff'
+            ];
+            lower UUID := '00000000-0000-0000-0000-000000000000';
+            upper UUID;
+        BEGIN
+            FOREACH upper IN ARRAY arr LOOP
+                EXECUTE format(
+                    'DELETE FROM authority_data_stat ads
+                      WHERE ads.authority_id > $1
+                        AND ads.authority_id <= $2
+                        AND (
+                              NOT EXISTS (
+                                  SELECT 1
+                                  FROM authority a
+                                  WHERE a.id = ads.authority_id
+                                   AND a.source != ''CONSORTIUM-MARC''
+                              )
+                         )'
+                )
+                USING lower, upper;
+                lower := upper;
+            END LOOP;
+        END;
+        $$;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

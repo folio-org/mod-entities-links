@@ -16,6 +16,7 @@
 * Extend Authority Statistics model with shared flag. Filter out shared records from bib report ([MODELINKS-312](https://folio-org.atlassian.net/browse/MODELINKS-312))
 * Pass userId to folioExecutionContext on authority update propagation ([MODELINKS-364](https://folio-org.atlassian.net/browse/MODELINKS-364))
 * Move consumption of authority DI events from mod-inventory ([APPAUTHREC-3](https://folio-org.atlassian.net/browse/APPAUTHREC-3))
+* Create migration script for entities links: drop duplicate links/authorities/sats([MODELINKS-388](https://folio-org.atlassian.net/browse/MODELINKS-388))
 
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))

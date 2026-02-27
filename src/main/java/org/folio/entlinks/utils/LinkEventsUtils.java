@@ -3,7 +3,6 @@ package org.folio.entlinks.utils;
 import static org.folio.entlinks.utils.DateUtils.currentTsInString;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
@@ -41,10 +40,5 @@ public class LinkEventsUtils {
   public static ChangeTargetLink toChangeTargetLink(InstanceAuthorityLink instanceAuthorityLink) {
     return new ChangeTargetLink().linkId(instanceAuthorityLink.getId())
       .instanceId(instanceAuthorityLink.getInstanceId());
-  }
-
-  public static Map<UUID, List<InstanceAuthorityLink>> groupLinksByAuthorityId(List<InstanceAuthorityLink> links) {
-    return links.stream()
-      .collect(Collectors.groupingBy(link -> link.getAuthority().getId()));
   }
 }

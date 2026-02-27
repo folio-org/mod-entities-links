@@ -23,7 +23,7 @@ public class InstanceAuthorityLinksStatisticsController implements InstanceAutho
                                                                             OffsetDateTime toDate,
                                                                             LinkAction action, Integer limit) {
     return ResponseEntity.ok(
-      instanceAuthorityStatServiceDelegate.fetchAuthorityLinksStats(fromDate, toDate, action, limit)
+      instanceAuthorityStatServiceDelegate.fetchAuthorityDataStats(fromDate, toDate, action, limit)
     );
   }
 

@@ -7,18 +7,23 @@ import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface AuthorityDataStatRepository extends JpaRepository<AuthorityDataStat, UUID> {
 
   @Query("""
-    select a from AuthorityDataStat a
-    where a.action = :action
-          and a.startedAt >= :startedAtStart
-          and a.startedAt <= :startedAtEnd
-          and a.authority.deleted = false""")
+      select a
+      from AuthorityDataStat a
+      where a.action = :action
+        and a.startedAt between :startedAtStart and :startedAtEnd""")
   List<AuthorityDataStat> findActualByActionAndDate(@Param("action") AuthorityDataStatAction action,
                                                     @Param("startedAtStart") Timestamp startedAtStart,
                                                     @Param("startedAtEnd") Timestamp startedAtEnd, Pageable pageable);
+
+  @Modifying
+  void deleteByAuthorityId(UUID authorityId);
 }

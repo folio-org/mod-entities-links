@@ -198,7 +198,6 @@ public class LinksSuggestionsService {
     newBibSubfields.addAll(controlledSubfields);
     newBibSubfields.addAll(systemSubfields);
     newBibSubfields.addAll(uncontrolledSubfields);
-
     bibField.setSubfieldList(newBibSubfields);
   }
 

@@ -1,10 +1,7 @@
 package org.folio.entlinks.controller.delegate;
 
-import static org.folio.entlinks.utils.ConsortiumUtils.CONSORTIUM_SOURCE_PREFIX;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
@@ -16,10 +13,7 @@ import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityArchivePropagationService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
 import org.folio.entlinks.service.settings.TenantSetting;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Setting;
 import org.folio.tenant.domain.dto.SettingCollection;
 import org.folio.tenant.settings.service.TenantSettingsService;
@@ -34,10 +28,8 @@ public class AuthorityArchiveServiceDelegate {
   private final AuthorityArchiveService authorityArchiveService;
   private final AuthorityArchiveRepository authorityArchiveRepository;
   private final AuthorityDomainEventPublisher eventPublisher;
-  private final ConsortiumAuthorityArchivePropagationService propagationService;
   private final AuthorityMapper authorityMapper;
   private final TenantSettingsService tenantSettingsService;
-  private final FolioExecutionContext context;
 
   public AuthorityFullDtoCollection retrieveAuthorityArchives(Integer offset, Integer limit, String cqlQuery,
                                                               Boolean idOnly) {
@@ -61,8 +53,7 @@ public class AuthorityArchiveServiceDelegate {
     }
 
     var tillDate = LocalDateTime.now().minusDays(retention.get());
-    try (Stream<AuthorityArchive> archives = authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(
-      tillDate, CONSORTIUM_SOURCE_PREFIX)) {
+    try (var archives = authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(tillDate)) {
       archives.forEach(this::process);
     }
   }
@@ -71,7 +62,6 @@ public class AuthorityArchiveServiceDelegate {
     authorityArchiveService.delete(archive);
     var dto = authorityMapper.toDto(archive);
     eventPublisher.publishHardDeleteEvent(dto);
-    propagationService.propagate(archive, ConsortiumPropagationService.PropagationType.DELETE, context.getTenantId());
   }
 
   private Optional<Integer> fetchAuthoritiesRetentionDuration() {

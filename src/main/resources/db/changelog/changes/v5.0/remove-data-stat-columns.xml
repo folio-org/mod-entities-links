@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="MODELINKS-383@@drop-authority_data_stat-columns" author="Viacheslav_Kolesnyk">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="authority_data_stat"/>
+        <columnExists tableName="authority_data_stat" columnName="lb_total"/>
+        <columnExists tableName="authority_data_stat" columnName="lb_failed"/>
+        <columnExists tableName="authority_data_stat" columnName="lb_updated"/>
+        <columnExists tableName="authority_data_stat" columnName="status"/>
+        <columnExists tableName="authority_data_stat" columnName="updated_at"/>
+        <columnExists tableName="authority_data_stat" columnName="completed_at"/>
+      </and>
+    </preConditions>
+
+    <dropColumn tableName="authority_data_stat" columnName="lb_total"/>
+    <dropColumn tableName="authority_data_stat" columnName="lb_failed"/>
+    <dropColumn tableName="authority_data_stat" columnName="lb_updated"/>
+    <dropColumn tableName="authority_data_stat" columnName="status"/>
+    <dropColumn tableName="authority_data_stat" columnName="updated_at"/>
+    <dropColumn tableName="authority_data_stat" columnName="completed_at"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-383@@drop-authority_data_stat_status-type" author="Viacheslav_Kolesnyk">
+    <comment>Drop AuthorityDataStatStatus enum type as it is no longer used</comment>
+
+    <sql>DROP TYPE IF EXISTS AuthorityDataStatStatus;</sql>
+  </changeSet>
+
+</databaseChangeLog>

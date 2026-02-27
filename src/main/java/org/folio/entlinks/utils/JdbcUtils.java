@@ -23,6 +23,10 @@ public class JdbcUtils {
     return getSchemaName(context) + "." + tableName;
   }
 
+  public static String getFullPath(FolioExecutionContext context, String tenant, String tableName) {
+    return getSchemaName(context, tenant) + "." + tableName;
+  }
+
   public static String getFullPath(FolioModuleMetadata folioModuleMetadata, String tenant, String tableName) {
     return folioModuleMetadata.getDBSchemaName(tenant) + "." + tableName;
   }

@@ -2,6 +2,7 @@ package org.folio.entlinks.controller.delegate.suggestion;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.eq;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.client.SourceStorageClient;
@@ -29,10 +31,13 @@ import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
 import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
+import org.folio.entlinks.domain.repository.AuthorityJdbcRepository;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionsService;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,34 +64,37 @@ class LinksSuggestionsServiceDelegateTest {
   private @Mock AuthorityRepository authorityRepository;
   private @Mock SourceStorageClient sourceStorageClient;
   private @Mock ConsortiumTenantExecutor executor;
+  private @Mock FolioExecutionContext folioExecutionContext;
+  private @Mock UserTenantsService userTenantsService;
+  private @Mock AuthorityJdbcRepository jdbcRepository;
   private @InjectMocks LinksSuggestionsByAuthorityNaturalId serviceDelegate;
 
   @Test
   void suggestLinksForMarcRecords_shouldSaveAuthoritiesFromSearch() {
     var authority1 = Authority.builder()
         .id(AUTHORITY_ID).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
-    var authority2 = Authority.builder()
-        .id(UUID.randomUUID()).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
-    authority2.makeAsConsortiumShadowCopy();
     var fetchRequest = getBatchFetchRequestForAuthority(AUTHORITY_ID);
     var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
     var rules = List.of(getRule("100"));
 
-    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID)))
-        .thenReturn(List.of(authority1, authority2));
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
+    when(folioExecutionContext.getTenantId()).thenReturn(TENANT_ID);
+    when(userTenantsService.getCentralTenant(TENANT_ID)).thenReturn(Optional.empty());
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID)))
+        .thenReturn(List.of(authority1));
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
       .thenReturn(fetchRequest);
     var strippedParsedRecords = new StrippedParsedRecordCollection(emptyList(), 1);
     when(sourceStorageClient.fetchParsedRecords(fetchRequest)).thenReturn(strippedParsedRecords);
-    when(executor.executeAsCentralTenant(any())).thenReturn(strippedParsedRecords);
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
 
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
+    verify(userTenantsService).getCentralTenant(TENANT_ID);
     verify(sourceStorageClient).fetchParsedRecords(fetchRequest);
-    verify(executor).executeAsCentralTenant(any());
+    verifyNoInteractions(executor);
+    verifyNoInteractions(jdbcRepository);
     verify(suggestionService)
         .fillLinkDetailsWithSuggestedAuthorities(any(),
             eq(List.of()), eq(Map.of("100", rules)), eq('0'), eq(false));
@@ -117,7 +125,6 @@ class LinksSuggestionsServiceDelegateTest {
     verify(suggestionService)
       .fillLinkDetailsWithSuggestedAuthorities(any(),
           eq(List.of()), eq(Map.of("100", rules)), eq('0'), eq(false));
-    verifyNoInteractions(executor);
   }
 
   @Test
@@ -142,7 +149,6 @@ class LinksSuggestionsServiceDelegateTest {
 
     verify(authorityRepository).findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID));
     verify(sourceStorageClient).fetchParsedRecords(fetchRequest);
-    verifyNoInteractions(executor);
   }
 
   @Test
@@ -190,6 +196,162 @@ class LinksSuggestionsServiceDelegateTest {
     verify(suggestionService).fillErrorDetailsWithDisabledAutoLinking(any(), anyChar());
   }
 
+  @Test
+  void suggestLinksForMarcRecords_shouldProcessWithIgnoreAutoLinkingEnabled() {
+    var authority = Authority.builder()
+        .id(AUTHORITY_ID).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
+    var fetchRequest = getBatchFetchRequestForAuthority(AUTHORITY_ID);
+    var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
+    var rules = List.of(getRule("100", false));
+
+    when(linkingRulesService.getLinkingRules()).thenReturn(rules);
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(List.of(authority));
+    when(sourceStorageClient
+      .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
+      .thenReturn(fetchRequest);
+    when(sourceStorageClient.fetchParsedRecords(fetchRequest)).thenReturn(
+      new StrippedParsedRecordCollection(emptyList(), 1));
+    var parsedContentCollection = new ParsedRecordContentCollection().records(records);
+
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, true);
+
+    verify(sourceStorageClient).fetchParsedRecords(fetchRequest);
+    verify(suggestionService)
+      .fillLinkDetailsWithSuggestedAuthorities(any(), any(), eq(Map.of("100", rules)), eq('0'), eq(true));
+  }
+
+  @Test
+  void suggestLinksForMarcRecords_shouldFetchSharedAuthoritiesFromCentralTenant() {
+    var tenantId = "member1";
+    var centralTenantId = "central";
+    var localAuthority = Authority.builder()
+        .id(AUTHORITY_ID).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
+    var sharedAuthorityId = UUID.randomUUID();
+    var sharedNaturalId = "shared123";
+    var sharedAuthority = Authority.builder()
+        .id(sharedAuthorityId).naturalId(sharedNaturalId).source(AUTHORITY_SOURCE_MARC).build();
+
+    var records = List.of(
+      getRecord("100", Map.of("0", NATURAL_ID)),
+      getRecord("110", Map.of("0", sharedNaturalId))
+    );
+    var rules = List.of(getRule("100"), getRule("110"));
+    var localFetchRequest = getBatchFetchRequestForAuthority(AUTHORITY_ID);
+    var sharedFetchRequest = getBatchFetchRequestForAuthority(sharedAuthorityId);
+
+    when(linkingRulesService.getLinkingRules()).thenReturn(rules);
+    when(folioExecutionContext.getTenantId()).thenReturn(tenantId);
+    when(userTenantsService.getCentralTenant(tenantId)).thenReturn(Optional.of(centralTenantId));
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID, sharedNaturalId)))
+        .thenReturn(List.of(localAuthority));
+    when(jdbcRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID, sharedNaturalId), centralTenantId))
+        .thenReturn(List.of(sharedAuthority));
+    when(sourceStorageClient
+      .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
+      .thenReturn(localFetchRequest);
+    when(sourceStorageClient
+      .buildBatchFetchRequestForAuthority(Set.of(sharedAuthorityId), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
+      .thenReturn(sharedFetchRequest);
+    when(sourceStorageClient.fetchParsedRecords(any())).thenReturn(
+      new StrippedParsedRecordCollection(emptyList(), 1));
+    when(executor.executeAsCentralTenant(any())).thenAnswer(invocation -> {
+      var supplier = invocation.getArgument(0, java.util.function.Supplier.class);
+      return supplier.get();
+    });
+
+    var parsedContentCollection = new ParsedRecordContentCollection().records(records);
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
+
+    verify(jdbcRepository).findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID, sharedNaturalId), centralTenantId);
+    verify(executor).executeAsCentralTenant(any());
+    verify(sourceStorageClient, times(2)).fetchParsedRecords(any());
+    verify(suggestionService).fillLinkDetailsWithSuggestedAuthorities(any(), any(), any(), eq('0'), eq(false));
+  }
+
+  @Test
+  void suggestLinksForMarcRecords_shouldNotFetchFromCentralIfAlreadyCentral() {
+    var centralTenantId = "central";
+    var authority = Authority.builder()
+        .id(AUTHORITY_ID).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
+    var fetchRequest = getBatchFetchRequestForAuthority(AUTHORITY_ID);
+    var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
+    var rules = List.of(getRule("100"));
+
+    when(linkingRulesService.getLinkingRules()).thenReturn(rules);
+    when(folioExecutionContext.getTenantId()).thenReturn(centralTenantId);
+    when(userTenantsService.getCentralTenant(centralTenantId)).thenReturn(Optional.of(centralTenantId));
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(List.of(authority));
+    when(sourceStorageClient
+      .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
+      .thenReturn(fetchRequest);
+    when(sourceStorageClient.fetchParsedRecords(fetchRequest)).thenReturn(
+      new StrippedParsedRecordCollection(emptyList(), 1));
+
+    var parsedContentCollection = new ParsedRecordContentCollection().records(records);
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
+
+    verify(userTenantsService).getCentralTenant(centralTenantId);
+    verifyNoInteractions(jdbcRepository);
+    verifyNoInteractions(executor);
+  }
+
+  @Test
+  void suggestLinksForMarcRecords_shouldFillErrorWhenNoAuthoritiesFound() {
+    var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
+    var rules = List.of(getRule("100"));
+
+    when(linkingRulesService.getLinkingRules()).thenReturn(rules);
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(emptyList());
+
+    var parsedContentCollection = new ParsedRecordContentCollection().records(records);
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
+
+    verify(authorityRepository).findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID));
+    verifyNoInteractions(sourceStorageClient);
+    verify(suggestionService).fillErrorDetailsWithNoSuggestions(any(), eq('0'));
+  }
+
+  @Test
+  void suggestLinksForMarcRecords_shouldHandleEmptyRecordsCollection() {
+    var rules = List.of(getRule("100"));
+
+    when(linkingRulesService.getLinkingRules()).thenReturn(rules);
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(emptySet())).thenReturn(emptyList());
+
+    var parsedContentCollection = new ParsedRecordContentCollection().records(emptyList());
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
+
+    verify(authorityRepository).findByNaturalIdInAndDeletedFalse(emptySet());
+    verifyNoInteractions(sourceStorageClient);
+    verify(suggestionService).fillErrorDetailsWithNoSuggestions(any(), eq('0'));
+  }
+
+  @Test
+  void suggestLinksForMarcRecords_shouldHandleMultipleRulesForSameField() {
+    var authority = Authority.builder()
+        .id(AUTHORITY_ID).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
+    var fetchRequest = getBatchFetchRequestForAuthority(AUTHORITY_ID);
+    var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
+    var rule1 = getRule("100", true);
+    var rule2 = getRule("100", false);
+    var rules = List.of(rule1, rule2);
+
+    when(linkingRulesService.getLinkingRules()).thenReturn(rules);
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(List.of(authority));
+    when(sourceStorageClient
+      .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
+      .thenReturn(fetchRequest);
+    when(sourceStorageClient.fetchParsedRecords(fetchRequest)).thenReturn(
+      new StrippedParsedRecordCollection(emptyList(), 1));
+
+    var parsedContentCollection = new ParsedRecordContentCollection().records(records);
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
+
+    verify(sourceStorageClient).fetchParsedRecords(fetchRequest);
+    verify(suggestionService)
+      .fillLinkDetailsWithSuggestedAuthorities(any(), any(), eq(Map.of("100", rules)), eq('0'), eq(false));
+  }
+
   private ParsedRecordContent getRecord(String bibField) {
     return getRecord(bibField, Map.of("a", "test"));
   }
@@ -212,7 +374,7 @@ class LinksSuggestionsServiceDelegateTest {
     var existence = Map.of("a", true);
 
     var rule = new InstanceAuthorityLinkingRule();
-    rule.setId(1);
+    rule.setId(Integer.parseInt(bibField));
     rule.setBibField(bibField);
     rule.setAuthorityField("100");
     rule.setAutoLinkingEnabled(autoLinkingEnabled);

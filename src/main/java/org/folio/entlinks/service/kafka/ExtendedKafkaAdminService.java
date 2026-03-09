@@ -8,6 +8,7 @@ import org.folio.spring.tools.config.properties.FolioEnvironment;
 import org.folio.spring.tools.kafka.FolioKafkaProperties;
 import org.folio.spring.tools.kafka.KafkaAdminService;
 import org.folio.spring.tools.kafka.KafkaUtils;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaAdmin;
@@ -28,7 +29,8 @@ public class ExtendedKafkaAdminService extends KafkaAdminService {
   }
 
   @Override
-  protected List<NewTopic> toTenantSpecificTopic(List<FolioKafkaProperties.KafkaTopic> configTopics,
+  protected List<NewTopic> toTenantSpecificTopic(@Nullable String topicPrefix,
+                                                 List<FolioKafkaProperties.KafkaTopic> configTopics,
                                                  String tenantId) {
     return configTopics.stream()
         .map(topic -> {

@@ -45,7 +45,7 @@ class ExtendedKafkaAdminServiceTest {
     when(topic.getNumPartitions()).thenReturn(1);
     when(topic.getReplicationFactor()).thenReturn((short) 1);
 
-    var result = service.toTenantSpecificTopic(List.of(topic), TENANT);
+    var result = service.toTenantSpecificTopic(null, List.of(topic), TENANT);
     assertEquals(1, result.size());
     assertTrue(result.getFirst().name().contains(DEFAULT_NAMESPACE));
   }
@@ -56,7 +56,7 @@ class ExtendedKafkaAdminServiceTest {
     when(topic.getNumPartitions()).thenReturn(2);
     when(topic.getReplicationFactor()).thenReturn((short) 2);
 
-    var result = service.toTenantSpecificTopic(List.of(topic), TENANT);
+    var result = service.toTenantSpecificTopic(null, List.of(topic), TENANT);
     assertEquals(1, result.size());
     assertFalse(result.getFirst().name().contains(DEFAULT_NAMESPACE));
   }

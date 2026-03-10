@@ -5,8 +5,6 @@ spring:
   application:
     name: @project.artifactId@
     version: @project.version@
-  profiles:
-    default: "dev"
   threads:
     virtual:
       enabled: true

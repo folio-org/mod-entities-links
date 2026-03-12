@@ -59,6 +59,7 @@ spring:
       - consortium-tenants-cache
       - consortium-central-tenant-cache
       - authority-extended-mapping-enabled-cache
+      - data-import-canceled-job-cache
     caffeine:
       spec: maximumSize=500,expireAfterWrite=3600s
     type: caffeine
@@ -70,6 +71,11 @@ folio:
   okapi-url: ${OKAPI_URL:http://localhost:9130}
   exchange:
     enabled: true
+  cache:
+    spec:
+      data-import-canceled-job-cache:
+        maximum-size: ${DI_CANCELED_JOB_CACHE_MAX_SIZE:500}
+        ttl: ${DI_CANCELED_JOB_CACHE_TTL:24h}
   system-user:
     enabled: ${SYSTEM_USER_ENABLED:true}
     username: ${SYSTEM_USER_USERNAME:mod-entities-links}
@@ -111,9 +117,15 @@ folio:
         group-id: ${folio.environment}-mod-entities-specification-storage-group
         auto-offset-reset: EARLIEST
       data-import:
-        concurrency: 1
+        concurrency: ${KAFKA_DI_CONSUMER_CONCURRENCY:4}
         topic-pattern: (${folio.environment}\.)[A-Za-z0-9-]+\.\w+\.DI_SRS_MARC_AUTHORITY_RECORD_(CREATED|MODIFIED_READY_FOR_POST_PROCESSING|DELETED|NOT_MATCHED)
         group-id: ${folio.environment}-mod-entities-links-data-import-group
+      data-import-canceled:
+        concurrency: ${KAFKA_DI_CANCELED_CONSUMER_CONCURRENCY:2}
+        topic-pattern: (${folio.environment}\.)[A-Za-z0-9-]+\.\w+\.DI_JOB_CANCELLED
+        group-id: ${folio.environment}-mod-entities-links-data-import-canceled-group
+        auto-offset-reset: EARLIEST
+        shared-group: false
   instance-authority:
     change:
       numPartitions: ${KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS:100}

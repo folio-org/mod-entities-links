@@ -64,6 +64,9 @@ folio:
       - name: DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING
         numPartitions: 1
         replicationFactor:
+      - name: DI_JOB_CANCELLED
+        numPartitions: 1
+        replicationFactor:
       # following topics are used to produce DI events for DataImportEventListener and check published events in tests
       - name: DI_SRS_MARC_AUTHORITY_RECORD_CREATED
         numPartitions: 1
@@ -99,6 +102,12 @@ folio:
         topic-pattern: (${folio.environment}\.)[A-Za-z0-9-]+\.\w+\.DI_SRS_MARC_AUTHORITY_RECORD_(CREATED|MODIFIED_READY_FOR_POST_PROCESSING|DELETED|NOT_MATCHED)
         group-id: ${folio.environment}-mod-entities-links-data-import-group
         auto-offset-reset: EARLIEST
+      data-import-canceled:
+        concurrency: 1
+        topic-pattern: (${folio.environment}\.)[A-Za-z0-9-]+\.\w+\.DI_JOB_CANCELLED
+        group-id: ${folio.environment}-mod-entities-links-data-import-canceled-group
+        auto-offset-reset: EARLIEST
+        shared-group: false
   jpa:
     repository:
       base-packages: org.folio.entlinks.domain

@@ -965,6 +965,26 @@
         "description": "Number of kafka concurrent threads for `links.instance-authority-stats` message consuming."
       },
       {
+        "name": "KAFKA_DI_CONSUMER_CONCURRENCY",
+        "value": "4",
+        "description": "Number of kafka concurrent threads for MARC authority record data-import event consuming."
+      },
+      {
+        "name": "KAFKA_DI_CANCELED_CONSUMER_CONCURRENCY",
+        "value": "2",
+        "description": "Number of kafka concurrent threads for `DI_JOB_CANCELLED` event consuming."
+      },
+      {
+        "name": "DI_CANCELED_JOB_CACHE_TTL",
+        "value": "24h",
+        "description": "Expiration time for cancelled data-import job IDs in the local cache (e.g. 24h, 30m)."
+      },
+      {
+        "name": "DI_CANCELED_JOB_CACHE_MAX_SIZE",
+        "value": "500",
+        "description": "Maximum number of cancelled data-import job IDs stored per module instance."
+      },
+      {
         "name": "KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS",
         "value": "100",
         "description": "Number of instance-authority links `links.instance-authority` event contains while processing authority link source change."

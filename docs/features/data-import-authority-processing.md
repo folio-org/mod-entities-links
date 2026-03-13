@@ -56,14 +56,14 @@ Cluster correctness: a cancellation registered by one instance is **not** propag
 
 | Env var | Description | Default |
 |---------|-------------|---------|
-| `KAFKA_DI_CONSUMER_CONCURRENCY` | Number of concurrent Kafka consumer threads for MARC authority events | `4` |
-| `KAFKA_DI_CANCELED_CONSUMER_CONCURRENCY` | Number of concurrent Kafka consumer threads for DI_JOB_CANCELLED events | `2` |
-| `DI_CANCELED_JOB_CACHE_TTL` | How long a cancelled job ID remains in cache | `24h` |
-| `DI_CANCELED_JOB_CACHE_MAX_SIZE` | Maximum number of cancelled job entries per module instance | `500` |
-| `KAFKA_DI_INVENTORY_AUTHORITY_UPDATED_PARTITIONS` | Partition count for the `DI_INVENTORY_AUTHORITY_UPDATED` topic | `8` |
-| `KAFKA_DI_INVENTORY_AUTHORITY_UPDATED_REPLICATION_FACTOR` | Replication factor for the `DI_INVENTORY_AUTHORITY_UPDATED` topic | — |
-| `KAFKA_DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING_PARTITIONS` | Partition count for the `DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING` topic | `8` |
-| `KAFKA_DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING_REPLICATION_FACTOR` | Replication factor for the `DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING` topic | — |
+| `KAFKA_DI_CONSUMER_CONCURRENCY` | Number of concurrent Kafka consumer threads for MARC authority events | `4`     |
+| `KAFKA_DI_CANCELED_CONSUMER_CONCURRENCY` | Number of concurrent Kafka consumer threads for DI_JOB_CANCELLED events | `1`     |
+| `DI_CANCELED_JOB_CACHE_TTL` | How long a cancelled job ID remains in cache | `24h`   |
+| `DI_CANCELED_JOB_CACHE_MAX_SIZE` | Maximum number of cancelled job entries per module instance | `500`   |
+| `KAFKA_DI_INVENTORY_AUTHORITY_UPDATED_PARTITIONS` | Partition count for the `DI_INVENTORY_AUTHORITY_UPDATED` topic | `8`     |
+| `KAFKA_DI_INVENTORY_AUTHORITY_UPDATED_REPLICATION_FACTOR` | Replication factor for the `DI_INVENTORY_AUTHORITY_UPDATED` topic | —       |
+| `KAFKA_DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING_PARTITIONS` | Partition count for the `DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING` topic | `8`     |
+| `KAFKA_DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING_REPLICATION_FACTOR` | Replication factor for the `DI_INVENTORY_AUTHORITY_CREATED_READY_FOR_POST_PROCESSING` topic | —       |
 
 ## Dependencies and interactions
 

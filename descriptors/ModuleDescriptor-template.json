@@ -971,7 +971,7 @@
       },
       {
         "name": "KAFKA_DI_CANCELED_CONSUMER_CONCURRENCY",
-        "value": "2",
+        "value": "1",
         "description": "Number of kafka concurrent threads for `DI_JOB_CANCELLED` event consuming."
       },
       {

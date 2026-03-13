@@ -1,5 +1,6 @@
 package org.folio.entlinks.integration.kafka;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.support.FileTestUtils.readFile;
@@ -15,8 +16,10 @@ import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.dataImportAuthorityCreatedTopic;
 import static org.folio.support.base.TestConstants.diAuthorityCreatedPostProcessingTopic;
 import static org.folio.support.base.TestConstants.diAuthorityErrorTopic;
+import static org.folio.support.base.TestConstants.diJobCanceledTopic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Arrays;
@@ -31,6 +34,7 @@ import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDSoftAssertions;
 import org.awaitility.Durations;
 import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.integration.di.DataImportCanceledJobService;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.testing.extension.DatabaseCleanup;
@@ -57,9 +61,12 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 class DataImportCreateEventListenerIT extends IntegrationTestBase {
 
   private static final UUID AUTHORITY_CREATE_ID = UUID.fromString("7e3745e6-2d48-4f22-825e-72f3338bfa14");
+  private static final String DI_JOB_ID = "3b255ca5-6746-47a1-9bd6-45c5bb948b77";
 
   private KafkaMessageListenerContainer<String, Event> container;
   private BlockingQueue<ConsumerRecord<String, Event>> consumerRecords;
+
+  private @Autowired DataImportCanceledJobService dataImportCanceledJobService;
 
   @BeforeAll
   static void prepare() {
@@ -70,7 +77,7 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(consumerRecords, kafkaProperties, Event.class,
-        diAuthorityCreatedPostProcessingTopic(), diAuthorityErrorTopic());
+      diAuthorityCreatedPostProcessingTopic(), diAuthorityErrorTopic());
 
     var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
@@ -88,9 +95,9 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
     // send DI authority created event
     var eventPayload = readFile(DI_CREATE_AUTHORITY_PATH);
     var event = TestDataUtils.diAuthorityEvent(DI_CREATED_TYPE,
-        eventPayload, AUTHORITY_CREATE_ID.toString(), TENANT_ID);
+      eventPayload, AUTHORITY_CREATE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityCreatedTopic(), AUTHORITY_CREATE_ID.toString(), event,
-        getDataImportKafkaHeaders(AUTHORITY_CREATE_ID.toString()));
+      getDataImportKafkaHeaders(AUTHORITY_CREATE_ID.toString()));
 
     // check sent event fields
     var received = getReceivedEvent();
@@ -99,8 +106,8 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
     assertions.then(received).isNotNull();
     var authorityPayload = received.value().getEventPayload();
     var receivedHeaderKeys = Arrays.stream(received.headers().toArray())
-        .map(Header::key)
-        .collect(Collectors.toSet());
+      .map(Header::key)
+      .collect(Collectors.toSet());
     assertions.then(receivedHeaderKeys).as("headers")
       .contains(XOkapiHeaders.TENANT, XOkapiHeaders.USER_ID, XOkapiHeaders.URL);
     assertions.then(received.key()).as("key").isEqualTo(AUTHORITY_CREATE_ID.toString());
@@ -110,8 +117,8 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
 
     // wait until authority is created
     await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
-        doGet(authorityEndpoint(AUTHORITY_CREATE_ID))
-            .andExpect(status().isOk())
+      doGet(authorityEndpoint(AUTHORITY_CREATE_ID))
+        .andExpect(status().isOk())
     );
     // verify created authority
     var content = doGet(authorityEndpoint(AUTHORITY_CREATE_ID)).andReturn().getResponse().getContentAsString();
@@ -125,6 +132,29 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
 
   @SneakyThrows
   @Test
+  void shouldHandleDataImportAuthorityCreatedEvent_positive_shouldSkipEventIfJobCanceled() {
+    // send DI job canceled event
+    sendKafkaMessage(diJobCanceledTopic(), DI_JOB_ID, new Object(),
+      getDataImportCanceledJobKafkaHeaders(TENANT_ID, DI_JOB_ID));
+    awaitUntilAsserted(() -> assertTrue(dataImportCanceledJobService.isJobCanceled(DI_JOB_ID, TENANT_ID)));
+
+    // send DI authority created event
+    var eventPayload = readFile(DI_CREATE_AUTHORITY_PATH);
+    var event = TestDataUtils.diAuthorityEvent(DI_CREATED_TYPE,
+      eventPayload, AUTHORITY_CREATE_ID.toString(), TENANT_ID);
+    sendKafkaMessage(dataImportAuthorityCreatedTopic(), AUTHORITY_CREATE_ID.toString(), event,
+      getDataImportKafkaHeaders(AUTHORITY_CREATE_ID.toString()));
+
+    // Allow time for the Kafka consumer to run; assert the record never created
+    await().during(5, SECONDS)
+      .pollDelay(ONE_SECOND)
+      .pollInterval(ONE_SECOND)
+      .atMost(10, SECONDS)
+      .untilAsserted(() -> tryGet(authorityEndpoint(AUTHORITY_CREATE_ID)).andExpect(status().isNotFound()));
+  }
+
+  @SneakyThrows
+  @Test
   void shouldHandleDataImportAuthorityCreatedEvent_negative_duplicateAuthority() {
     // create authority
     var authority = authority(0, 0);
@@ -133,15 +163,15 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
 
     // wait until authority is created
     await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
-        doGet(authorityEndpoint(AUTHORITY_CREATE_ID))
-            .andExpect(status().isOk())
+      doGet(authorityEndpoint(AUTHORITY_CREATE_ID))
+        .andExpect(status().isOk())
     );
     // send DI authority created event for existing authority
     var eventPayload = readFile(DI_CREATE_AUTHORITY_PATH);
     var event = TestDataUtils.diAuthorityEvent(DI_CREATED_TYPE,
-        eventPayload, AUTHORITY_CREATE_ID.toString(), TENANT_ID);
+      eventPayload, AUTHORITY_CREATE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityCreatedTopic(), AUTHORITY_CREATE_ID.toString(), event,
-        getDataImportKafkaHeaders(AUTHORITY_CREATE_ID.toString()));
+      getDataImportKafkaHeaders(AUTHORITY_CREATE_ID.toString()));
 
     // check sent DI error event
     var received = getReceivedEvent();
@@ -151,7 +181,7 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
     assertions.then(received.key()).as("key").isEqualTo(AUTHORITY_CREATE_ID.toString());
     assertions.then(received.topic()).as("topic").contains(DI_ERROR_TOPIC);
     assertions.then(received.value().getEventPayload())
-        .contains("ERROR: duplicate key value violates unique constraint");
+      .contains("ERROR: duplicate key value violates unique constraint");
     assertions.assertAll();
   }
 

@@ -1,5 +1,6 @@
 package org.folio.entlinks.integration.kafka;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.support.FileTestUtils.readFile;
@@ -15,10 +16,12 @@ import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.dataImportAuthorityModifiedTopic;
 import static org.folio.support.base.TestConstants.diAuthorityErrorTopic;
 import static org.folio.support.base.TestConstants.diAuthorityUpdateTopic;
+import static org.folio.support.base.TestConstants.diJobCanceledTopic;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,6 +38,7 @@ import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDSoftAssertions;
 import org.awaitility.Durations;
 import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.integration.di.DataImportCanceledJobService;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.testing.extension.DatabaseCleanup;
@@ -61,9 +65,12 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 class DataImportUpdateEventListenerIT extends IntegrationTestBase {
 
   private static final UUID AUTHORITY_UPDATE_ID = UUID.fromString("9e3745e6-2d48-4f22-825e-72f3338bfa36");
+  private static final String DI_JOB_ID = "ee39dc50-6adb-44bb-b707-d85b14cbe201";
 
   private KafkaMessageListenerContainer<String, Event> container;
   private BlockingQueue<ConsumerRecord<String, Event>> consumerRecords;
+
+  private @Autowired DataImportCanceledJobService dataImportCanceledJobService;
 
   @BeforeAll
   static void prepare() {
@@ -74,7 +81,7 @@ class DataImportUpdateEventListenerIT extends IntegrationTestBase {
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(consumerRecords, kafkaProperties, Event.class,
-        diAuthorityUpdateTopic(), diAuthorityErrorTopic());
+      diAuthorityUpdateTopic(), diAuthorityErrorTopic());
 
     var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
@@ -99,14 +106,14 @@ class DataImportUpdateEventListenerIT extends IntegrationTestBase {
 
     // wait until authority is created
     await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
-        doGet(authorityEndpoint(AUTHORITY_UPDATE_ID))
-            .andExpect(status().isOk())
+      doGet(authorityEndpoint(AUTHORITY_UPDATE_ID))
+        .andExpect(status().isOk())
     );
 
     // send DI authority update event for existing authority
     var eventPayload = readFile(DI_UPDATE_AUTHORITY_PATH);
     var event = TestDataUtils.diAuthorityEvent(DI_UPDATED_TYPE,
-        eventPayload, AUTHORITY_UPDATE_ID.toString(), TENANT_ID);
+      eventPayload, AUTHORITY_UPDATE_ID.toString(), TENANT_ID);
     var updaterUserId = UUID.randomUUID();
     var headers = new HashMap<>(getDataImportKafkaHeaders(AUTHORITY_UPDATE_ID.toString()));
     //srs sends without this header
@@ -142,6 +149,37 @@ class DataImportUpdateEventListenerIT extends IntegrationTestBase {
 
   @SneakyThrows
   @Test
+  void shouldHandleDataImportAuthorityUpdateEvent_positive_shouldSkipEventIfJobCanceled() {
+    // create authority
+    var authority = authority(0, 0);
+    authority.setId(AUTHORITY_UPDATE_ID);
+    databaseHelper.saveAuthority(TENANT_ID, authority);
+
+    // send DI job canceled event
+    sendKafkaMessage(diJobCanceledTopic(), DI_JOB_ID, new Object(),
+      getDataImportCanceledJobKafkaHeaders(TENANT_ID, DI_JOB_ID));
+
+    awaitUntilAsserted(() -> assertTrue(dataImportCanceledJobService.isJobCanceled(DI_JOB_ID, TENANT_ID)));
+
+    // send DI authority created event
+    var eventPayload = readFile(DI_UPDATE_AUTHORITY_PATH);
+    var event = TestDataUtils.diAuthorityEvent(DI_UPDATED_TYPE,
+      eventPayload, AUTHORITY_UPDATE_ID.toString(), TENANT_ID);
+    sendKafkaMessage(dataImportAuthorityModifiedTopic(), AUTHORITY_UPDATE_ID.toString(), event,
+      getDataImportKafkaHeaders(AUTHORITY_UPDATE_ID.toString()));
+
+    // Allow time for the Kafka consumer to run; assert the record never updated
+    await().during(5, SECONDS)
+      .pollDelay(ONE_SECOND)
+      .pollInterval(ONE_SECOND)
+      .atMost(10, SECONDS)
+      .untilAsserted(() -> doGet(authorityEndpoint(AUTHORITY_UPDATE_ID))
+        .andExpect(jsonPath("_version", is(0)))
+      );
+  }
+
+  @SneakyThrows
+  @Test
   void shouldHandleDataImportAuthorityUpdateEvent_negative_noAuthority() {
     // check authority does not exist
     doGet(authorityEndpoint()).andExpect(jsonPath("totalRecords", is(0)));
@@ -149,9 +187,9 @@ class DataImportUpdateEventListenerIT extends IntegrationTestBase {
     // send DI authority update event for non-existing authority
     var eventPayload = readFile(DI_UPDATE_AUTHORITY_PATH);
     var event = TestDataUtils.diAuthorityEvent(DI_UPDATED_TYPE,
-        eventPayload, AUTHORITY_UPDATE_ID.toString(), TENANT_ID);
+      eventPayload, AUTHORITY_UPDATE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityModifiedTopic(), AUTHORITY_UPDATE_ID.toString(), event,
-        getDataImportKafkaHeaders(AUTHORITY_UPDATE_ID.toString()));
+      getDataImportKafkaHeaders(AUTHORITY_UPDATE_ID.toString()));
 
     // check sent DI error event
     var received = getReceivedEvent();

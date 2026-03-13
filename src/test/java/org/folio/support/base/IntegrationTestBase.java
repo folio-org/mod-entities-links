@@ -396,6 +396,13 @@ public class IntegrationTestBase {
     return result -> MatcherAssert.assertThat(result.getResolvedException(), instanceOf(type));
   }
 
+  protected static Map<String, String> getDataImportCanceledJobKafkaHeaders(String tenantId, String jobId) {
+    return Map.of(
+      FOLIO_TENANT_ID, tenantId,
+      JOB_EXECUTION_ID, jobId
+    );
+  }
+
   @BeforeAll
   static void setUp(@Autowired MockMvc mockMvc,
                     @Autowired ObjectMapper objectMapper,

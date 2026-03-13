@@ -265,6 +265,37 @@ public class KafkaConfiguration {
     return new KafkaTemplate<>(linkUpdateProducerFactory);
   }
 
+  /**
+   * Creates and configures {@link org.springframework.kafka.core.ConsumerFactory} as Spring bean.
+   *
+   * <p>Key type - {@link String}, value - {@link String} (message body is ignored; only headers are consumed).</p>
+   *
+   * @return typed {@link org.springframework.kafka.core.ConsumerFactory} object as Spring bean.
+   */
+  @Bean
+  public ConsumerFactory<String, String> diCanceledConsumerFactory(
+    KafkaProperties kafkaProperties,
+    @Value("#{folioKafkaProperties.listener['data-import-canceled'].autoOffsetReset}")
+    FolioKafkaProperties.OffsetResetStrategy autoOffsetReset) {
+    Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties());
+    config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    config.put(VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    config.put(AUTO_OFFSET_RESET_CONFIG, autoOffsetReset.toString());
+    return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), new StringDeserializer());
+  }
+
+  /**
+   * Creates and configures {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} as
+   * Spring bean for consuming DI_JOB_CANCELLED events from Apache Kafka.
+   *
+   * @return {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} object as Spring bean.
+   */
+  @Bean
+  public ConcurrentKafkaListenerContainerFactory<String, String> diCanceledListenerFactory(
+    ConsumerFactory<String, String> diCanceledConsumerFactory) {
+    return listenerFactory(diCanceledConsumerFactory, false);
+  }
+
   @Bean
   public EventProducer<LinksChangeEvent> linksChangeEventMessageProducerService(
     KafkaTemplate<String, LinksChangeEvent> template) {

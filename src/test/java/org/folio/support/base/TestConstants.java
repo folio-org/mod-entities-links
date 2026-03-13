@@ -47,6 +47,7 @@ public class TestConstants {
   public static final String DI_AUTHORITY_UPDATED_TOPIC = "DI_INVENTORY_AUTHORITY_UPDATED";
   public static final String DI_ERROR_TOPIC = "DI_ERROR";
   public static final String DI_COMPLETED_TOPIC = "DI_COMPLETED";
+  public static final String DI_JOB_CANCELLED_TOPIC = "DI_JOB_CANCELLED";
   public static final String UPDATE_TYPE = "UPDATE";
   public static final String DI_CREATED_TYPE = "DI_SRS_MARC_AUTHORITY_RECORD_CREATED";
   public static final String DI_UPDATED_TYPE = "DI_INVENTORY_AUTHORITY_UPDATED";
@@ -104,6 +105,10 @@ public class TestConstants {
 
   public static String diAuthorityCompletedTopic() {
     return fullDiTopicName(DI_COMPLETED_TOPIC, TENANT_ID);
+  }
+
+  public static String diJobCanceledTopic() {
+    return fullDiTopicName(DI_JOB_CANCELLED_TOPIC, TENANT_ID);
   }
 
   public static String dataImportAuthorityDeletedTopic() {

@@ -21,6 +21,7 @@ import org.folio.entlinks.integration.kafka.AuthorityChangeFilterStrategy;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.integration.kafka.deserializer.ConsumerRecordToWrapperConverter;
 import org.folio.entlinks.integration.kafka.deserializer.DataImportEventDeserializer;
+import org.folio.entlinks.integration.kafka.filter.DataImportCanceledJobRecordFilterStrategy;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rspec.domain.dto.SpecificationUpdatedEvent;
 import org.folio.rspec.domain.dto.UpdateRequestEvent;
@@ -64,11 +65,12 @@ public class KafkaConfiguration {
    */
   @Bean
   public ConcurrentKafkaListenerContainerFactory<String, DataImportEventPayload> diListenerFactory(
-    ConsumerFactory<String, DataImportEventPayload> consumerFactory) {
+    ConsumerFactory<String, DataImportEventPayload> consumerFactory,
+    DataImportCanceledJobRecordFilterStrategy recordFilterStrategy) {
     var listenerFactory = listenerFactory(consumerFactory, true);
     listenerFactory.setBatchMessageConverter(
       new BatchMessagingMessageConverter(new ConsumerRecordToWrapperConverter()));
-
+    listenerFactory.setRecordFilterStrategy(recordFilterStrategy);
     return listenerFactory;
   }
 

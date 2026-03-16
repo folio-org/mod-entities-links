@@ -1,13 +1,10 @@
 package org.folio.entlinks.integration.kafka;
 
-import static org.folio.support.base.TestConstants.FOLIO_TENANT_ID;
-import static org.folio.support.base.TestConstants.JOB_EXECUTION_ID;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.diJobCanceledTopic;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Map;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.entlinks.integration.di.DataImportCanceledJobService;
@@ -35,15 +32,8 @@ class DataImportCanceledJobIT extends IntegrationTestBase {
 
     assertFalse(dataImportCanceledJobService.isJobCanceled(jobId, tenantId));
 
-    sendKafkaMessage(diJobCanceledTopic(), jobId, new Object(), getKafkaHeaders(tenantId, jobId));
+    sendKafkaMessage(diJobCanceledTopic(), jobId, new Object(), getDataImportCanceledJobKafkaHeaders(tenantId, jobId));
 
     awaitUntilAsserted(() -> assertTrue(dataImportCanceledJobService.isJobCanceled(jobId, tenantId)));
-  }
-
-  private static Map<String, String> getKafkaHeaders(String tenantId, String jobId) {
-    return Map.of(
-      FOLIO_TENANT_ID, tenantId,
-      JOB_EXECUTION_ID, jobId
-    );
   }
 }

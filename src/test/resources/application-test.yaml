@@ -124,3 +124,7 @@ folio:
       enabled: true
 
 server.port: 8081
+
+logging:
+  level:
+    org.folio.spring.filter.IncomingRequestLoggingFilter: debug

@@ -1,5 +1,6 @@
 package org.folio.entlinks.integration.kafka;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.support.FileTestUtils.readFile;
@@ -14,7 +15,9 @@ import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.dataImportAuthorityDeletedTopic;
 import static org.folio.support.base.TestConstants.diAuthorityCompletedTopic;
 import static org.folio.support.base.TestConstants.diAuthorityErrorTopic;
+import static org.folio.support.base.TestConstants.diJobCanceledTopic;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,6 +32,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDSoftAssertions;
 import org.awaitility.Durations;
+import org.folio.entlinks.integration.di.DataImportCanceledJobService;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.testing.extension.DatabaseCleanup;
@@ -55,9 +59,12 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 class DataImportDeleteEventListenerIT extends IntegrationTestBase {
 
   private static final UUID AUTHORITY_DELETE_ID = UUID.fromString("8e3745e6-2d48-4f22-825e-72f3338bfa25");
+  private static final String DI_JOB_ID = "4b255ca5-6746-47a1-9bd6-45c5bb948b77";
 
   private KafkaMessageListenerContainer<String, Event> container;
   private BlockingQueue<ConsumerRecord<String, Event>> consumerRecords;
+
+  private @Autowired DataImportCanceledJobService dataImportCanceledJobService;
 
   @BeforeAll
   static void prepare() {
@@ -68,7 +75,7 @@ class DataImportDeleteEventListenerIT extends IntegrationTestBase {
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(consumerRecords, kafkaProperties, Event.class,
-        diAuthorityCompletedTopic(), diAuthorityCompletedTopic(), diAuthorityErrorTopic());
+      diAuthorityCompletedTopic(), diAuthorityCompletedTopic(), diAuthorityErrorTopic());
 
     var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
@@ -90,16 +97,16 @@ class DataImportDeleteEventListenerIT extends IntegrationTestBase {
 
     // wait until authority is created
     await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
-        doGet(authorityEndpoint(AUTHORITY_DELETE_ID))
-            .andExpect(status().isOk())
+      doGet(authorityEndpoint(AUTHORITY_DELETE_ID))
+        .andExpect(status().isOk())
     );
 
     // send DI authority deleted event for existing authority
     var eventPayload = readFile(DI_DELETE_AUTHORITY_PATH);
     var event = TestDataUtils.diAuthorityEvent(DI_DELETED_TYPE,
-        eventPayload, AUTHORITY_DELETE_ID.toString(), TENANT_ID);
+      eventPayload, AUTHORITY_DELETE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityDeletedTopic(), AUTHORITY_DELETE_ID.toString(), event,
-        getDataImportKafkaHeaders(AUTHORITY_DELETE_ID.toString()));
+      getDataImportKafkaHeaders(AUTHORITY_DELETE_ID.toString()));
 
     // check sent DI completed event
     var received = getReceivedEvent();
@@ -119,17 +126,46 @@ class DataImportDeleteEventListenerIT extends IntegrationTestBase {
 
   @SneakyThrows
   @Test
+  void shouldHandleDataImportAuthorityDeletedEvent_positive_shouldSkipEventIfJobCanceled() {
+    // create authority
+    var authority = authority(0, 0);
+    authority.setId(AUTHORITY_DELETE_ID);
+    databaseHelper.saveAuthority(TENANT_ID, authority);
+
+    // send DI job canceled event
+    sendKafkaMessage(diJobCanceledTopic(), DI_JOB_ID, new Object(),
+      getDataImportCanceledJobKafkaHeaders(TENANT_ID, DI_JOB_ID));
+
+    awaitUntilAsserted(() -> assertTrue(dataImportCanceledJobService.isJobCanceled(DI_JOB_ID, TENANT_ID)));
+
+    // send DI authority created event
+    var eventPayload = readFile(DI_DELETE_AUTHORITY_PATH);
+    var event = TestDataUtils.diAuthorityEvent(DI_DELETED_TYPE,
+      eventPayload, AUTHORITY_DELETE_ID.toString(), TENANT_ID);
+    sendKafkaMessage(dataImportAuthorityDeletedTopic(), AUTHORITY_DELETE_ID.toString(), event,
+      getDataImportKafkaHeaders(AUTHORITY_DELETE_ID.toString()));
+
+    // Allow time for the Kafka consumer to run; assert the record never deleted
+    await().during(5, SECONDS)
+      .pollDelay(ONE_SECOND)
+      .pollInterval(ONE_SECOND)
+      .atMost(10, SECONDS)
+      .untilAsserted(() -> doGet(authorityEndpoint(AUTHORITY_DELETE_ID)));
+  }
+
+  @SneakyThrows
+  @Test
   void shouldHandleDataImportAuthorityDeletedEvent_negative_noAuthorityToDelete() {
     // check authority does not exist
     doGet(authorityEndpoint())
-        .andExpect(jsonPath("totalRecords", is(0)));
+      .andExpect(jsonPath("totalRecords", is(0)));
 
     // send DI authority deleted event for non-existing authority
     var eventPayload = readFile(DI_DELETE_AUTHORITY_PATH);
     var event = TestDataUtils.diAuthorityEvent(DI_DELETED_TYPE,
-        eventPayload, AUTHORITY_DELETE_ID.toString(), TENANT_ID);
+      eventPayload, AUTHORITY_DELETE_ID.toString(), TENANT_ID);
     sendKafkaMessage(dataImportAuthorityDeletedTopic(), AUTHORITY_DELETE_ID.toString(), event,
-        getDataImportKafkaHeaders(AUTHORITY_DELETE_ID.toString()));
+      getDataImportKafkaHeaders(AUTHORITY_DELETE_ID.toString()));
 
     // check sent DI error event
     var received = getReceivedEvent();

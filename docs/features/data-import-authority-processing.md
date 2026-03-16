@@ -1,14 +1,14 @@
 ---
 feature_id: data-import-authority-processing
 title: Data Import Authority Record Processing
-updated: 2026-03-12
+updated: 2026-03-13
 ---
 
 # Data Import Authority Record Processing
 
 ## What it does
 
-When MARC authority records are created, modified, or deleted through a FOLIO data-import job, this module receives the corresponding Kafka events and synchronizes those changes into authority storage — creating, updating, or deleting authority records as appropriate. When a data-import job is cancelled, the module records the job ID so that in-flight events belonging to that job can be identified by the module.
+When MARC authority records are created, modified, or deleted through a FOLIO data-import job, this module receives the corresponding Kafka events and synchronizes those changes into authority storage — creating, updating, or deleting authority records as appropriate. When a data-import job is cancelled, the module records the job ID in a local cache so that any subsequent MARC authority events belonging to that job are silently dropped before processing begins.
 
 ## Why it exists
 
@@ -23,7 +23,7 @@ Authority record data originates in SRS (Source Record Storage) via data-import 
 
 ### Event processing — MARC authority events
 
-- **When processed**: in batches, grouped by tenant; all records in a batch are processed concurrently and the listener waits for all to complete before committing
+- **When processed**: in batches, grouped by tenant; all records in a batch are processed concurrently and the listener waits for all to complete before committing; records whose `jobExecutionId` matches a cancelled job are dropped by the record filter **before** the listener is invoked (they are not processed and not retried)
 - **Event types handled**:
   - `DI_SRS_MARC_AUTHORITY_RECORD_CREATED` — triggers authority creation
   - `DI_SRS_MARC_AUTHORITY_RECORD_MODIFIED_READY_FOR_POST_PROCESSING` — triggers authority update
@@ -43,6 +43,7 @@ Authority record data originates in SRS (Source Record Storage) via data-import 
 - **Update**: the existing authority is fetched first to carry its `version` field forward (optimistic locking)
 - **Delete**: the authority is deleted by the `AUTHORITY_RECORD_ID` value stored in the event context
 - **Cancelled jobs**: a job cancellation is stored per-tenant with a composite key `tenantId:jobId`; the cache is populated independently of MARC event consumption so that all module instances can reference it
+- **Cancelled job filtering**: MARC authority events whose `jobExecutionId` matches a cancelled job in the local cache are dropped by the record filter before reaching the listener; they are not processed and not retried; if a batch is entirely filtered out the listener is not invoked
 
 ## Caching
 

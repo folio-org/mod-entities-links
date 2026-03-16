@@ -17,6 +17,7 @@
 * Pass userId to folioExecutionContext on authority update propagation ([MODELINKS-364](https://folio-org.atlassian.net/browse/MODELINKS-364))
 * Move consumption of authority DI events from mod-inventory ([APPAUTHREC-3](https://folio-org.atlassian.net/browse/APPAUTHREC-3))
 * Subscribe to event indicating import job cancellation and cache jobs IDs ([MODELINKS-399](https://folio-org.atlassian.net/browse/MODELINKS-399))
+* Filter data import events for a canceled job ([MODELINKS-400](https://folio-org.atlassian.net/browse/MODELINKS-400))
 * Create migration script for entities links: drop duplicate links/authorities/sats ([MODELINKS-388](https://folio-org.atlassian.net/browse/MODELINKS-388))
 
 ### Bug fixes

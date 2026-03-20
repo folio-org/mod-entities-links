@@ -19,6 +19,7 @@
 * Subscribe to event indicating import job cancellation and cache jobs IDs ([MODELINKS-399](https://folio-org.atlassian.net/browse/MODELINKS-399))
 * Filter data import events for a canceled job ([MODELINKS-400](https://folio-org.atlassian.net/browse/MODELINKS-400))
 * Create migration script for entities links: drop duplicate links/authorities/sats ([MODELINKS-388](https://folio-org.atlassian.net/browse/MODELINKS-388))
+* Add authorities integration with FQM ([MODELINKS-373](https://folio-org.atlassian.net/browse/MODELINKS-373))
 
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))

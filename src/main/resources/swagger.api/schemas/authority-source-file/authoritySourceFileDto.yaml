@@ -5,41 +5,63 @@ properties:
     description: Unique ID of the Authority source file; a UUID
     type: string
     format: uuid
+    x-fqm-value-getter: ":sourceAlias.id"
   name:
     type: string
     description: Authority source file name
+    x-fqm-essential: true
+    x-fqm-id-column-name: "id"
+    x-fqm-visible-by-default: true
+    x-fqm-value-getter: ":sourceAlias.name"
+    x-fqm-source: {
+      "entityTypeId": "c788d4b8-2a7e-5d6c-8d6b-c548f95455e5",
+      "columnName": "name"
+    }
+    x-fqm-value-source-api: {
+      "path": "authority-source-files",
+      "valueJsonPath": "$.authoritySourceFiles.*.id",
+      "labelJsonPath": "$.authoritySourceFiles.*.name"
+    }
   codes:
     type: array
     description: List of identifying prefix
     items:
       type: string
       description: identifying prefix, i.e. 'n', 'D', 'fst'
+    x-fqm-ignore: true
   type:
     type: string
     description: Type of authority records stored in source file
+    x-fqm-ignore: true
   baseUrl:
     type: string
     format: url
     description: Base URL of the source file origin
+    x-fqm-ignore: true
   source:
     type: string
     description: label indicating where the authority source file entry originates from, i.e. 'folio' or 'local'
     enum:
       - folio
       - local
+    x-fqm-ignore: true
   selectable:
     type: boolean
+    x-fqm-ignore: true
   hridManagement:
     description: Identifies HRID management properties
     type: object
+    x-fqm-ignore: true
     properties:
       startNumber:
         type: integer
   _version:
     type: integer
     description: Record version for optimistic locking
+    x-fqm-ignore: true
   metadata:
     $ref: '../common/metadata.yaml'
+    x-fqm-ignore: true
 required:
   - name
   - codes

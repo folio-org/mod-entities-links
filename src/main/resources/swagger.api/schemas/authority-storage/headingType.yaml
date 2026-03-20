@@ -1,0 +1,37 @@
+description: Heading type
+type: string
+enum:
+  - personalName
+  - personalNameTitle
+  - corporateName
+  - corporateNameTitle
+  - meetingName
+  - meetingNameTitle
+  - uniformTitle
+  - namedEvent
+  - topicalTerm
+  - geographicName
+  - genreTerm
+  - chronTerm
+  - mediumPerfTerm
+  - generalSubdivision
+  - geographicSubdivision
+  - chronSubdivision
+  - formSubdivision
+  - personalNameTrunc
+  - personalNameTitleTrunc
+  - corporateNameTrunc
+  - corporateNameTitleTrunc
+  - meetingNameTrunc
+  - meetingNameTitleTrunc
+  - uniformTitleTrunc
+  - topicalTermTrunc
+  - geographicNameTrunc
+  - genreTermTrunc
+  - namedEventTrunc
+  - chronTermTrunc
+  - mediumPerfTermTrunc
+  - generalSubdivisionTrunc
+  - geographicSubdivisionTrunc
+  - chronSubdivisionTrunc
+  - formSubdivisionTrunc

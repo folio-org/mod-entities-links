@@ -5,11 +5,20 @@ properties:
     description: ID of the type of note
     type: string
     format: uuid
+    x-fqm-value-getter: "(SELECT array_agg(elems.value->>'noteTypeId') FROM jsonb_array_elements(:sourceAlias.notes) AS elems)"
+    x-fqm-source: {
+      entityTypeId: '369af782-637c-5ab7-af1f-f66a3e45acad',
+      columnName: 'name'
+    }
   note:
     type: string
     description: Text content of the note
+    x-fqm-value-getter: "(SELECT array_agg(elems.value->>'note') FROM jsonb_array_elements(:sourceAlias.notes) AS elems)"
+    x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'note')) FROM jsonb_array_elements(:sourceAlias.notes) AS elems)"
   staffOnly:
     type: boolean
+    x-fqm-value-getter: "(SELECT array_agg(elems.value->>'staffOnly') FROM jsonb_array_elements(:sourceAlias.notes) AS elems)"
+    x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'staffOnly')) FROM jsonb_array_elements(:sourceAlias.notes) AS elems)"
 required:
   - note
   - noteTypeId

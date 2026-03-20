@@ -5,15 +5,21 @@ properties:
     description: Date and time when the record was created
     type: string
     format: date-time
+    x-fqm-value-getter: ":sourceAlias.created_date"
+    x-fqm-value-function: "(:value)::timestamp"
   createdByUserId:
     description: ID of the user who created the record (when available)
     type: string
     format: uuid
+    x-fqm-value-getter: ":sourceAlias.created_by_user_id"
   updatedDate:
     description: Date and time when the record was last updated
     type: string
     format: date-time
+    x-fqm-value-getter: ":sourceAlias.updated_date"
+    x-fqm-value-function: "(:value)::timestamp"
   updatedByUserId:
     description: ID of the user who last updated the record (when available)
     type: string
     format: uuid
+    x-fqm-value-getter: ":sourceAlias.updated_by_user_id"

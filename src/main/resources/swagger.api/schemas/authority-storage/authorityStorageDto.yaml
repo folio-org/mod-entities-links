@@ -1,0 +1,125 @@
+description: An authority storage record aligned with the authority DB table
+type: object
+properties:
+  id:
+    description: Authority UUID
+    type: string
+    format: uuid
+    x-fqm-value-getter: ":sourceAlias.id"
+    x-fqm-visible-by-default: true
+  naturalId:
+    type: string
+    description: Authority natural ID
+    maxLength: 250
+    x-fqm-value-getter: ":sourceAlias.natural_id"
+    x-fqm-visible-by-default: true
+  sourceFileId:
+    description: Authority source file UUID
+    type: string
+    format: uuid
+    x-fqm-visibility: 'hidden-non-queryable'
+    x-fqm-value-getter: ":sourceAlias.source_file_id"
+    x-fqm-joins-to-raw: [
+      {
+        "targetId": "c788d4b8-2a7e-5d6c-8d6b-c548f95455e5",
+        "targetField": "id",
+        "type": "equality-cast-uuid",
+        "direction": "left"
+      },
+    ]
+  source:
+    type: string
+    description: The metadata source of the underlying record
+    maxLength: 250
+    x-fqm-value-getter: ":sourceAlias.source"
+  heading:
+    type: string
+    description: The authority heading value
+    maxLength: 2500
+    x-fqm-value-getter: "lower(:sourceAlias.heading)"
+    x-fqm-value-function: "lower(:value)"
+    x-fqm-visible-by-default: true
+  headingType:
+    type: string
+    description: The type of the authority heading
+    $ref: './headingType.yaml'
+    x-fqm-value-getter: ":sourceAlias.heading_type"
+    x-fqm-visible-by-default: true
+  _version:
+    type: integer
+    description: Record version for optimistic locking
+    x-fqm-ignore: true
+  subjectHeadingCode:
+    type: string
+    description: Subject heading code (single character, e.g. 'a' for LC subject headings)
+    maxLength: 1
+    x-fqm-value-getter: ":sourceAlias.subject_heading_code"
+  sftHeadings:
+    type: array
+    description: See from tracing headings
+    x-fqm-value-getter: "(:sourceAlias.sft_headings)::text"
+    items:
+      type: object
+      properties:
+        heading:
+          type: string
+          description: Heading value
+          x-fqm-value-getter: "(SELECT array_agg(elems.value->>'heading') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
+          x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'heading')) FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
+        headingType:
+          type: string
+          description: Heading type
+          $ref: './headingType.yaml'
+          x-fqm-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
+          x-fqm-value-function: ":value"
+          x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
+        relationshipType:
+          type: string
+          description: Relationship type
+          enum: [BROADER_TERM, NARROWER_TERM, EARLIER_HEADING, LATER_HEADING]
+          x-fqm-value-getter: "(SELECT array_agg(elems.value->>'relationshipType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
+          x-fqm-value-function: ":value"
+          x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'relationshipType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
+  saftHeadings:
+    type: array
+    description: See also from tracing headings
+    x-fqm-value-getter: "(:sourceAlias.saft_headings)::text"
+    items:
+      type: object
+      properties:
+        heading:
+          type: string
+          description: Heading value
+          x-fqm-value-getter: "(SELECT array_agg(elems.value->>'heading') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
+          x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'heading')) FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
+        headingType:
+          type: string
+          description: Heading type
+          $ref: './headingType.yaml'
+          x-fqm-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
+          x-fqm-value-function: ":value"
+          x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
+        relationshipType:
+          type: string
+          description: Relationship type
+          enum: [BROADER_TERM, NARROWER_TERM, EARLIER_HEADING, LATER_HEADING]
+          x-fqm-value-getter: "(SELECT array_agg(elems.value->>'relationshipType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
+          x-fqm-value-function: ":value"
+          x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'relationshipType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
+  identifiers:
+    type: array
+    description: An extensible set of name-value pairs of identifiers associated with the resource
+    x-fqm-value-getter: "(:sourceAlias.identifiers)::text"
+    items:
+      $ref: './authorityDtoIdentifier.yaml'
+  notes:
+    type: array
+    description: Notes (e.g. nonpublic general note)
+    x-fqm-value-getter: "(SELECT jsonb_agg(record.value || jsonb_build_object('noteType', note_type.name) ORDER BY record.value ->> 'noteTypeId') FROM jsonb_array_elements((:sourceAlias.notes)) record(value) LEFT JOIN ${tenant_id}_mod_fqm_manager.src__authorities__entities_links__authority_note_type note_type ON (record.value ->> 'noteTypeId') = note_type.id::text)::text"
+    items:
+      $ref: './authorityDtoNote.yaml'
+  metadata:
+    $ref: '../common/metadata.yaml'
+required:
+  - naturalId
+  - source

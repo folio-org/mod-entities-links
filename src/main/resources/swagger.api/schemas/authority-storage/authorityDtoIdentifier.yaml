@@ -4,10 +4,13 @@ properties:
   value:
     type: string
     description: Resource identifier value
+    x-fqm-value-getter: "(SELECT array_agg(elems.value->>'value') FROM jsonb_array_elements(:sourceAlias.identifiers) AS elems)"
+    x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'value')) FROM jsonb_array_elements(:sourceAlias.identifiers) AS elems)"
   identifierTypeId:
     description: Resource identifier type (e.g. Control number, LCCN, Other standard identifier, System control number)
     type: string
     format: uuid
+    x-fqm-value-getter: "(SELECT array_agg(elems.value->>'identifierTypeId') FROM jsonb_array_elements(:sourceAlias.identifiers) AS elems)"
 required:
   - value
   - identifierTypeId

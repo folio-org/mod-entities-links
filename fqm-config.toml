@@ -1,0 +1,59 @@
+[metadata]
+team = "spitfire"
+domain = "authorities"
+module = "mod-entities-links"
+
+[[sources]]
+name = "authority"
+table = "authority"
+
+[[entityTypes]]
+name = "authority"
+source = "authority"
+schema = "src/main/resources/swagger.api/schemas/authority-storage/authorityStorageDto.yaml"
+permissions = ["inventory-storage.authorities.collection.get"]
+sort = ["id", "ASC"]
+private = true
+includeJsonbField = false
+
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-essential = true
+x-fqm-visibility = 'hidden'
+x-fqm-joins-to-raw = [
+    { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left' }, # simple_user
+    { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left' } # simple_FOLIO_user
+]
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-essential = true
+x-fqm-visibility = 'hidden'
+x-fqm-joins-to-raw = [
+    { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left' }, # simple_user
+    { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left' } # simple_FOLIO_user
+]
+
+[[sources]]
+name = "authority-note-type"
+table = "authority_note_type"
+
+[[entityTypes]]
+name = "authority-note-type"
+source = "authority-note-type"
+schema = "src/main/resources/swagger.api/schemas/authority-note-type/authorityNoteTypeDto.yaml"
+permissions = ["inventory-storage.authority-note-types.collection.get"]
+sort = ["id", "ASC"]
+private = true
+includeJsonbField = false
+
+[[sources]]
+name = "authority-source-file"
+table = "authority_source_file"
+
+[[entityTypes]]
+name = "authority-source-file"
+source = "authority-source-file"
+schema = "src/main/resources/swagger.api/schemas/authority-source-file/authoritySourceFileDto.yaml"
+permissions = ["inventory-storage.authority-source-files.collection.get"]
+sort = ["id", "ASC"]
+private = true
+includeJsonbField = false

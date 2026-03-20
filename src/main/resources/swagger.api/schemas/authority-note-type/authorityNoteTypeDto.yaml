@@ -5,14 +5,18 @@ properties:
     description: Unique ID of the Authority note type; a UUID
     type: string
     format: uuid
+    x-fqm-value-getter: ":sourceAlias.id"
   name:
     type: string
     description: Name of the Authority note type
+    x-fqm-value-getter: ":sourceAlias.name"
   source:
     type: string
     description: label indicating where the Authority note type entry originates from, i.e. 'folio' or 'local'
+    x-fqm-ignore: true
   metadata:
     $ref: '../common/metadata.yaml'
+    x-fqm-ignore: true
 required:
   - name
   - source

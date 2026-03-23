@@ -37,7 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Primary
 @Service("authorityService")
 @RequiredArgsConstructor
-public class AuthorityService implements AuthorityServiceI<Authority> {
+public class AuthorityService {
 
   private final AuthorityRepository repository;
   private final AuthorityJdbcRepository jdbcRepository;
@@ -45,7 +45,6 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
   private final UserTenantsService userTenantsService;
   private final FolioExecutionContext folioExecutionContext;
 
-  @Override
   public Page<Authority> getAll(Integer offset, Integer limit, String cql) {
     log.debug("getAll:: Attempts to find all Authority by [offset: {}, limit: {}, cql: {}]", offset, limit,
       cql);
@@ -57,7 +56,6 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
     return repository.findByCql(cql, new OffsetRequest(offset, limit));
   }
 
-  @Override
   public Page<Authority> getAllDeleted(Integer offset, Integer limit, String cql) {
     log.debug("getAllDeleted:: Attempts to find all deleted Authority by [offset: {}, limit: {}, cql: {}]",
       offset, limit, cql);
@@ -69,7 +67,6 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
     return repository.findDeletedByCql(cql, new OffsetRequest(offset, limit));
   }
 
-  @Override
   public Page<UUID> getAllIds(Integer offset, Integer limit, String cql) {
     log.debug("getAll:: Attempts to find all Authority IDs by [offset: {}, limit: {}, cql: {}]",
       offset, limit, cql);
@@ -80,7 +77,6 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
     return repository.findIdsByCql(cql, new OffsetRequest(offset, limit));
   }
 
-  @Override
   public Page<UUID> getAllDeletedIds(Integer offset, Integer limit, String cql) {
     log.debug("getAllDeletedIds:: Attempts to find all deleted Authority IDs by [offset: {}, limit: {}, cql: {}]",
       offset, limit, cql);
@@ -92,31 +88,34 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
     return repository.findDeletedIdsByCql(cql, new OffsetRequest(offset, limit));
   }
 
-  @Override
   public Map<UUID, Authority> getAllByIds(Collection<UUID> ids) {
     return repository.findAllByIdInAndDeletedFalse(ids).stream()
       .collect(Collectors.toMap(Authority::getId, Function.identity()));
   }
 
-  @Override
   public Authority getById(UUID id) {
     log.debug("getById:: Loading Authority by ID [id: {}]", id);
 
     return repository.findByIdAndDeletedFalse(id).orElseThrow(() -> new AuthorityNotFoundException(id));
   }
 
-  @Override
   public Authority create(Authority entity) {
     return createInner(entity);
   }
 
-  @Override
   @Transactional
-  public AuthorityUpdateResult update(Authority modified, boolean forced) {
-    return updateInner(modified, forced);
+  public AuthorityUpdateResult update(Authority modified) {
+    log.debug("update:: Attempting to update Authority [authority: {}]", modified);
+
+    var existing = validateOnUpdateAndGetExisting(modified.getId(), modified);
+    var detachedExisting = new Authority(existing);
+
+    copyModifiableFields(existing, modified);
+
+    var saved = repository.saveAndFlush(existing);
+    return new AuthorityUpdateResult(detachedExisting, saved);
   }
 
-  @Override
   @Transactional
   public List<AuthorityUpdateResult> upsert(List<Authority> authorities) {
     var existingRecordsMap = getAllByIds(authorities.stream().map(Authority::getId).toList());
@@ -142,16 +141,15 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
       .toList();
   }
 
-  @Override
-  @Transactional
-  public void deleteById(UUID id, boolean forced) {
-    deleteByIdInner(id, forced);
-  }
-
-  @Override
   @Transactional
   public Authority deleteById(UUID id) {
-    return deleteByIdInner(id, false);
+    log.debug("deleteById:: Attempt to delete Authority by [id: {}]", id);
+
+    var existed = repository.findByIdAndDeletedFalse(id)
+      .orElseThrow(() -> new AuthorityNotFoundException(id));
+    existed.setDeleted(true);
+
+    return repository.save(existed);
   }
 
   /**
@@ -159,7 +157,6 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
    *
    * @param ids collection of authority record ids of {@link UUID} type
    */
-  @Override
   @Transactional
   public void deleteByIds(Collection<UUID> ids) {
     repository.deleteAllByIdInBatch(ids);
@@ -206,28 +203,6 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
     initId(entity);
 
     return repository.save(entity);
-  }
-
-  protected AuthorityUpdateResult updateInner(Authority modified, boolean forced) {
-    log.debug("update:: Attempting to update Authority [authority: {}]", modified);
-
-    var existing = validateOnUpdateAndGetExisting(modified.getId(), modified);
-    var detachedExisting = new Authority(existing);
-
-    copyModifiableFields(existing, modified);
-
-    var saved = repository.saveAndFlush(existing);
-    return new AuthorityUpdateResult(detachedExisting, saved);
-  }
-
-  protected Authority deleteByIdInner(UUID id, boolean forced) {
-    log.debug("deleteById:: Attempt to delete Authority by [id: {}]", id);
-
-    var existed = repository.findByIdAndDeletedFalse(id)
-      .orElseThrow(() -> new AuthorityNotFoundException(id));
-    existed.setDeleted(true);
-
-    return repository.save(existed);
   }
 
   private Map<UUID, Boolean> contructExistenceMap(Set<UUID> ids, List<UUID> existingIds) {

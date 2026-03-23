@@ -24,16 +24,13 @@ import org.folio.entlinks.service.authority.AuthoritiesBulkContext;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.authority.AuthorityS3Service;
 import org.folio.entlinks.service.authority.AuthorityService;
-import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.settings.TenantSetting;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Parameter;
 import org.folio.tenant.domain.dto.Setting;
 import org.folio.tenant.domain.dto.SettingCollection;
 import org.folio.tenant.settings.service.TenantSettingsService;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,20 +47,16 @@ public class AuthorityServiceDelegate {
   private final AuthorityRepository authorityRepository;
   private final TenantSettingsService tenantSettingsService;
 
-  public AuthorityServiceDelegate(@Qualifier("authorityService") AuthorityService service,
-                                  @Qualifier("consortiumAuthorityService") AuthorityService consortiumService,
-                                  AuthorityMapper mapper, FolioExecutionContext context,
+  public AuthorityServiceDelegate(AuthorityService service,
+                                  AuthorityMapper mapper,
                                   AuthorityDomainEventPublisher eventPublisher,
                                   AuthorityS3Service authorityS3Service,
                                   LocalStorageProperties localStorageProperties,
-                                  UserTenantsService userTenantsService,
                                   AuthorityDataStatService dataStatService,
                                   AuthorityRepository authorityRepository,
                                   TenantSettingsService tenantSettingsService) {
     this.dataStatService = dataStatService;
-    this.service = userTenantsService.getCentralTenant(context.getTenantId()).isEmpty()
-                   ? service
-                   : consortiumService;
+    this.service = service;
     this.mapper = mapper;
     this.eventPublisher = eventPublisher;
     this.authorityS3Service = authorityS3Service;
@@ -106,7 +99,7 @@ public class AuthorityServiceDelegate {
         List.of(new Parameter("id").value(String.valueOf(authorityDto.getId()))));
     }
     var modifiedEntity = mapper.toEntity(authorityDto);
-    var updateResult = service.update(modifiedEntity, false);
+    var updateResult = service.update(modifiedEntity);
     updateConsumer().accept(updateResult.newEntity(), updateResult.oldEntity());
   }
 

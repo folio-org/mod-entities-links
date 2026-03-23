@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthorityIdentifierType;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
@@ -26,7 +25,6 @@ public class DatabaseHelper {
   public static final String AUTHORITY_SOURCE_FILE_SOURCE_TYPE = "authority_source_file_source";
   public static final String AUTHORITY_SOURCE_FILE_CODE_TABLE = "authority_source_file_code";
   public static final String AUTHORITY_TABLE = "authority";
-  public static final String AUTHORITY_ARCHIVE_TABLE = "authority_archive";
   public static final String AUTHORITY_REINDEX_JOB_TABLE = "reindex_job";
   public static final String INSTANCE_AUTHORITY_LINKING_RULE = "instance_authority_linking_rule";
 
@@ -144,14 +142,14 @@ public class DatabaseHelper {
     jdbcTemplate.update(sql, naturalId, authorityId);
   }
 
-  public void updateAuthorityArchiveUpdateDate(String tenant, UUID authorityArchiveId, Timestamp updatedDate) {
-    var sql = "UPDATE " + getDbPath(tenant, AUTHORITY_ARCHIVE_TABLE)
+  public void updateAuthorityUpdatedDate(String tenant, UUID authorityId, Timestamp updatedDate) {
+    var sql = "UPDATE " + getDbPath(tenant, AUTHORITY_TABLE)
         + " SET updated_date = ? where id = ?";
-    jdbcTemplate.update(sql, updatedDate, authorityArchiveId);
+    jdbcTemplate.update(sql, updatedDate, authorityId);
   }
 
-  public String getAuthorityArchive(String tenant, UUID id) {
-    var sql = "SELECT * FROM " + getDbPath(tenant, AUTHORITY_ARCHIVE_TABLE) + " WHERE id = '" + id + "'";
+  public String getAuthority(String tenant, UUID id) {
+    var sql = "SELECT * FROM " + getDbPath(tenant, AUTHORITY_TABLE) + " WHERE id = '" + id + "'";
     return jdbcTemplate.query(sql, rs -> {
       if (rs.next()) {
         return rs.getString("id");
@@ -181,18 +179,6 @@ public class DatabaseHelper {
         entity.isDeleted(), sourceFileId);
   }
 
-  public void saveAuthorityArchive(String tenant, AuthorityArchive entity) {
-    var sql = "INSERT INTO " + getDbPath(tenant, AUTHORITY_ARCHIVE_TABLE)
-        +  " (id, _version, natural_id, source, heading, heading_type, subject_heading_code, created_date, "
-        + "created_by_user_id, updated_date, updated_by_user_id, deleted, source_file_id) "
-        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
-    var sourceFileId = Optional.ofNullable(entity.getAuthoritySourceFile())
-        .map(AuthoritySourceFile::getId)
-        .orElse(null);
-    jdbcTemplate.update(sql, entity.getId(), entity.getVersion(), entity.getNaturalId(), entity.getSource(),
-        entity.getHeading(), entity.getHeadingType(), entity.getSubjectHeadingCode(), entity.getCreatedDate(),
-        entity.getCreatedByUserId(), entity.getUpdatedDate(), entity.getUpdatedByUserId(),
-        true, sourceFileId);
   }
 
   public AuthorityNoteType getAuthorityNoteTypeById(UUID id, String tenant) {

@@ -55,6 +55,40 @@ public abstract class AuthorityBaseCqlRepositoryImpl<T extends AuthorityBase> im
     return PageableExecutionUtils.getPage(resultList, pageable, () -> count(countBy));
   }
 
+  @Override
+  public Page<T> findDeletedByCql(String cqlQuery, Pageable pageable) {
+    var collectBy = deletedIs(Boolean.TRUE).and(cql2JpaCriteria.createCollectSpecification(cqlQuery));
+    var countBy = deletedIs(Boolean.TRUE).and(cql2JpaCriteria.createCountSpecification(cqlQuery));
+    var criteria = cql2JpaCriteria.toCollectCriteria(collectBy);
+
+    List<T> resultList = em
+      .createQuery(criteria)
+      .setFirstResult((int) pageable.getOffset())
+      .setMaxResults(pageable.getPageSize())
+      .getResultList();
+    return PageableExecutionUtils.getPage(resultList, pageable, () -> count(countBy));
+  }
+
+  @Override
+  public Page<UUID> findDeletedIdsByCql(String cqlQuery, Pageable pageable) {
+    var collectBy = deletedIs(Boolean.TRUE).and(cql2JpaCriteria.createCollectSpecification(cqlQuery));
+    var countBy = deletedIs(Boolean.TRUE).and(cql2JpaCriteria.createCountSpecification(cqlQuery));
+
+    var cb = em.getCriteriaBuilder();
+    var query = cb.createQuery(UUID.class);
+    var root = query.from(getClassType());
+
+    query.select(root.get(AuthorityBase.ID_COLUMN));
+    query.where(collectBy.toPredicate(root, query, cb));
+
+    List<UUID> resultList = em
+      .createQuery(query)
+      .setFirstResult((int) pageable.getOffset())
+      .setMaxResults(pageable.getPageSize())
+      .getResultList();
+    return PageableExecutionUtils.getPage(resultList, pageable, () -> count(countBy));
+  }
+
   protected abstract Class<T> getClassType();
 
   protected abstract Boolean deleted();

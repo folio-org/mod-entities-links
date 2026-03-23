@@ -20,7 +20,6 @@ import org.folio.entlinks.domain.dto.AuthoritySourceFileHridDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
-import org.folio.entlinks.exception.AuthorityArchiveConstraintException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.entlinks.service.authority.AuthoritySourceFileDomainEventPublisher;
@@ -44,7 +43,6 @@ public class AuthoritySourceFileServiceDelegate {
 
   private static final String URL_PROTOCOL_PATTERN = "^(https?://www\\.|https?://|www\\.)";
   private static final String AUTHORITY_TABLE_NAME = "authority";
-  private static final String AUTHORITY_ARCHIVE_TABLE_NAME = "authority_archive";
 
   private final @Qualifier("authoritySourceFileService") AuthoritySourceFileService service;
   private final AuthoritySourceFileMapper mapper;
@@ -104,11 +102,6 @@ public class AuthoritySourceFileServiceDelegate {
     if (anyAuthoritiesExistForSourceFile(entity)) {
       throw new RequestBodyValidationException(
         "Unable to delete. Authority source file has referenced authorities", Collections.emptyList());
-    }
-
-    if (anyReferenceForSourceFile(entity)) {
-      throw new AuthorityArchiveConstraintException(
-        "Unable to delete. Authority source file has referenced authority archives");
     }
 
     if (entity.getSequenceName() != null) {
@@ -171,10 +164,6 @@ public class AuthoritySourceFileServiceDelegate {
       throw new RequestBodyValidationException(
         "Unable to patch. Authority source file source is FOLIO or it has authority references", errorParameters);
     }
-  }
-
-  public boolean anyReferenceForSourceFile(AuthoritySourceFile sourceFile) {
-    return anyDataExistForSourceFile(sourceFile.getId(), AUTHORITY_ARCHIVE_TABLE_NAME);
   }
 
   public boolean anyAuthoritiesExistForSourceFile(AuthoritySourceFile sourceFile) {

@@ -9,7 +9,6 @@ import static org.folio.entlinks.integration.dto.event.DomainEventType.CREATE;
 import static org.folio.entlinks.integration.dto.event.DomainEventType.DELETE;
 import static org.folio.entlinks.integration.dto.event.DomainEventType.UPDATE;
 import static org.folio.entlinks.service.settings.TenantSetting.ARCHIVES_EXPIRATION_PERIOD;
-import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
 import static org.folio.support.KafkaTestUtils.createAndStartTestConsumer;
@@ -58,7 +57,6 @@ import org.awaitility.Durations;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.exception.AuthoritiesRequestNotSupportedMediaTypeException;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
@@ -100,7 +98,6 @@ import tools.jackson.core.JacksonException;
   DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE,
   AUTHORITY_DATA_STAT_TABLE,
   AUTHORITY_TABLE,
-  AUTHORITY_ARCHIVE_TABLE,
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class AuthorityControllerIT extends IntegrationTestBase {
 
@@ -204,7 +201,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var headers = defaultHeaders();
     headers.setAccept(List.of(MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON));
     var expectedContent = createdEntities.stream()
-      .map(AuthorityArchive::getId)
+      .map(Authority::getId)
       .map(UUID::toString)
       .collect(Collectors.joining("\n"));
 
@@ -328,13 +325,13 @@ class AuthorityControllerIT extends IntegrationTestBase {
     archive2.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE).plus(2, ChronoUnit.DAYS)));
     var archive3 = authorityArchive(2, 1);
     archive3.setUpdatedDate(Timestamp.from(Instant.parse(UPDATED_DATE).plus(4, ChronoUnit.DAYS)));
-    databaseHelper.saveAuthorityArchive(TENANT_ID, archive1);
-    databaseHelper.saveAuthorityArchive(TENANT_ID, archive2);
-    databaseHelper.saveAuthorityArchive(TENANT_ID, archive3);
+    databaseHelper.saveAuthority(TENANT_ID, archive1);
+    databaseHelper.saveAuthority(TENANT_ID, archive2);
+    databaseHelper.saveAuthority(TENANT_ID, archive3);
     var archive4 = authorityArchive(3, 0);
     archive4.setAuthoritySourceFile(null);
     archive4.setUpdatedDate(Timestamp.from(Instant.parse(UPDATED_DATE).minus(2, ChronoUnit.DAYS)));
-    databaseHelper.saveAuthorityArchive(TENANT_ID, archive4);
+    databaseHelper.saveAuthority(TENANT_ID, archive4);
 
     var cqlQuery = "(" + query + ")sortby createdDate";
     doGet(authorityEndpoint() + "?query={cql}&deleted=true", cqlQuery)
@@ -640,7 +637,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     verifyConsumedAuthorityEvent(event, DELETE, expectedDto.version(1));
 
     awaitUntilAsserted(() ->
-      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID,
+      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_TABLE, TENANT_ID,
         String.format("id = '%s' AND deleted = true", authority.getId()))));
     awaitUntilAsserted(() ->
       assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID)));
@@ -667,12 +664,13 @@ class AuthorityControllerIT extends IntegrationTestBase {
     doDelete(authorityEndpoint(authority2.getId()));
     getConsumedEvent();
     awaitUntilAsserted(() ->
-      assertEquals(2, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID, "deleted = true")));
-    awaitUntilAsserted(() -> assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID)));
+      assertEquals(2, databaseHelper.countRowsWhere(AUTHORITY_TABLE, TENANT_ID, "deleted = true")));
+    awaitUntilAsserted(() -> assertEquals(0, databaseHelper.countRowsWhere(AUTHORITY_TABLE, TENANT_ID,
+      "deleted = false")));
 
     var dateInPast = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS));
-    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority1.getId(), dateInPast);
-    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority2.getId(), dateInPast);
+    databaseHelper.updateAuthorityUpdatedDate(TENANT_ID, authority1.getId(), dateInPast);
+    databaseHelper.updateAuthorityUpdatedDate(TENANT_ID, authority2.getId(), dateInPast);
 
     verifyExpiredArchivesDeleted(authority1, content1, content2);
   }
@@ -734,7 +732,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     verifyConsumedAuthorityEvent(consumedEvent, DELETE, dto);
     assertEquals(AuthorityDeleteEventSubType.HARD_DELETE, consumedEvent.value().getDeleteEventSubType());
-    assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, TENANT_ID));
+    assertEquals(0, databaseHelper.countRowsWhere(AUTHORITY_TABLE, TENANT_ID, "deleted = true"));
   }
 
   private void assertAuthorityCollectionFields(AuthorityDto expected, AuthorityDto actual) {
@@ -780,14 +778,14 @@ class AuthorityControllerIT extends IntegrationTestBase {
     return List.of(entity1, entity2, entity3);
   }
 
-  private List<AuthorityArchive> createAuthorityArchives() {
+  private List<Authority> createAuthorityArchives() {
     createSourceFile(0);
     var entity1 = authorityArchive(0, 0);
     var entity2 = authorityArchive(1, 0);
     var entity3 = authorityArchive(2, 0);
-    databaseHelper.saveAuthorityArchive(TENANT_ID, entity1);
-    databaseHelper.saveAuthorityArchive(TENANT_ID, entity2);
-    databaseHelper.saveAuthorityArchive(TENANT_ID, entity3);
+    databaseHelper.saveAuthority(TENANT_ID, entity1);
+    databaseHelper.saveAuthority(TENANT_ID, entity2);
+    databaseHelper.saveAuthority(TENANT_ID, entity3);
 
     return List.of(entity1, entity2, entity3);
   }

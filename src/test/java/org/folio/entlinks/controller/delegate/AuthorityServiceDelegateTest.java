@@ -6,10 +6,8 @@ import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -135,7 +133,7 @@ class AuthorityServiceDelegateTest {
 
     when(mapper.toEntity(modificationDto)).thenReturn(modifiedEntity);
     when(mapper.toDto(any(Authority.class))).thenReturn(oldDto).thenReturn(newDto);
-    when(service.update(eq(modifiedEntity), anyBoolean()))
+    when(service.update(eq(modifiedEntity)))
       .thenReturn(new AuthorityUpdateResult(existingEntity, modifiedEntity));
     var captor2 = ArgumentCaptor.forClass(AuthorityDto.class);
 
@@ -146,7 +144,7 @@ class AuthorityServiceDelegateTest {
     verify(eventPublisher).publishUpdateEvent(captor.capture(), captor2.capture());
     assertEquals(oldDto, captor.getValue());
     assertEquals(newDto, captor2.getValue());
-    verify(service).update(any(Authority.class), anyBoolean());
+    verify(service).update(any(Authority.class));
     verifyNoMoreInteractions(service);
     verify(mapper, times(2)).toDto(any(Authority.class));
     verify(mapper).toEntity(any(AuthorityDto.class));
@@ -283,45 +281,6 @@ class AuthorityServiceDelegateTest {
     assertThat(result.getErrorsFileName()).isNotNull();
     verify(localStorageProperties).getS3LocalSubPath();
     verify(authorityS3Service).processAuthorities(any(AuthoritiesBulkContext.class), any(Consumer.class));
-  }
-
-  @Test
-  void shouldUseConsortiumServiceWhenCentralTenantPresent() {
-    // given
-    var centralTenant = "central";
-    when(userTenantsService.getCentralTenant(TENANT_ID)).thenReturn(Optional.of(centralTenant));
-
-    var consortiumService = mock(AuthorityService.class);
-    // Re-initialize delegate to pick up the consortium service
-    var consortiumDelegate = new AuthorityServiceDelegate(
-      service,
-      consortiumService,
-      mapper,
-      context,
-      eventPublisher,
-      authorityS3Service,
-      localStorageProperties,
-      userTenantsService,
-      dataStatService,
-      authorityRepository,
-      tenantSettingsService
-    );
-
-    var offset = 0;
-    var limit = 2;
-    var cql = "query";
-    var total = 5;
-    var page = new PageImpl<>(List.of(UUID.randomUUID(), UUID.randomUUID()), Pageable.unpaged(), total);
-
-    when(consortiumService.getAllIds(offset, limit, cql)).thenReturn(page);
-
-    // when
-    var result = consortiumDelegate.retrieveAuthorityCollection(offset, limit, cql, true, false);
-
-    // then
-    assertThat(result).isInstanceOf(AuthorityIdDtoCollection.class);
-    verify(consortiumService).getAllIds(offset, limit, cql);
-    verifyNoInteractions(service); // regular service should not be called
   }
 
   @Test

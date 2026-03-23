@@ -140,9 +140,13 @@ public class Authority extends MetadataEntity implements Persistable<UUID>, Iden
     return getId() != null && Objects.equals(getId(), that.getId());
   }
 
-  @PostLoad
   @PrePersist
-  void markNotNew() {
+  void prePersist() {
+    this.isNew = false;
+  }
+
+  @PostLoad
+  void postLoad() {
     this.isNew = false;
   }
 

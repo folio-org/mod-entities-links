@@ -4,16 +4,17 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
 import org.folio.entlinks.domain.dto.AuthorityFullDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityIdDto;
 import org.folio.entlinks.domain.dto.AuthorityIdDtoCollection;
-import org.folio.entlinks.domain.entity.AuthorityArchive;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityBase;
-import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
-import org.folio.entlinks.service.authority.AuthorityArchiveService;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.settings.TenantSetting;
+import org.folio.spring.data.OffsetRequest;
 import org.folio.tenant.domain.dto.Setting;
 import org.folio.tenant.domain.dto.SettingCollection;
 import org.folio.tenant.settings.service.TenantSettingsService;
@@ -25,21 +26,25 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthorityArchiveServiceDelegate {
 
-  private final AuthorityArchiveService authorityArchiveService;
-  private final AuthorityArchiveRepository authorityArchiveRepository;
+  private final AuthorityRepository authorityRepository;
   private final AuthorityDomainEventPublisher eventPublisher;
   private final AuthorityMapper authorityMapper;
   private final TenantSettingsService tenantSettingsService;
 
   public AuthorityFullDtoCollection retrieveAuthorityArchives(Integer offset, Integer limit, String cqlQuery,
                                                               Boolean idOnly) {
+    var pageable = new OffsetRequest(offset, limit);
     if (Boolean.TRUE.equals(idOnly)) {
-      var idsPage = authorityArchiveService.getAllIds(offset, limit, cqlQuery);
+      var idsPage = StringUtils.isBlank(cqlQuery)
+          ? authorityRepository.findAllIdsByDeletedTrue(pageable)
+          : authorityRepository.findDeletedIdsByCql(cqlQuery, pageable);
       var ids = idsPage.map(id -> new AuthorityIdDto().id(id)).toList();
       return new AuthorityIdDtoCollection(ids, (int) idsPage.getTotalElements());
     }
 
-    var entitiesPage = authorityArchiveService.getAll(offset, limit, cqlQuery)
+    var entitiesPage = (StringUtils.isBlank(cqlQuery)
+        ? authorityRepository.findAllByDeletedTrue(pageable)
+        : authorityRepository.findDeletedByCql(cqlQuery, pageable))
       .map(AuthorityBase.class::cast);
     return authorityMapper.toAuthorityCollection(entitiesPage);
   }
@@ -53,14 +58,14 @@ public class AuthorityArchiveServiceDelegate {
     }
 
     var tillDate = LocalDateTime.now().minusDays(retention.get());
-    try (var archives = authorityArchiveRepository.streamByUpdatedTillDateAndSourcePrefix(tillDate)) {
-      archives.forEach(this::process);
+    try (var authorities = authorityRepository.streamByDeletedTrueAndUpdatedDateLessThanEqual(tillDate)) {
+      authorities.forEach(this::process);
     }
   }
 
-  private void process(AuthorityArchive archive) {
-    authorityArchiveService.delete(archive);
-    var dto = authorityMapper.toDto(archive);
+  private void process(Authority authority) {
+    authorityRepository.delete(authority);
+    var dto = authorityMapper.toDto(authority);
     eventPublisher.publishHardDeleteEvent(dto);
   }
 

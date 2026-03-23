@@ -20,7 +20,6 @@ import org.apache.logging.log4j.Level;
 import org.folio.entlinks.config.constants.ErrorCode;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.exception.AuthoritiesRequestNotSupportedMediaTypeException;
-import org.folio.entlinks.exception.AuthorityArchiveConstraintException;
 import org.folio.entlinks.exception.AuthoritySourceFileHridException;
 import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
@@ -130,8 +129,7 @@ public class ApiErrorHandler {
 
   @ExceptionHandler({
     DataIntegrityViolationException.class,
-    InvalidDataAccessApiUsageException.class,
-    AuthorityArchiveConstraintException.class
+    InvalidDataAccessApiUsageException.class
   })
   public ResponseEntity<Errors> conflict(Exception e) {
     var cause = e.getCause();

@@ -1,6 +1,5 @@
 package org.folio.entlinks.controller;
 
-import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE;
@@ -41,7 +40,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
   AUTHORITY_DATA_STAT_TABLE,
   INSTANCE_AUTHORITY_LINK_TABLE,
   AUTHORITY_TABLE,
-  AUTHORITY_ARCHIVE_TABLE,
   AUTHORITY_SOURCE_FILE_TABLE},
   tenants = {CENTRAL_TENANT_ID, TENANT_ID})
 class InstanceAuthorityLinkStatisticsConsortiumIT extends IntegrationTestBase {

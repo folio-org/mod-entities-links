@@ -66,7 +66,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @DatabaseCleanup(tables = {
   AUTHORITY_DATA_STAT_TABLE,
   DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
-  DatabaseHelper.AUTHORITY_ARCHIVE_TABLE,
   DatabaseHelper.AUTHORITY_TABLE,
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {

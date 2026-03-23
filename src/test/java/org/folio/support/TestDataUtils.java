@@ -46,7 +46,6 @@ import org.folio.entlinks.domain.dto.RelatedHeading;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordParsedRecord;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
@@ -332,19 +331,9 @@ public class TestDataUtils {
       return entity;
     }
 
-    public static AuthorityArchive authorityArchive(int authorityIdNum, int sourceFileIdNum) {
-      var entity = new AuthorityArchive();
-      entity.setId(AUTHORITY_IDS[authorityIdNum]);
-      entity.setSource(SOURCES[authorityIdNum]);
-      entity.setNaturalId(NATURAL_IDS[authorityIdNum]);
-      entity.setHeading(HEADINGS[authorityIdNum]);
-      entity.setHeadingType(HEADING_TYPES[authorityIdNum]);
-      entity.setSubjectHeadingCode(HEADING_CODES[authorityIdNum]);
-      entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
-      entity.setCreatedByUserId(UUID.fromString(USER_ID));
-      entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
-      entity.setUpdatedByUserId(UUID.fromString(USER_ID));
-      entity.setAuthoritySourceFile(authoritySourceFile(sourceFileIdNum));
+    public static Authority authorityArchive(int authorityIdNum, int sourceFileIdNum) {
+      var entity = authority(authorityIdNum, sourceFileIdNum);
+      entity.setDeleted(true);
       return entity;
     }
 

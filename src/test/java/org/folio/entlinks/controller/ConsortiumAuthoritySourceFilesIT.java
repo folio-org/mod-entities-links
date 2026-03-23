@@ -1,7 +1,6 @@
 package org.folio.entlinks.controller;
 
 import static org.folio.entlinks.controller.ConsortiumLinksSuggestionsIT.COLLEGE_TENANT_ID;
-import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
@@ -22,7 +21,7 @@ import lombok.SneakyThrows;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
-import org.folio.entlinks.exception.AuthorityArchiveConstraintException;
+import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.base.IntegrationTestBase;
@@ -36,7 +35,6 @@ import org.springframework.test.web.servlet.ResultMatcher;
 @DatabaseCleanup(
   tables = {
     AUTHORITY_TABLE,
-    AUTHORITY_ARCHIVE_TABLE,
     AUTHORITY_SOURCE_FILE_CODE_TABLE,
     AUTHORITY_SOURCE_FILE_TABLE},
   tenants = {CENTRAL_TENANT_ID, COLLEGE_TENANT_ID})
@@ -75,16 +73,13 @@ class ConsortiumAuthoritySourceFilesIT extends IntegrationTestBase {
     // delete authority in member tenant
     doDelete(authorityEndpoint(authorityDto.getId()), tenantHeaders(COLLEGE_TENANT_ID));
     awaitUntilAsserted(() ->
-      assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, COLLEGE_TENANT_ID)));
-    awaitUntilAsserted(() ->
-      assertEquals(1, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, COLLEGE_TENANT_ID)));
+      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_TABLE, COLLEGE_TENANT_ID, "deleted = true")));
 
     // try to delete in central tenant the authority source file with reference in member tenant
     tryDelete(authoritySourceFilesEndpoint(sourceFileId), tenantHeaders(CENTRAL_TENANT_ID))
       .andExpect(status().isUnprocessableEntity())
-      .andExpect(exceptionMatch(AuthorityArchiveConstraintException.class))
-      .andExpect(errorMessageMatch(is("Cannot complete operation on the entity due to it's relation with"
-                                      + " Authority Archive/Authority.")));
+      .andExpect(exceptionMatch(RequestBodyValidationException.class))
+      .andExpect(errorMessageMatch(is("Unable to delete. Authority source file has referenced authorities")));
 
     assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, CENTRAL_TENANT_ID));
   }

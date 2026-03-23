@@ -10,7 +10,6 @@ import org.folio.entlinks.domain.dto.AuthorityFullDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityIdDto;
 import org.folio.entlinks.domain.dto.AuthorityIdDtoCollection;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.settings.TenantSetting;
@@ -42,10 +41,9 @@ public class AuthorityArchiveServiceDelegate {
       return new AuthorityIdDtoCollection(ids, (int) idsPage.getTotalElements());
     }
 
-    var entitiesPage = (StringUtils.isBlank(cqlQuery)
+    var entitiesPage = StringUtils.isBlank(cqlQuery)
         ? authorityRepository.findAllByDeletedTrue(pageable)
-        : authorityRepository.findDeletedByCql(cqlQuery, pageable))
-      .map(AuthorityBase.class::cast);
+        : authorityRepository.findDeletedByCql(cqlQuery, pageable);
     return authorityMapper.toAuthorityCollection(entitiesPage);
   }
 

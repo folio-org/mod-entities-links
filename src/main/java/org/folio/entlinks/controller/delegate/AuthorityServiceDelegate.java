@@ -16,7 +16,6 @@ import org.folio.entlinks.domain.dto.AuthorityFullDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityIdDto;
 import org.folio.entlinks.domain.dto.AuthorityIdDtoCollection;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.service.authority.AuthoritiesBulkContext;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
@@ -67,8 +66,7 @@ public class AuthorityServiceDelegate {
       return new AuthorityIdDtoCollection(ids, (int) idsPage.getTotalElements());
     }
 
-    var entitiesPage = service.getAll(offset, limit, cqlQuery)
-      .map(AuthorityBase.class::cast);
+    var entitiesPage = service.getAll(offset, limit, cqlQuery);
     return mapper.toAuthorityCollection(entitiesPage);
   }
 

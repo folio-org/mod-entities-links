@@ -16,7 +16,6 @@ import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
 import org.folio.entlinks.domain.dto.AuthorityDtoNote;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.entity.AuthorityIdentifier;
 import org.folio.entlinks.domain.entity.AuthorityNote;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
@@ -153,7 +152,7 @@ class AuthorityMapperTest {
 
   @Test
   void testToDtoListWithValidData() {
-    AuthorityBase authority = createAuthority();
+    Authority authority = createAuthority();
     var authorityList = new ArrayList<>(List.of(authority));
 
     List<AuthorityDto> dtoList = authorityMapper.toDtoList(authorityList);
@@ -201,7 +200,7 @@ class AuthorityMapperTest {
 
   @Test
   void testToAuthorityCollectionWithValidPage() {
-    AuthorityBase authority = createAuthority();
+    Authority authority = createAuthority();
 
     var authorityList = List.of(authority);
     var authorityPage = new PageImpl<>(authorityList);

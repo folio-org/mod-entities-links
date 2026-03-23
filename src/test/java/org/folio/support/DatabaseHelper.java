@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityArchive;
+import org.folio.entlinks.domain.entity.AuthorityIdentifierType;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
@@ -19,6 +20,7 @@ public class DatabaseHelper {
 
   public static final String AUTHORITY_DATA_STAT_TABLE = "authority_data_stat";
   public static final String INSTANCE_AUTHORITY_LINK_TABLE = "instance_authority_link";
+  public static final String AUTHORITY_IDENTIFIER_TYPE_TABLE = "authority_identifier_type";
   public static final String AUTHORITY_NOTE_TYPE_TABLE = "authority_note_type";
   public static final String AUTHORITY_SOURCE_FILE_TABLE = "authority_source_file";
   public static final String AUTHORITY_SOURCE_FILE_SOURCE_TYPE = "authority_source_file_source";
@@ -58,6 +60,14 @@ public class DatabaseHelper {
       + "updated_by_user_id) VALUES (?,?,?,?,?,?,?)";
     jdbcTemplate.update(sql, entity.getId(), entity.getName(), entity.getSource(), entity.getCreatedDate(),
       entity.getUpdatedDate(), entity.getCreatedByUserId(), entity.getUpdatedByUserId());
+  }
+
+  public void saveAuthorityIdentifierType(String tenant, AuthorityIdentifierType entity) {
+    var sql = "INSERT INTO " + getDbPath(tenant, AUTHORITY_IDENTIFIER_TYPE_TABLE)
+      + " (id, name, code, source, created_date, updated_date, created_by_user_id, "
+      + "updated_by_user_id) VALUES (?,?,?,?,?,?,?,?)";
+    jdbcTemplate.update(sql, entity.getId(), entity.getName(), entity.getCode(), entity.getSource(),
+      entity.getCreatedDate(), entity.getUpdatedDate(), entity.getCreatedByUserId(), entity.getUpdatedByUserId());
   }
 
   public void saveAuthoritySourceFile(String tenant, AuthoritySourceFile entity) {

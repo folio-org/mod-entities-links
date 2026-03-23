@@ -297,6 +297,21 @@
       ]
     },
     {
+      "id": "authority-identifier-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/authority-identifier-types",
+          "permissionsRequired": [
+            "authority-identifier-types.collection.get"
+          ]
+        }
+      ]
+    },
+    {
       "id": "authority-source-files",
       "version": "2.2",
       "handlers": [
@@ -654,6 +669,11 @@
       "permissionName": "inventory-storage.authority-note-types.item.delete",
       "displayName": "inventory storage - delete individual authority-note-type",
       "description": "delete individual authority-note-type from storage"
+    },
+    {
+      "permissionName": "authority-identifier-types.collection.get",
+      "displayName": "inventory storage - get authority-identifier-type collection",
+      "description": "get authority-identifier-type collection from storage"
     },
     {
       "permissionName": "inventory-storage.authority-source-files.collection.get",

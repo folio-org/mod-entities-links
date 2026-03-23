@@ -11,7 +11,11 @@ public interface AuthorityServiceI<T> {
 
   Page<T> getAll(Integer offset, Integer limit, String cql);
 
+  Page<T> getAllDeleted(Integer offset, Integer limit, String cql);
+
   Page<UUID> getAllIds(Integer offset, Integer limit, String cql);
+
+  Page<UUID> getAllDeletedIds(Integer offset, Integer limit, String cql);
 
   Map<UUID, T> getAllByIds(Collection<UUID> ids);
 

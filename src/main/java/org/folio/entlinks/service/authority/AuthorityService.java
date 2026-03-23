@@ -58,6 +58,18 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
   }
 
   @Override
+  public Page<Authority> getAllDeleted(Integer offset, Integer limit, String cql) {
+    log.debug("getAllDeleted:: Attempts to find all deleted Authority by [offset: {}, limit: {}, cql: {}]",
+      offset, limit, cql);
+
+    if (StringUtils.isBlank(cql)) {
+      return repository.findAllByDeletedTrue(new OffsetRequest(offset, limit));
+    }
+
+    return repository.findDeletedByCql(cql, new OffsetRequest(offset, limit));
+  }
+
+  @Override
   public Page<UUID> getAllIds(Integer offset, Integer limit, String cql) {
     log.debug("getAll:: Attempts to find all Authority IDs by [offset: {}, limit: {}, cql: {}]",
       offset, limit, cql);
@@ -66,6 +78,18 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
     }
 
     return repository.findIdsByCql(cql, new OffsetRequest(offset, limit));
+  }
+
+  @Override
+  public Page<UUID> getAllDeletedIds(Integer offset, Integer limit, String cql) {
+    log.debug("getAllDeletedIds:: Attempts to find all deleted Authority IDs by [offset: {}, limit: {}, cql: {}]",
+      offset, limit, cql);
+
+    if (StringUtils.isBlank(cql)) {
+      return repository.findAllIdsByDeletedTrue(new OffsetRequest(offset, limit));
+    }
+
+    return repository.findDeletedIdsByCql(cql, new OffsetRequest(offset, limit));
   }
 
   @Override

@@ -5,12 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
-import org.folio.entlinks.controller.delegate.AuthorityArchiveServiceDelegate;
 import org.folio.entlinks.controller.delegate.AuthorityServiceDelegate;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
@@ -42,9 +40,6 @@ class AuthorityControllerTest {
   @Mock
   private AuthorityServiceDelegate authorityServiceDelegate;
 
-  @Mock
-  private AuthorityArchiveServiceDelegate authorityArchiveServiceDelegate;
-
   @InjectMocks
   private AuthorityController controller;
 
@@ -60,15 +55,14 @@ class AuthorityControllerTest {
   @Test
   void shouldRetrieveAuthorities() {
     var collectionDto = new AuthorityDtoCollection(List.of(dto), 1);
-    when(authorityServiceDelegate.retrieveAuthorityCollection(anyInt(), anyInt(), anyString(), anyBoolean()))
-        .thenReturn(collectionDto);
+    when(authorityServiceDelegate.retrieveAuthorityCollection(anyInt(), anyInt(), anyString(), anyBoolean(),
+        anyBoolean())).thenReturn(collectionDto);
     var expectedHeader = new HttpHeaders();
     expectedHeader.setContentType(MediaType.APPLICATION_JSON);
 
     var response = controller.retrieveAuthorities(false, false, 0, 10, CQL_QUERY, List.of(ACCEPT_JSON_HEADER));
 
     assertThat(response).isEqualTo(new ResponseEntity<>(collectionDto, expectedHeader, HttpStatus.OK));
-    verifyNoInteractions(authorityArchiveServiceDelegate);
   }
 
   @Test
@@ -76,43 +70,40 @@ class AuthorityControllerTest {
     var collectionDto = new AuthorityIdDtoCollection(List.of(
       new AuthorityIdDto().id(dto.getId()),
       new AuthorityIdDto().id(dto.getId())), 2);
-    when(authorityServiceDelegate.retrieveAuthorityCollection(anyInt(), anyInt(), anyString(), anyBoolean()))
-        .thenReturn(collectionDto);
+    when(authorityServiceDelegate.retrieveAuthorityCollection(anyInt(), anyInt(), anyString(), anyBoolean(),
+        anyBoolean())).thenReturn(collectionDto);
 
     var response = controller.retrieveAuthorities(false, true, 0, 10, CQL_QUERY, List.of(ACCEPT_TEXT_HEADER));
 
     assertThat(response.getBody())
         .isEqualTo(dto.getId().toString() + System.lineSeparator() + dto.getId().toString());
-    verifyNoInteractions(authorityArchiveServiceDelegate);
   }
 
   @Test
-  void shouldRetrieveAuthorityArchives() {
+  void shouldRetrieveDeletedAuthorities() {
     var collectionDto = new AuthorityDtoCollection(List.of(dto), 1);
-    when(authorityArchiveServiceDelegate.retrieveAuthorityArchives(anyInt(), anyInt(), anyString(), anyBoolean()))
-        .thenReturn(collectionDto);
+    when(authorityServiceDelegate.retrieveAuthorityCollection(anyInt(), anyInt(), anyString(), anyBoolean(),
+        anyBoolean())).thenReturn(collectionDto);
     var expectedHeader = new HttpHeaders();
     expectedHeader.setContentType(MediaType.APPLICATION_JSON);
 
     var response = controller.retrieveAuthorities(true, false, 0, 10, CQL_QUERY, List.of(ACCEPT_JSON_HEADER));
 
     assertThat(response).isEqualTo(new ResponseEntity<>(collectionDto, expectedHeader, HttpStatus.OK));
-    verifyNoInteractions(authorityServiceDelegate);
   }
 
   @Test
-  void shouldRetrieveAuthorityArchivesIds() {
+  void shouldRetrieveDeletedAuthoritiesIds() {
     var collectionDto = new AuthorityIdDtoCollection(List.of(
       new AuthorityIdDto().id(dto.getId()),
       new AuthorityIdDto().id(dto.getId())), 1);
-    when(authorityArchiveServiceDelegate.retrieveAuthorityArchives(anyInt(), anyInt(), anyString(), anyBoolean()))
-        .thenReturn(collectionDto);
+    when(authorityServiceDelegate.retrieveAuthorityCollection(anyInt(), anyInt(), anyString(), anyBoolean(),
+        anyBoolean())).thenReturn(collectionDto);
 
     var response = controller.retrieveAuthorities(true, true, 0, 10, CQL_QUERY, List.of(ACCEPT_TEXT_HEADER));
 
     assertThat(response.getBody())
         .isEqualTo(dto.getId().toString() + System.lineSeparator() + dto.getId().toString());
-    verifyNoInteractions(authorityServiceDelegate);
   }
 
   @Test

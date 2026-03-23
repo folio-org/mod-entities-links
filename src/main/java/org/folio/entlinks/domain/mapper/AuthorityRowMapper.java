@@ -1,18 +1,18 @@
 package org.folio.entlinks.domain.mapper;
 
-import static org.folio.entlinks.domain.entity.AuthorityBase.DELETED_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.HEADING_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.HEADING_TYPE_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.IDENTIFIERS_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.ID_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.NATURAL_ID_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.NOTES_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.SAFT_HEADINGS_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.SFT_HEADINGS_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.SOURCE_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.SOURCE_FILE_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.SUBJECT_HEADING_CODE_COLUMN;
-import static org.folio.entlinks.domain.entity.AuthorityBase.VERSION_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.DELETED_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.HEADING_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.HEADING_TYPE_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.IDENTIFIERS_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.ID_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.NATURAL_ID_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.NOTES_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.SAFT_HEADINGS_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.SFT_HEADINGS_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.SOURCE_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.SOURCE_FILE_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.SUBJECT_HEADING_CODE_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.VERSION_COLUMN;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;

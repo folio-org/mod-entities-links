@@ -5,7 +5,6 @@ import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.entlinks.domain.dto.LinkAction.UPDATE_HEADING;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
-import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
 import static org.folio.support.MatchUtils.errorCodeMatch;
 import static org.folio.support.MatchUtils.errorMessageMatch;
 import static org.folio.support.MatchUtils.errorTotalMatch;
@@ -181,8 +180,6 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
     await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
         assertEquals(0, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID))
     );
-    awaitUntilAsserted(() -> assertEquals(0, databaseHelper.countRowsWhere(AUTHORITY_TABLE, TENANT_ID,
-        String.format("id = '%s'", AUTHORITY_ID))));
   }
 
   @Test

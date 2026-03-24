@@ -24,6 +24,7 @@ import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
+import org.folio.entlinks.exception.EntityReferenceNotFoundException;
 import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.spring.FolioExecutionContext;
@@ -100,7 +101,21 @@ public class AuthorityService {
   }
 
   public Authority create(Authority entity) {
-    return createInner(entity);
+    log.debug("create:: Attempting to create Authority [entity: {}]", entity);
+    initId(entity);
+
+    sourceFileCheck(entity);
+
+    return repository.save(entity);
+  }
+
+  private void sourceFileCheck(Authority entity) {
+    var sourceFileId = Optional.ofNullable(entity.getAuthoritySourceFile())
+        .map(AuthoritySourceFile::getId)
+        .orElse(null);
+    if (sourceFileId != null && !sourceFileRepository.existsById(sourceFileId)) {
+      throw EntityReferenceNotFoundException.forAuthoritySourceFile();
+    }
   }
 
   @Transactional
@@ -118,6 +133,7 @@ public class AuthorityService {
 
   @Transactional
   public List<AuthorityUpdateResult> upsert(List<Authority> authorities) {
+    authorities.forEach(this::sourceFileCheck);
     var existingRecordsMap = getAllByIds(authorities.stream().map(Authority::getId).toList());
     final var detachedExistingRecordsMap = Maps.transformEntries(existingRecordsMap,
       (key, value) -> new Authority(value));
@@ -196,13 +212,6 @@ public class AuthorityService {
       return Collections.emptyMap();
     }
     return jdbcRepository.findAuthorityNaturalIdsByIdsAndDeletedFalse(ids, centralTenant.get());
-  }
-
-  protected Authority createInner(Authority entity) {
-    log.debug("create:: Attempting to create Authority [entity: {}]", entity);
-    initId(entity);
-
-    return repository.save(entity);
   }
 
   private Map<UUID, Boolean> contructExistenceMap(Set<UUID> ids, List<UUID> existingIds) {

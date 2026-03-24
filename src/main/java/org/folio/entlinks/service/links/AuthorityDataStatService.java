@@ -41,7 +41,7 @@ public class AuthorityDataStatService {
 
   @Transactional
   public void deleteByAuthorityId(UUID authorityId) {
-    log.info("deleteByAuthorityId:: [authorityId: {}]", authorityId);
+    log.debug("deleteByAuthorityId:: [authorityId: {}]", authorityId);
     statRepository.deleteByAuthorityId(authorityId);
   }
 }

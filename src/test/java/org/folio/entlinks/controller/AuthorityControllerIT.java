@@ -61,6 +61,7 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.exception.AuthoritiesRequestNotSupportedMediaTypeException;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
+import org.folio.entlinks.exception.EntityReferenceNotFoundException;
 import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
@@ -475,7 +476,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     tryPost(authorityEndpoint(), dto)
       .andExpect(status().isUnprocessableContent())
       .andExpect(errorMessageMatch(is("Authority Source File with the given 'id' does not exists.")))
-      .andExpect(exceptionMatch(InvalidDataAccessApiUsageException.class));
+      .andExpect(exceptionMatch(EntityReferenceNotFoundException.class));
   }
 
   @Test

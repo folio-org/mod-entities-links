@@ -72,7 +72,7 @@ class AuthorityBulkIT extends IntegrationTestBase {
         .toList();
     assertThat(errors)
         .hasSize(2)
-        .anyMatch(s -> s.contains("constraint [authority_storage_source_file_id_foreign_key]"))
+        .anyMatch(s -> s.contains("Authority Source File with the given 'id' does not exists."))
         .anyMatch(s -> s.contains("Unexpected json parsing exception")); //invalid UUID for noteTypeId
 
     //1'st time with exception triggering spring retry, then - 2 regular calls

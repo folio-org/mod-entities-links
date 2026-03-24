@@ -2,7 +2,6 @@ package org.folio.entlinks.service.reindex;
 
 import static org.folio.entlinks.domain.entity.Authority.HEADING_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.HEADING_TYPE_COLUMN;
-import static org.folio.entlinks.domain.entity.Authority.IDENTIFIERS_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.ID_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.NATURAL_ID_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.NOTES_COLUMN;
@@ -21,14 +20,17 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
-import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityIdentifier;
 import org.folio.entlinks.domain.entity.AuthorityNote;
@@ -51,12 +53,12 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
+  static final int BATCH_SIZE = 50;
+
   private static final TypeReference<HeadingRef[]> HEADING_TYPE_REF = new TypeReference<>() { };
-  private static final TypeReference<AuthorityIdentifier[]> IDENTIFIER_TYPE_REF = new TypeReference<>() { };
   private static final TypeReference<AuthorityNote[]> NOTE_TYPE_REF = new TypeReference<>() { };
-  private static final String COUNT_QUERY_TEMPLATE = "SELECT COUNT(*) FROM %s_mod_entities_links.authority";
-  private static final String SELECT_QUERY_TEMPLATE =
-    "SELECT * FROM %s_mod_entities_links.authority WHERE deleted = false";
+  private static final String AUTHORITY_TABLE = "authority";
+  private static final String AUTHORITY_IDENTIFIER_TABLE = "authority_identifier";
 
   private final JdbcTemplate jdbcTemplate;
   private final FolioExecutionContext folioExecutionContext;
@@ -79,17 +81,24 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
   public void streamAuthorities(ReindexContext context) {
     var totalRecords = jdbcTemplate.queryForObject(countQuery(context.getTenantId()), Integer.class);
     log.info("reindex::count={}", totalRecords);
-    ReindexJobProgressTracker progressTracker = new ReindexJobProgressTracker(totalRecords == null ? 0 : totalRecords);
+    var progressTracker = new ReindexJobProgressTracker(totalRecords == null ? 0 : totalRecords);
 
-    jdbcTemplate.setFetchSize(50);
-    var query = selectQuery(context.getTenantId());
-    try (var authorityStream = jdbcTemplate.queryForStream(query, (rs, rowNum) -> toAuthority(rs))) {
-      authorityStream
-        .forEach(authority -> {
-          eventPublisher.publishReindexEvent(authority, context);
-          progressTracker.incrementProcessedCount();
-          reindexService.logJobProgress(progressTracker, context.getJobId());
-        });
+    jdbcTemplate.setFetchSize(BATCH_SIZE);
+    try (var authorityStream = jdbcTemplate.queryForStream(selectQuery(context.getTenantId()),
+        (rs, rowNum) -> toAuthorityEntity(rs))) {
+
+      var batch = new ArrayList<Authority>(BATCH_SIZE);
+      authorityStream.forEach(authority -> {
+        batch.add(authority);
+        if (batch.size() >= BATCH_SIZE) {
+          processBatch(batch, context, progressTracker);
+          batch.clear();
+        }
+      });
+      if (!batch.isEmpty()) {
+        processBatch(batch, context, progressTracker);
+      }
+
     } catch (Exception e) {
       log.warn(e);
       reindexService.logJobFailed(context.getJobId());
@@ -99,7 +108,41 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
     reindexService.logJobSuccess(context.getJobId());
   }
 
-  private AuthorityDto toAuthority(ResultSet rs) {
+  private void processBatch(List<Authority> authorities, ReindexContext context,
+                             ReindexJobProgressTracker progressTracker) {
+    fetchAndAttachIdentifiers(authorities, context.getTenantId());
+    authorities.forEach(authority -> {
+      eventPublisher.publishReindexEvent(mapper.toDto(authority), context);
+      progressTracker.incrementProcessedCount();
+      reindexService.logJobProgress(progressTracker, context.getJobId());
+    });
+  }
+
+  private void fetchAndAttachIdentifiers(List<Authority> authorities, String tenant) {
+    var idList = authorities.stream()
+      .map(a -> "'" + a.getId() + "'")
+      .collect(Collectors.joining(","));
+
+    var sql = "SELECT authority_id, value, identifier_type_id FROM "
+      + schemaPath(tenant, AUTHORITY_IDENTIFIER_TABLE)
+      + " WHERE authority_id IN (" + idList + ")";
+
+    Map<UUID, List<AuthorityIdentifier>> identifiersByAuthorityId = new HashMap<>();
+    jdbcTemplate.query(sql, rs -> {
+      var authorityId = UUID.fromString(rs.getString("authority_id"));
+      var identifier = new AuthorityIdentifier(
+        rs.getString("value"),
+        UUID.fromString(rs.getString("identifier_type_id")));
+      identifiersByAuthorityId.computeIfAbsent(authorityId, k -> new ArrayList<>()).add(identifier);
+    });
+
+    authorities.forEach(authority -> {
+      var identifiers = identifiersByAuthorityId.get(authority.getId());
+      authority.setIdentifiers(identifiers != null ? identifiers : List.of());
+    });
+  }
+
+  private Authority toAuthorityEntity(ResultSet rs) {
     var authority = new Authority();
     try {
       authority.setId(UUID.fromString(rs.getString(ID_COLUMN)));
@@ -120,20 +163,17 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
       var subjectHeadingCode = rs.getString(SUBJECT_HEADING_CODE_COLUMN);
       authority.setSubjectHeadingCode(subjectHeadingCode != null ? subjectHeadingCode.charAt(0) : null);
 
-      // read JSON arrays from SQL array columns
       authority.setSftHeadings(readJsonArray(rs, SFT_HEADINGS_COLUMN, HEADING_TYPE_REF));
       authority.setSaftHeadings(readJsonArray(rs, SAFT_HEADINGS_COLUMN, HEADING_TYPE_REF));
-      authority.setIdentifiers(readJsonArray(rs, IDENTIFIERS_COLUMN, IDENTIFIER_TYPE_REF));
       authority.setNotes(readJsonArray(rs, NOTES_COLUMN, NOTE_TYPE_REF));
 
-      // metadata
       populateMetadata(authority, rs);
     } catch (Exception e) {
       log.warn(e);
       throw new IllegalStateException(e);
     }
 
-    return mapper.toDto(authority);
+    return authority;
   }
 
   @SuppressWarnings("java:S1168")
@@ -147,21 +187,24 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
   }
 
   private void populateMetadata(Authority authority, ResultSet rs) throws SQLException {
-    var createdDate = rs.getTimestamp(CREATED_DATE_COLUMN);
-    authority.setCreatedDate(createdDate);
-    var createdBy = rs.getString(CREATED_BY_USER_COLUMN);
-    authority.setCreatedByUserId(transformIfNotNull(createdBy, UUID::fromString));
-    var updatedDate = rs.getTimestamp(UPDATED_DATE_COLUMN);
-    authority.setUpdatedDate(updatedDate);
-    var updatedBy = rs.getString(UPDATED_BY_USER_COLUMN);
-    authority.setUpdatedByUserId(transformIfNotNull(updatedBy, UUID::fromString));
+    authority.setCreatedDate(rs.getTimestamp(CREATED_DATE_COLUMN));
+    authority.setCreatedByUserId(transformIfNotNull(rs.getString(CREATED_BY_USER_COLUMN), UUID::fromString));
+    authority.setUpdatedDate(rs.getTimestamp(UPDATED_DATE_COLUMN));
+    authority.setUpdatedByUserId(transformIfNotNull(rs.getString(UPDATED_BY_USER_COLUMN), UUID::fromString));
+  }
+
+  private String schemaPath(String tenant, String table) {
+    return tenant + "_mod_entities_links." + table;
   }
 
   private String countQuery(String tenant) {
-    return String.format(COUNT_QUERY_TEMPLATE, tenant);
+    return "SELECT COUNT(*) FROM " + schemaPath(tenant, AUTHORITY_TABLE) + " WHERE deleted = false";
   }
 
   private String selectQuery(String tenant) {
-    return String.format(SELECT_QUERY_TEMPLATE, tenant);
+    return "SELECT id, _version, natural_id, source, source_file_id, heading, heading_type,"
+      + " subject_heading_code, sft_headings, saft_headings, notes,"
+      + " created_date, created_by_user_id, updated_date, updated_by_user_id"
+      + " FROM " + schemaPath(tenant, AUTHORITY_TABLE) + " WHERE deleted = false";
   }
 }

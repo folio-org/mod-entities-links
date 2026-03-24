@@ -127,6 +127,7 @@ class AuthorityServiceTest {
     var newEntity = new Authority();
     newEntity.setAuthoritySourceFile(sourceFile);
 
+    when(sourceFileRepository.existsById(any(UUID.class))).thenReturn(true);
     when(repository.save(any(Authority.class))).thenReturn(expected);
     var argumentCaptor = ArgumentCaptor.forClass(Authority.class);
 

@@ -130,7 +130,7 @@ public class AuthorityServiceDelegate {
     return authorityBulkCreateResponse;
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public void expire() {
     var retention = fetchAuthoritiesRetentionDuration();
 

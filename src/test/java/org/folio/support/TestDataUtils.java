@@ -68,6 +68,7 @@ public class TestDataUtils {
 
   public static final UUID[] AUTHORITY_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID(), randomUUID()};
   public static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3", "naturalId4"};
+  public static final UUID CONTROL_NUMBER_TYPE_ID = UUID.fromString("5d164f4b-0b15-4e42-ae75-cfcf85318ad9");
 
   public static AuthorityDomainEvent domainEvent(String type, AuthorityDto n, AuthorityDto o) {
     return new AuthorityDomainEvent(randomUUID(), o, n, DomainEventType.valueOf(type), TENANT_ID);
@@ -389,7 +390,7 @@ public class TestDataUtils {
       noteDto.setStaffOnly(false);
       dto.setNotes(List.of(noteDto));
 
-      var identifier = new AuthorityDtoIdentifier("identifier_value", UUID.randomUUID());
+      var identifier = new AuthorityDtoIdentifier("identifier_value", CONTROL_NUMBER_TYPE_ID);
       dto.setIdentifiers(List.of(identifier));
 
       dto.addSftPersonalNameItem("sftPersonalName1");

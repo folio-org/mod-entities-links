@@ -7,6 +7,7 @@
 ### New APIs versions
 * Provides `instance-authority-links-statistics v3.0`
 * Provides `instance-authority-links v2.2`
+* Provides `authority-identifier-types v1.0`
 * Change `instance-storage` from required to optional ([MODELINKS-378](https://folio-org.atlassian.net/browse/MODELINKS-378))
 * Change `mapping-rules-provider` from required to optional ([MODELINKS-379](https://folio-org.atlassian.net/browse/MODELINKS-379))
 
@@ -20,6 +21,7 @@
 * Filter data import events for a canceled job ([MODELINKS-400](https://folio-org.atlassian.net/browse/MODELINKS-400))
 * Create migration script for entities links: drop duplicate links/authorities/sats ([MODELINKS-388](https://folio-org.atlassian.net/browse/MODELINKS-388))
 * Add authorities integration with FQM ([MODELINKS-373](https://folio-org.atlassian.net/browse/MODELINKS-373))
+* Implement collection retrieval endpoint for authority identifier types ([MODELINKS-401](https://folio-org.atlassian.net/browse/MODELINKS-401))
 
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))

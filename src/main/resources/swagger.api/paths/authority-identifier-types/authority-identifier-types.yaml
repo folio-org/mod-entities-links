@@ -1,0 +1,19 @@
+get:
+  operationId: retrieveAuthorityIdentifierTypes
+  tags:
+    - authority-identifier-type
+  parameters:
+    - $ref: '../../parameters/offset-param.yaml'
+    - $ref: '../../parameters/limit-param.yaml'
+    - $ref: '../../parameters/cql-query.yaml'
+  responses:
+    '200':
+      description: Returns a list of authority identifier types
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/authority-identifier-type/authorityIdentifierTypeDtoCollection.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'

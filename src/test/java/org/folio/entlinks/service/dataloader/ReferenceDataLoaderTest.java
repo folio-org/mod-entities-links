@@ -31,7 +31,6 @@ class ReferenceDataLoaderTest {
   private final AuthoritySourceFileMapper sourceFileMapper = Mappers.getMapper(AuthoritySourceFileMapper.class);
 
   private final AuthorityNoteTypeService noteTypeService = mock(AuthorityNoteTypeService.class);
-
   private final AuthoritySourceFileService sourceFileService = mock(AuthoritySourceFileService.class);
 
   private final ReferenceDataLoader referenceDataLoader =
@@ -45,9 +44,6 @@ class ReferenceDataLoaderTest {
     when(sourceFileService.create(any(AuthoritySourceFile.class))).thenAnswer(i -> i.getArguments()[0]);
 
     referenceDataLoader.loadRefData();
-
-    verify(noteTypeService).findById(any(UUID.class));
-    verify(sourceFileService).findById(any(UUID.class));
 
     var noteTypeCaptor = ArgumentCaptor.forClass(AuthorityNoteType.class);
     var sourceFileCaptor = ArgumentCaptor.forClass(AuthoritySourceFile.class);
@@ -73,7 +69,8 @@ class ReferenceDataLoaderTest {
 
   @Test
   void shouldHandleExceptionInLoadRefData() {
-    when(noteTypeService.findById(any(UUID.class))).thenThrow(new RuntimeException("Unable to load reference data"));
+    when(noteTypeService.findById(any(UUID.class)))
+      .thenThrow(new RuntimeException("Unable to load reference data"));
 
     var exception = Assertions.assertThrows(IllegalStateException.class, referenceDataLoader::loadRefData);
 

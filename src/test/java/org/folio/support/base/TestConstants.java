@@ -68,6 +68,7 @@ public class TestConstants {
   private static final String AUTH_STATS_ENDPOINT_PATH_PATTERN = "/links/stats/authority";
   private static final String AUTH_STATS_ENDPOINT_PARAMS = "?action=%s&fromDate=%s&toDate=%s&limit=%d";
   private static final String LINKING_RULES_ENDPOINT = "/linking-rules/instance-authority";
+  private static final String AUTHORITY_IDENTIFIER_TYPES_ENDPOINT = "/authority-identifier-types";
   private static final String AUTHORITY_NOTE_TYPES_ENDPOINT = "/authority-note-types";
   private static final String AUTHORITY_SOURCE_FILES_ENDPOINT = "/authority-source-files";
   private static final String AUTHORITY_STORAGE_ENDPOINT = "/authority-storage/authorities";
@@ -164,6 +165,10 @@ public class TestConstants {
 
   public static String authorityNoteTypesEndpoint(UUID id) {
     return AUTHORITY_NOTE_TYPES_ENDPOINT + "/" + id;
+  }
+
+  public static String authorityIdentifierTypesEndpoint() {
+    return AUTHORITY_IDENTIFIER_TYPES_ENDPOINT;
   }
 
   public static String authoritySourceFilesEndpoint() {

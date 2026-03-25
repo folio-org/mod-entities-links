@@ -57,3 +57,16 @@ permissions = ["inventory-storage.authority-source-files.collection.get"]
 sort = ["id", "ASC"]
 private = true
 includeJsonbField = false
+
+[[sources]]
+name = "authority-identifier-type"
+table = "authority_identifier_type"
+
+[[entityTypes]]
+name = "authority-identifier-type"
+source = "authority-identifier-type"
+schema = "src/main/resources/swagger.api/schemas/authority-identifier-type/authorityIdentifierTypeDto.yaml"
+permissions = ["authority-identifier-types.collection.get"]
+sort = ["id", "ASC"]
+private = true
+includeJsonbField = false

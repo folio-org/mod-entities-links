@@ -1,0 +1,105 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="MODELINKS-401@@schema-create-table-authority-identifier-type" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="authority_identifier_type"/>
+      </not>
+    </preConditions>
+
+    <comment>Create authority_identifier_type table</comment>
+
+    <createTable tableName="authority_identifier_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_authority_identifier_type"/>
+      </column>
+      <column name="name" type="varchar(250)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="authority_identifier_type_name_unq"/>
+      </column>
+      <column name="code" type="varchar(100)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="authority_identifier_type_code_unq"/>
+      </column>
+      <column name="source" type="varchar(100)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_date" type="DATETIME">
+        <constraints nullable="false"/>
+      </column>
+      <column name="updated_date" type="DATETIME">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_by_user_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="updated_by_user_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODELINKS-401@@data-seed-table-authority-identifier-type-default-values" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority_identifier_type"/>
+    </preConditions>
+
+    <insert tableName="authority_identifier_type">
+      <column name="id" value="c858e4f2-2b6b-4385-842b-60532ee34abb"/>
+      <column name="name" value="Canceled LCCN"/>
+      <column name="code" value="canceled-lccn"/>
+      <column name="source" value="folio"/>
+      <column name="created_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="updated_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="created_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+      <column name="updated_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+    </insert>
+
+    <insert tableName="authority_identifier_type">
+      <column name="id" value="5d164f4b-0b15-4e42-ae75-cfcf85318ad9"/>
+      <column name="name" value="Control number"/>
+      <column name="code" value="control-number"/>
+      <column name="source" value="folio"/>
+      <column name="created_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="updated_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="created_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+      <column name="updated_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+    </insert>
+
+    <insert tableName="authority_identifier_type">
+      <column name="id" value="c858e4f2-2b6b-4385-842b-60732ee14abb"/>
+      <column name="name" value="LCCN"/>
+      <column name="code" value="lccn"/>
+      <column name="source" value="folio"/>
+      <column name="created_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="updated_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="created_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+      <column name="updated_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+    </insert>
+
+    <insert tableName="authority_identifier_type">
+      <column name="id" value="2e8b3b6c-0e7d-4e48-bca2-b0b23b376af5"/>
+      <column name="name" value="Other standard identifier"/>
+      <column name="code" value="other-standard-identifier"/>
+      <column name="source" value="folio"/>
+      <column name="created_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="updated_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="created_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+      <column name="updated_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+    </insert>
+
+    <insert tableName="authority_identifier_type">
+      <column name="id" value="7e591197-f335-4afb-bc6d-a6d76ca3bace"/>
+      <column name="name" value="System control number"/>
+      <column name="code" value="system-control-number"/>
+      <column name="source" value="folio"/>
+      <column name="created_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="updated_date" valueComputed="CURRENT_TIMESTAMP"/>
+      <column name="created_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+      <column name="updated_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+    </insert>
+  </changeSet>
+
+</databaseChangeLog>

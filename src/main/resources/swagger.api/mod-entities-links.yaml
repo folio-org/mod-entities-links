@@ -287,6 +287,9 @@ paths:
   /authority-note-types/{id}:
     $ref: './paths/authority-note-types/authority-note-types-by-id.yaml'
 
+  /authority-identifier-types:
+    $ref: './paths/authority-identifier-types/authority-identifier-types.yaml'
+
   /authority-source-files:
     $ref: './paths/authority-source-files/authority-source-files.yaml'
 
@@ -481,6 +484,12 @@ components:
 
     authorityNoteTypeDtoCollection:
       $ref: schemas/authority-note-type/authorityNoteTypeDtoCollection.yaml
+
+    authorityIdentifierTypeDto:
+      $ref: schemas/authority-identifier-type/authorityIdentifierTypeDto.yaml
+
+    authorityIdentifierTypeDtoCollection:
+      $ref: schemas/authority-identifier-type/authorityIdentifierTypeDtoCollection.yaml
 
     authoritySourceFileDto:
       $ref: schemas/authority-source-file/authoritySourceFileDto.yaml

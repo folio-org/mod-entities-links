@@ -1,0 +1,14 @@
+description: A collection of authority identifier types
+type: object
+properties:
+  identifierTypes:
+    description: List of authority identifier types
+    type: array
+    items:
+      $ref: './authorityIdentifierTypeDto.yaml'
+  totalRecords:
+    description: Total amount of records
+    type: integer
+required:
+  - identifierTypes
+  - totalRecords

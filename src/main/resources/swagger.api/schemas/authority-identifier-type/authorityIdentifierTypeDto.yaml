@@ -1,0 +1,35 @@
+description: An authority identifier type
+type: object
+properties:
+  id:
+    description: Unique ID of the authority identifier type; a UUID
+    type: string
+    format: uuid
+    x-fqm-value-getter: ":sourceAlias.id"
+  name:
+    type: string
+    description: Name of the authority identifier type
+    x-fqm-essential: true
+    x-fqm-id-column-name: "id"
+    x-fqm-visible-by-default: true
+    x-fqm-value-getter: ":sourceAlias.name"
+    x-fqm-value-source-api: {
+      "path": "authority-identifier-types",
+      "valueJsonPath": "$.identifierTypes.*.id",
+      "labelJsonPath": "$.identifierTypes.*.name"
+    }
+  code:
+    type: string
+    description: Stable human-readable code of the authority identifier type
+    x-fqm-value-getter: ":sourceAlias.code"
+  source:
+    type: string
+    description: Label indicating where the authority identifier type entry originates from, i.e. 'folio' or 'local'
+    x-fqm-ignore: true
+  metadata:
+    $ref: '../common/metadata.yaml'
+    x-fqm-ignore: true
+required:
+  - name
+  - code
+  - source

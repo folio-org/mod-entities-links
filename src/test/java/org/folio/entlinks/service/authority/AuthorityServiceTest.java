@@ -206,7 +206,7 @@ class AuthorityServiceTest {
     when(repository.findByIdAndDeletedFalse(any(UUID.class))).thenReturn(Optional.of(authority));
     when(repository.save(any(Authority.class))).thenReturn(authority);
 
-    service.deleteById(UUID.randomUUID());
+    service.deleteByIdSoft(UUID.randomUUID());
 
     verify(repository).findByIdAndDeletedFalse(any(UUID.class));
     verify(repository).save(any(Authority.class));
@@ -217,7 +217,7 @@ class AuthorityServiceTest {
     var id = UUID.randomUUID();
     when(repository.findByIdAndDeletedFalse(any(UUID.class))).thenReturn(Optional.empty());
 
-    var thrown = assertThrows(AuthorityNotFoundException.class, () -> service.deleteById(id));
+    var thrown = assertThrows(AuthorityNotFoundException.class, () -> service.deleteByIdSoft(id));
 
     assertThat(thrown.getMessage()).containsOnlyOnce(id.toString());
     verify(repository).findByIdAndDeletedFalse(any(UUID.class));
@@ -226,7 +226,7 @@ class AuthorityServiceTest {
 
   @Test
   void shouldHardDeleteAuthoritiesByIds() {
-    service.deleteByIds(List.of(UUID.randomUUID()));
+    service.deleteByIdsHard(List.of(UUID.randomUUID()));
 
     verify(repository).deleteAllByIdInBatch(anyIterable());
   }
@@ -309,14 +309,14 @@ class AuthorityServiceTest {
   }
 
   @Test
-  void shouldDeleteByIdAndReturnDeletedAuthority() {
+  void shouldDeleteByIdSoftAndReturnDeletedAuthorityHard() {
     var id = UUID.randomUUID();
     var authority = new Authority();
     authority.setId(id);
     when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(authority));
     when(repository.save(any(Authority.class))).thenReturn(authority);
 
-    var deleted = service.deleteById(id);
+    var deleted = service.deleteByIdSoft(id);
 
     assertThat(deleted).isEqualTo(authority);
     assertThat(deleted.isDeleted()).isTrue();

@@ -93,16 +93,6 @@
     </sql>
   </changeSet>
 
-  <changeSet id="modelinks-448@@schema-drop-table-authority-archive-identifier" author="pavlo_smahin">
-    <preConditions onFail="MARK_RAN">
-      <tableExists tableName="authority_archive_identifier"/>
-    </preConditions>
-
-    <comment>Drop authority_archive_identifier table — replaced by authority_identifier</comment>
-
-    <dropTable tableName="authority_archive_identifier"/>
-  </changeSet>
-
   <changeSet id="modelinks-448@@schema-drop-table-authority-archive" author="pavlo_smahin">
     <preConditions onFail="MARK_RAN">
       <tableExists tableName="authority_archive"/>

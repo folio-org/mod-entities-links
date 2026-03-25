@@ -3,6 +3,7 @@ package org.folio.entlinks.service.authority;
 import static org.folio.entlinks.utils.ServiceUtils.initId;
 
 import com.google.common.collect.Maps;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service("authorityService")
 @RequiredArgsConstructor
 public class AuthorityService {
+
+  private static final String ALL_RECORDS_CQL = "cql.allRecords=1";
 
   private final AuthorityRepository repository;
   private final AuthorityJdbcRepository jdbcRepository;
@@ -109,15 +113,6 @@ public class AuthorityService {
     return repository.save(entity);
   }
 
-  private void sourceFileCheck(Authority entity) {
-    var sourceFileId = Optional.ofNullable(entity.getAuthoritySourceFile())
-        .map(AuthoritySourceFile::getId)
-        .orElse(null);
-    if (sourceFileId != null && !sourceFileRepository.existsById(sourceFileId)) {
-      throw EntityReferenceNotFoundException.forAuthoritySourceFile();
-    }
-  }
-
   @Transactional
   public AuthorityUpdateResult update(Authority modified) {
     log.debug("update:: Attempting to update Authority [authority: {}]", modified);
@@ -158,7 +153,7 @@ public class AuthorityService {
   }
 
   @Transactional
-  public Authority deleteById(UUID id) {
+  public Authority deleteByIdSoft(UUID id) {
     log.debug("deleteById:: Attempt to delete Authority by [id: {}]", id);
 
     var existed = repository.findByIdAndDeletedFalse(id)
@@ -174,7 +169,7 @@ public class AuthorityService {
    * @param ids collection of authority record ids of {@link UUID} type
    */
   @Transactional
-  public void deleteByIds(Collection<UUID> ids) {
+  public void deleteByIdsHard(Collection<UUID> ids) {
     repository.deleteAllByIdInBatch(ids);
   }
 
@@ -183,7 +178,8 @@ public class AuthorityService {
    *
    * @param authorityIds list of authority ids to check existence for.
    * @return map of authority ids to boolean values indicating existence.
-   * */
+   *
+   */
   public Map<UUID, Boolean> authoritiesExist(Set<UUID> authorityIds) {
     var existingIds = repository.findExistingIdsByIdsAndDeletedFalse(authorityIds);
     return contructExistenceMap(authorityIds, existingIds);
@@ -194,7 +190,8 @@ public class AuthorityService {
    *
    * @param authorityIds list of authority ids to check existence for.
    * @return map of authority ids to boolean values indicating existence.
-   * */
+   *
+   */
   public Map<UUID, Boolean> authoritiesExistForCentralIfOnMember(Set<UUID> authorityIds) {
     var tenant = folioExecutionContext.getTenantId();
     var centralTenant = userTenantsService.getCentralTenant(tenant);
@@ -214,6 +211,25 @@ public class AuthorityService {
     return jdbcRepository.findAuthorityNaturalIdsByIdsAndDeletedFalse(ids, centralTenant.get());
   }
 
+  @Transactional
+  public void expireHardDeleted(LocalDateTime tillDate, Consumer<Authority> authorityCallback) {
+    try (var authorities = repository.streamByDeletedTrueAndUpdatedDateLessThanEqual(tillDate)) {
+      authorities.forEach(authority -> {
+        repository.delete(authority);
+        authorityCallback.accept(authority);
+      });
+    }
+  }
+
+  private void sourceFileCheck(Authority entity) {
+    var sourceFileId = Optional.ofNullable(entity.getAuthoritySourceFile())
+      .map(AuthoritySourceFile::getId)
+      .orElse(null);
+    if (sourceFileId != null && !sourceFileRepository.existsById(sourceFileId)) {
+      throw EntityReferenceNotFoundException.forAuthoritySourceFile();
+    }
+  }
+
   private Map<UUID, Boolean> contructExistenceMap(Set<UUID> ids, List<UUID> existingIds) {
     var existingIdsSet = new HashSet<>(existingIds);
 
@@ -228,8 +244,8 @@ public class AuthorityService {
     var existing = repository.findByIdAndDeletedFalse(id).orElseThrow(() -> new AuthorityNotFoundException(id));
 
     var sourceFileId = Optional.ofNullable(modified.getAuthoritySourceFile())
-        .map(AuthoritySourceFile::getId)
-        .orElse(null);
+      .map(AuthoritySourceFile::getId)
+      .orElse(null);
     if (sourceFileId != null && !sourceFileRepository.existsById(sourceFileId)) {
       throw new AuthoritySourceFileNotFoundException(sourceFileId);
     }

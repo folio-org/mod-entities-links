@@ -18,7 +18,6 @@ import org.folio.entlinks.domain.dto.AuthorityFullDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityIdDto;
 import org.folio.entlinks.domain.dto.AuthorityIdDtoCollection;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.service.authority.AuthoritiesBulkContext;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
@@ -32,7 +31,6 @@ import org.folio.tenant.domain.dto.SettingCollection;
 import org.folio.tenant.settings.service.TenantSettingsService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Log4j2
 @Service
@@ -44,7 +42,6 @@ public class AuthorityServiceDelegate {
   private final AuthorityS3Service authorityS3Service;
   private final LocalStorageProperties localStorageProperties;
   private final AuthorityDataStatService dataStatService;
-  private final AuthorityRepository authorityRepository;
   private final TenantSettingsService tenantSettingsService;
 
   public AuthorityServiceDelegate(AuthorityService service,
@@ -53,7 +50,6 @@ public class AuthorityServiceDelegate {
                                   AuthorityS3Service authorityS3Service,
                                   LocalStorageProperties localStorageProperties,
                                   AuthorityDataStatService dataStatService,
-                                  AuthorityRepository authorityRepository,
                                   TenantSettingsService tenantSettingsService) {
     this.dataStatService = dataStatService;
     this.service = service;
@@ -61,7 +57,6 @@ public class AuthorityServiceDelegate {
     this.eventPublisher = eventPublisher;
     this.authorityS3Service = authorityS3Service;
     this.localStorageProperties = localStorageProperties;
-    this.authorityRepository = authorityRepository;
     this.tenantSettingsService = tenantSettingsService;
   }
 
@@ -108,7 +103,7 @@ public class AuthorityServiceDelegate {
    * Deletes and propagates deletion for associated data stats.
    */
   public void deleteAuthorityById(UUID id) {
-    var authority = service.deleteById(id);
+    var authority = service.deleteByIdSoft(id);
     dataStatService.deleteByAuthorityId(id);
 
     eventPublisher.publishSoftDeleteEvent(mapper.toDto(authority));
@@ -130,7 +125,6 @@ public class AuthorityServiceDelegate {
     return authorityBulkCreateResponse;
   }
 
-  @Transactional
   public void expire() {
     var retention = fetchAuthoritiesRetentionDuration();
 
@@ -139,9 +133,7 @@ public class AuthorityServiceDelegate {
     }
 
     var tillDate = LocalDateTime.now().minusDays(retention.get());
-    try (var authorities = authorityRepository.streamByDeletedTrueAndUpdatedDateLessThanEqual(tillDate)) {
-      authorities.forEach(this::processExpiredAuthority);
-    }
+    service.expireHardDeleted(tillDate, authority -> eventPublisher.publishHardDeleteEvent(mapper.toDto(authority)));
   }
 
   private AuthorityFullDtoCollection retrieveDeletedCollection(Integer offset, Integer limit, String cqlQuery,
@@ -154,11 +146,6 @@ public class AuthorityServiceDelegate {
 
     var entitiesPage = service.getAllDeleted(offset, limit, cqlQuery);
     return mapper.toAuthorityCollection(entitiesPage);
-  }
-
-  private void processExpiredAuthority(Authority authority) {
-    authorityRepository.delete(authority);
-    eventPublisher.publishHardDeleteEvent(mapper.toDto(authority));
   }
 
   private Optional<Integer> fetchAuthoritiesRetentionDuration() {

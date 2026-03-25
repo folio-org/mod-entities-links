@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -158,7 +159,7 @@ class AuthorityServiceDelegateTest {
     var entity = new Authority();
     entity.setId(id);
     var dto = new AuthorityDto().id(id);
-    when(service.deleteById(id)).thenReturn(entity);
+    when(service.deleteByIdSoft(id)).thenReturn(entity);
     when(mapper.toDto(entity)).thenReturn(dto);
 
     // when
@@ -336,16 +337,19 @@ class AuthorityServiceDelegateTest {
     var authority = new Authority();
     authority.setId(UUID.randomUUID());
     var dto = new AuthorityDto().id(authority.getId());
-    var stream = java.util.stream.Stream.of(authority);
 
     when(tenantSettingsService.getGroupSettings(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getGroup()))
       .thenReturn(Optional.of(groupSettings));
-    when(authorityRepository.streamByDeletedTrueAndUpdatedDateLessThanEqual(any())).thenReturn(stream);
+    doAnswer(invocation -> {
+      java.util.function.Consumer<Authority> callback = invocation.getArgument(1);
+      callback.accept(authority);
+      return null;
+    }).when(service).expireHardDeleted(any(), any());
     when(mapper.toDto(authority)).thenReturn(dto);
 
     delegate.expire();
 
-    verify(authorityRepository).delete(authority);
+    verify(service).expireHardDeleted(any(), any());
     verify(eventPublisher).publishHardDeleteEvent(dto);
   }
 
@@ -356,7 +360,7 @@ class AuthorityServiceDelegateTest {
 
     delegate.expire();
 
-    verifyNoInteractions(authorityRepository);
+    verifyNoInteractions(service);
     verifyNoInteractions(eventPublisher);
   }
 }

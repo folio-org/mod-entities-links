@@ -60,6 +60,19 @@ private = true
 includeJsonbField = false
 
 [[sources]]
+name = "authority-heading-type"
+table = "authority_heading_type"
+
+[[entityTypes]]
+name = "authority-heading-type"
+source = "authority-heading-type"
+schema = "src/main/resources/swagger.api/schemas/authority-heading-type/authorityHeadingTypeDto.yaml"
+permissions = ["authority-heading-types.collection.get"]
+sort = ["id", "ASC"]
+private = true
+includeJsonbField = false
+
+[[sources]]
 name = "authority-identifier-type"
 table = "authority_identifier_type"
 

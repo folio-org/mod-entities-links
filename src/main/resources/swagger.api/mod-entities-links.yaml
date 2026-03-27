@@ -290,6 +290,9 @@ paths:
   /authority-identifier-types:
     $ref: './paths/authority-identifier-types/authority-identifier-types.yaml'
 
+  /authority-heading-types:
+    $ref: './paths/authority-heading-types/authority-heading-types.yaml'
+
   /authority-source-files:
     $ref: './paths/authority-source-files/authority-source-files.yaml'
 
@@ -490,6 +493,12 @@ components:
 
     authorityIdentifierTypeDtoCollection:
       $ref: schemas/authority-identifier-type/authorityIdentifierTypeDtoCollection.yaml
+
+    authorityHeadingTypeDto:
+      $ref: schemas/authority-heading-type/authorityHeadingTypeDto.yaml
+
+    authorityHeadingTypeDtoCollection:
+      $ref: schemas/authority-heading-type/authorityHeadingTypeDtoCollection.yaml
 
     authoritySourceFileDto:
       $ref: schemas/authority-source-file/authoritySourceFileDto.yaml

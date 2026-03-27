@@ -1,0 +1,14 @@
+description: A collection of authority heading types
+type: object
+properties:
+  headingTypes:
+    description: List of authority heading types
+    type: array
+    items:
+      $ref: './authorityHeadingTypeDto.yaml'
+  totalRecords:
+    description: Total amount of records
+    type: integer
+required:
+  - headingTypes
+  - totalRecords

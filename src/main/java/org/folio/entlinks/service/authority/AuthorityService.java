@@ -42,8 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthorityService {
 
-  private static final String ALL_RECORDS_CQL = "cql.allRecords=1";
-
   private final AuthorityRepository repository;
   private final AuthorityJdbcRepository jdbcRepository;
   private final AuthoritySourceFileRepository sourceFileRepository;
@@ -182,7 +180,7 @@ public class AuthorityService {
    */
   public Map<UUID, Boolean> authoritiesExist(Set<UUID> authorityIds) {
     var existingIds = repository.findExistingIdsByIdsAndDeletedFalse(authorityIds);
-    return contructExistenceMap(authorityIds, existingIds);
+    return constructExistenceMap(authorityIds, existingIds);
   }
 
   /**
@@ -199,7 +197,7 @@ public class AuthorityService {
       return Collections.emptyMap();
     }
     var existingIds = jdbcRepository.findExistingIdsByIdsAndDeletedFalse(authorityIds, centralTenant.get());
-    return contructExistenceMap(authorityIds, existingIds);
+    return constructExistenceMap(authorityIds, existingIds);
   }
 
   public Map<UUID, String> findNaturalIdsByIdInAndDeletedFalseForCentralIfOnMember(Collection<UUID> ids) {
@@ -230,7 +228,7 @@ public class AuthorityService {
     }
   }
 
-  private Map<UUID, Boolean> contructExistenceMap(Set<UUID> ids, List<UUID> existingIds) {
+  private Map<UUID, Boolean> constructExistenceMap(Set<UUID> ids, List<UUID> existingIds) {
     var existingIdsSet = new HashSet<>(existingIds);
 
     return ids.stream()

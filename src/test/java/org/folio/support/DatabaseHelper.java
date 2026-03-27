@@ -179,8 +179,6 @@ public class DatabaseHelper {
         entity.isDeleted(), sourceFileId);
   }
 
-  }
-
   public AuthorityNoteType getAuthorityNoteTypeById(UUID id, String tenant) {
     String sql = "SELECT * FROM " + getDbPath(tenant, AUTHORITY_NOTE_TYPE_TABLE) + " WHERE id = '" + id + "'";
     return jdbcTemplate.query(sql, rs -> {

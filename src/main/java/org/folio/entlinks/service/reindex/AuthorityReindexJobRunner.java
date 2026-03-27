@@ -2,8 +2,8 @@ package org.folio.entlinks.service.reindex;
 
 import static org.folio.entlinks.domain.entity.Authority.HEADING_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.HEADING_TYPE_COLUMN;
-import static org.folio.entlinks.domain.entity.Authority.ID_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.IDENTIFIERS_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.ID_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.NATURAL_ID_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.NOTES_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.SAFT_HEADINGS_COLUMN;
@@ -83,7 +83,7 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
     jdbcTemplate.setFetchSize(BATCH_SIZE);
     try (var authorityStream = jdbcTemplate.queryForStream(selectQuery(context.getTenantId()),
-        (rs, rowNum) -> toAuthorityEntity(rs))) {
+      (rs, rowNum) -> toAuthorityEntity(rs))) {
 
       var batch = new ArrayList<Authority>(BATCH_SIZE);
       authorityStream.forEach(authority -> {
@@ -96,7 +96,6 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
       if (!batch.isEmpty()) {
         processBatch(batch, context, progressTracker);
       }
-
     } catch (Exception e) {
       log.warn(e);
       reindexService.logJobFailed(context.getJobId());
@@ -107,7 +106,7 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
   }
 
   private void processBatch(List<Authority> authorities, ReindexContext context,
-                             ReindexJobProgressTracker progressTracker) {
+                            ReindexJobProgressTracker progressTracker) {
     authorities.forEach(authority -> {
       eventPublisher.publishReindexEvent(mapper.toDto(authority), context);
       progressTracker.incrementProcessedCount();
@@ -177,8 +176,8 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
   private String selectQuery(String tenant) {
     return "SELECT id, _version, natural_id, source, source_file_id, heading, heading_type,"
-      + " subject_heading_code, sft_headings, saft_headings, identifiers, notes,"
-      + " created_date, created_by_user_id, updated_date, updated_by_user_id"
-      + " FROM " + schemaPath(tenant, AUTHORITY_TABLE) + " WHERE deleted = false";
+           + " subject_heading_code, sft_headings, saft_headings, identifiers, notes,"
+           + " created_date, created_by_user_id, updated_date, updated_by_user_id"
+           + " FROM " + schemaPath(tenant, AUTHORITY_TABLE) + " WHERE deleted = false";
   }
 }

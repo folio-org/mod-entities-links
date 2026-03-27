@@ -22,6 +22,7 @@
 * Create migration script for entities links: drop duplicate links/authorities/sats ([MODELINKS-388](https://folio-org.atlassian.net/browse/MODELINKS-388))
 * Add authorities integration with FQM ([MODELINKS-373](https://folio-org.atlassian.net/browse/MODELINKS-373))
 * Implement collection retrieval endpoint for authority identifier types ([MODELINKS-401](https://folio-org.atlassian.net/browse/MODELINKS-401))
+* Consolidate authority_archive into authority using soft-delete (deleted flag) ([MODELINKS-403](https://folio-org.atlassian.net/browse/MODELINKS-403))
 
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))

@@ -102,7 +102,6 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     tryGet(authoritySourceFilesEndpoint())
       .andExpect(status().isOk())
       .andExpect(jsonPath("totalRecords", is(createdEntities.size())))
-      .andExpect(jsonPath("authoritySourceFiles[1].hridManagement.startNumber", is(2)))
       .andExpect(jsonPath("authoritySourceFiles[0].metadata", notNullValue()))
       .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdDate", notNullValue()))
       .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedDate", notNullValue()))

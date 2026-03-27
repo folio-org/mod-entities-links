@@ -3,6 +3,7 @@ package org.folio.entlinks.service.reindex;
 import static org.folio.entlinks.domain.entity.Authority.HEADING_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.HEADING_TYPE_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.ID_COLUMN;
+import static org.folio.entlinks.domain.entity.Authority.IDENTIFIERS_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.NATURAL_ID_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.NOTES_COLUMN;
 import static org.folio.entlinks.domain.entity.Authority.SAFT_HEADINGS_COLUMN;
@@ -22,12 +23,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
@@ -56,9 +54,9 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
   static final int BATCH_SIZE = 50;
 
   private static final TypeReference<HeadingRef[]> HEADING_TYPE_REF = new TypeReference<>() { };
+  private static final TypeReference<AuthorityIdentifier[]> IDENTIFIER_TYPE_REF = new TypeReference<>() { };
   private static final TypeReference<AuthorityNote[]> NOTE_TYPE_REF = new TypeReference<>() { };
   private static final String AUTHORITY_TABLE = "authority";
-  private static final String AUTHORITY_IDENTIFIER_TABLE = "authority_identifier";
 
   private final JdbcTemplate jdbcTemplate;
   private final FolioExecutionContext folioExecutionContext;
@@ -110,35 +108,10 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
   private void processBatch(List<Authority> authorities, ReindexContext context,
                              ReindexJobProgressTracker progressTracker) {
-    fetchAndAttachIdentifiers(authorities, context.getTenantId());
     authorities.forEach(authority -> {
       eventPublisher.publishReindexEvent(mapper.toDto(authority), context);
       progressTracker.incrementProcessedCount();
       reindexService.logJobProgress(progressTracker, context.getJobId());
-    });
-  }
-
-  private void fetchAndAttachIdentifiers(List<Authority> authorities, String tenant) {
-    var idList = authorities.stream()
-      .map(a -> "'" + a.getId() + "'")
-      .collect(Collectors.joining(","));
-
-    var sql = "SELECT authority_id, value, identifier_type_id FROM "
-      + schemaPath(tenant, AUTHORITY_IDENTIFIER_TABLE)
-      + " WHERE authority_id IN (" + idList + ")";
-
-    Map<UUID, List<AuthorityIdentifier>> identifiersByAuthorityId = new HashMap<>();
-    jdbcTemplate.query(sql, rs -> {
-      var authorityId = UUID.fromString(rs.getString("authority_id"));
-      var identifier = new AuthorityIdentifier(
-        rs.getString("value"),
-        UUID.fromString(rs.getString("identifier_type_id")));
-      identifiersByAuthorityId.computeIfAbsent(authorityId, k -> new ArrayList<>()).add(identifier);
-    });
-
-    authorities.forEach(authority -> {
-      var identifiers = identifiersByAuthorityId.get(authority.getId());
-      authority.setIdentifiers(identifiers != null ? identifiers : List.of());
     });
   }
 
@@ -165,6 +138,7 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
       authority.setSftHeadings(readJsonArray(rs, SFT_HEADINGS_COLUMN, HEADING_TYPE_REF));
       authority.setSaftHeadings(readJsonArray(rs, SAFT_HEADINGS_COLUMN, HEADING_TYPE_REF));
+      authority.setIdentifiers(readJsonArray(rs, IDENTIFIERS_COLUMN, IDENTIFIER_TYPE_REF));
       authority.setNotes(readJsonArray(rs, NOTES_COLUMN, NOTE_TYPE_REF));
 
       populateMetadata(authority, rs);
@@ -203,7 +177,7 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
   private String selectQuery(String tenant) {
     return "SELECT id, _version, natural_id, source, source_file_id, heading, heading_type,"
-      + " subject_heading_code, sft_headings, saft_headings, notes,"
+      + " subject_heading_code, sft_headings, saft_headings, identifiers, notes,"
       + " created_date, created_by_user_id, updated_date, updated_by_user_id"
       + " FROM " + schemaPath(tenant, AUTHORITY_TABLE) + " WHERE deleted = false";
   }

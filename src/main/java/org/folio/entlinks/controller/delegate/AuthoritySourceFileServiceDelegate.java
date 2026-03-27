@@ -10,9 +10,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
@@ -41,7 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthoritySourceFileServiceDelegate {
 
-  private static final String URL_PROTOCOL_PATTERN = "^(https?://www\\.|https?://|www\\.)";
+  private static final Pattern URL_PROTOCOL_PATTERN = Pattern.compile("^(https?://www\\.|https?://|www\\.)");
   private static final String AUTHORITY_TABLE_NAME = "authority";
 
   private final @Qualifier("authoritySourceFileService") AuthoritySourceFileService service;
@@ -123,10 +125,8 @@ public class AuthoritySourceFileServiceDelegate {
   private void normalizeBaseUrl(AuthoritySourceFile entity) {
     var baseUrl = entity.getBaseUrl();
     if (StringUtils.isNotBlank(baseUrl)) {
-      baseUrl = baseUrl.replaceFirst(URL_PROTOCOL_PATTERN, "");
-      if (!baseUrl.endsWith("/")) {
-        baseUrl += "/";
-      }
+      baseUrl = URL_PROTOCOL_PATTERN.matcher(baseUrl).replaceFirst("");
+      baseUrl = Strings.CS.appendIfMissing(baseUrl, "/");
       entity.setBaseUrl(baseUrl);
     }
   }

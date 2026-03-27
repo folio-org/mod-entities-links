@@ -6,7 +6,6 @@ import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
@@ -134,7 +133,7 @@ class AuthorityServiceDelegateTest {
 
     when(mapper.toEntity(modificationDto)).thenReturn(modifiedEntity);
     when(mapper.toDto(any(Authority.class))).thenReturn(oldDto).thenReturn(newDto);
-    when(service.update(eq(modifiedEntity)))
+    when(service.update(modifiedEntity))
       .thenReturn(new AuthorityUpdateResult(existingEntity, modifiedEntity));
     var captor2 = ArgumentCaptor.forClass(AuthorityDto.class);
 

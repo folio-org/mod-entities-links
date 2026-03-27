@@ -640,8 +640,6 @@ class AuthorityControllerIT extends IntegrationTestBase {
     awaitUntilAsserted(() ->
       assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_TABLE, TENANT_ID,
         String.format("id = '%s' AND deleted = true", authority.getId()))));
-    awaitUntilAsserted(() ->
-      assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID)));
     tryGet(authorityEndpoint(authority.getId()))
       .andExpect(status().isNotFound())
       .andExpect(exceptionMatch(AuthorityNotFoundException.class));

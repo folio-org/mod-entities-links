@@ -4,18 +4,7 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
 
-  <changeSet id="modelinks-448@@schema-alter-column-authority-heading-widen" author="pavlo_smahin">
-    <preConditions onFail="MARK_RAN">
-      <tableExists tableName="authority"/>
-      <columnExists tableName="authority" columnName="heading"/>
-    </preConditions>
-
-    <comment>Widen authority.heading from varchar(250) to varchar(2500) to match archive capacity</comment>
-
-    <modifyDataType tableName="authority" columnName="heading" newDataType="varchar(2500)"/>
-  </changeSet>
-
-  <changeSet id="modelinks-448@@data-migrate-authority-archive-to-authority" author="pavlo_smahin">
+  <changeSet id="modelinks-403@@data-migrate-authority-archive-to-authority" author="pavlo_smahin">
     <preConditions onFail="MARK_RAN">
       <tableExists tableName="authority"/>
       <tableExists tableName="authority_archive"/>
@@ -35,7 +24,7 @@
     </sql>
   </changeSet>
 
-  <changeSet id="modelinks-448@@schema-create-index-authority-heading-type" author="pavlo_smahin">
+  <changeSet id="modelinks-403@@schema-create-index-authority-heading-type" author="pavlo_smahin">
     <preConditions onFail="MARK_RAN">
       <tableExists tableName="authority"/>
       <not>
@@ -50,7 +39,7 @@
     </createIndex>
   </changeSet>
 
-  <changeSet id="modelinks-448@@schema-create-index-authority-created-date" author="pavlo_smahin">
+  <changeSet id="modelinks-403@@schema-create-index-authority-created-date" author="pavlo_smahin">
     <preConditions onFail="MARK_RAN">
       <tableExists tableName="authority"/>
       <not>
@@ -65,7 +54,7 @@
     </createIndex>
   </changeSet>
 
-  <changeSet id="modelinks-448@@schema-create-index-authority-updated-date" author="pavlo_smahin">
+  <changeSet id="modelinks-403@@schema-create-index-authority-updated-date" author="pavlo_smahin">
     <preConditions onFail="MARK_RAN">
       <tableExists tableName="authority"/>
       <not>
@@ -80,7 +69,7 @@
     </createIndex>
   </changeSet>
 
-  <changeSet id="modelinks-448@@schema-drop-trigger-archive-authority-on-soft-delete" author="pavlo_smahin">
+  <changeSet id="modelinks-403@@schema-drop-trigger-archive-authority-on-soft-delete" author="pavlo_smahin">
     <preConditions onFail="MARK_RAN">
       <tableExists tableName="authority"/>
     </preConditions>
@@ -93,7 +82,7 @@
     </sql>
   </changeSet>
 
-  <changeSet id="modelinks-448@@schema-drop-table-authority-archive" author="pavlo_smahin">
+  <changeSet id="modelinks-403@@schema-drop-table-authority-archive" author="pavlo_smahin">
     <preConditions onFail="MARK_RAN">
       <tableExists tableName="authority_archive"/>
     </preConditions>

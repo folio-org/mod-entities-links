@@ -8,7 +8,6 @@ import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
 import org.folio.entlinks.domain.dto.AuthorityDtoNote;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.entity.AuthorityIdentifier;
 import org.folio.entlinks.domain.entity.AuthorityNote;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
@@ -43,7 +42,7 @@ public interface AuthorityMapper {
   @Mapping(target = "sourceFileId", source = "authoritySourceFile.id")
   @Mapping(target = "subjectHeadings",
       expression = "java(toSubjectHeadingsDto(authority.getSubjectHeadingCode()))")
-  AuthorityDto toDto(AuthorityBase authority);
+  AuthorityDto toDto(Authority authority);
 
   AuthorityIdentifier toAuthorityIdentifier(AuthorityDtoIdentifier dto);
 
@@ -53,10 +52,10 @@ public interface AuthorityMapper {
 
   AuthorityDtoNote toAuthorityDtoNote(AuthorityNote note);
 
-  List<AuthorityDto> toDtoList(Iterable<AuthorityBase> authorityStorageIterable);
+  List<AuthorityDto> toDtoList(Iterable<Authority> authorityStorageIterable);
 
   default AuthorityDtoCollection toAuthorityCollection(
-      Page<AuthorityBase> authorityStorageIterable) {
+      Page<Authority> authorityStorageIterable) {
     var authorityDtos = toDtoList(authorityStorageIterable.getContent());
     return new AuthorityDtoCollection(authorityDtos, (int) authorityStorageIterable.getTotalElements());
   }
@@ -89,14 +88,14 @@ public interface AuthorityMapper {
   }
 
   @AfterMapping
-  default void authorityPostProcess(AuthorityDto source, @MappingTarget AuthorityBase target) {
+  default void authorityPostProcess(AuthorityDto source, @MappingTarget Authority target) {
     AuthorityUtilityMapper.extractAuthorityHeading(source, target);
     AuthorityUtilityMapper.extractAuthoritySftHeadings(source, target);
     AuthorityUtilityMapper.extractAuthoritySaftHeadings(source, target);
   }
 
   @AfterMapping
-  default void authorityDtoPostProcessing(AuthorityBase source, @MappingTarget AuthorityDto target) {
+  default void authorityDtoPostProcessing(Authority source, @MappingTarget AuthorityDto target) {
     AuthorityUtilityMapper.extractAuthorityDtoHeadingValue(source, target);
     AuthorityUtilityMapper.extractAuthorityDtoSftHeadings(source, target);
     AuthorityUtilityMapper.extractAuthorityDtoSaftHeadings(source, target);

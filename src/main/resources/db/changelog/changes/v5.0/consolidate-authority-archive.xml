@@ -1,0 +1,95 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="modelinks-403@@schema-drop-trigger-archive-authority-on-soft-delete" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority"/>
+    </preConditions>
+
+    <comment>Drop archive trigger and function — no longer needed after consolidation</comment>
+
+    <sql>
+      DROP TRIGGER IF EXISTS archive_authority_on_soft_delete ON authority CASCADE;
+      DROP FUNCTION IF EXISTS archive_authority_record();
+    </sql>
+  </changeSet>
+
+  <changeSet id="modelinks-403@@data-migrate-authority-archive-to-authority" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority"/>
+      <tableExists tableName="authority_archive"/>
+    </preConditions>
+
+    <comment>Migrate authority_archive rows back into authority table (soft-deleted rows); ON CONFLICT DO NOTHING to avoid duplicates</comment>
+
+    <sql>
+      INSERT INTO authority (id, natural_id, source_file_id, source, heading, heading_type, _version,
+        subject_heading_code, sft_headings, saft_headings, identifiers, notes, deleted, created_date, updated_date,
+        created_by_user_id, updated_by_user_id)
+      SELECT id, natural_id, source_file_id, source, heading, heading_type, _version,
+        subject_heading_code, sft_headings, saft_headings, identifiers, notes, deleted, created_date, updated_date,
+        created_by_user_id, updated_by_user_id
+      FROM authority_archive
+      ON CONFLICT (id) DO NOTHING;
+    </sql>
+  </changeSet>
+
+  <changeSet id="modelinks-403@@schema-create-index-authority-heading-type" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority"/>
+      <not>
+        <indexExists indexName="idx_authority_heading_type" tableName="authority"/>
+      </not>
+    </preConditions>
+
+    <comment>Create B-tree index for heading_type in authority (mirrors archive index)</comment>
+
+    <createIndex tableName="authority" indexName="idx_authority_heading_type">
+      <column name="heading_type"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="modelinks-403@@schema-create-index-authority-created-date" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority"/>
+      <not>
+        <indexExists indexName="idx_authority_created_date" tableName="authority"/>
+      </not>
+    </preConditions>
+
+    <comment>Create B-tree index for created_date in authority (mirrors archive index)</comment>
+
+    <createIndex tableName="authority" indexName="idx_authority_created_date">
+      <column name="created_date"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="modelinks-403@@schema-create-index-authority-updated-date" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority"/>
+      <not>
+        <indexExists indexName="idx_authority_updated_date" tableName="authority"/>
+      </not>
+    </preConditions>
+
+    <comment>Create B-tree index for updated_date in authority (mirrors archive index)</comment>
+
+    <createIndex tableName="authority" indexName="idx_authority_updated_date">
+      <column name="updated_date"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="modelinks-403@@schema-drop-table-authority-archive" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority_archive"/>
+    </preConditions>
+
+    <comment>Drop authority_archive table — data migrated to authority with deleted=true flag</comment>
+
+    <dropTable tableName="authority_archive"/>
+  </changeSet>
+
+</databaseChangeLog>

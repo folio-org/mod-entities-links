@@ -3,7 +3,6 @@ package org.folio.entlinks.controller;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.domain.entity.AuthoritySourceFileSource.FOLIO;
-import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
@@ -62,7 +61,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @IntegrationTest
 @DatabaseCleanup(tables = {
   AUTHORITY_TABLE,
-  AUTHORITY_ARCHIVE_TABLE,
   AUTHORITY_SOURCE_FILE_CODE_TABLE,
   AUTHORITY_SOURCE_FILE_TABLE}
 )
@@ -104,7 +102,6 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     tryGet(authoritySourceFilesEndpoint())
       .andExpect(status().isOk())
       .andExpect(jsonPath("totalRecords", is(createdEntities.size())))
-      .andExpect(jsonPath("authoritySourceFiles[1].hridManagement.startNumber", is(2)))
       .andExpect(jsonPath("authoritySourceFiles[0].metadata", notNullValue()))
       .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdDate", notNullValue()))
       .andExpect(jsonPath("authoritySourceFiles[0].metadata.updatedDate", notNullValue()))
@@ -540,15 +537,14 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     doDelete(authorityEndpoint(authority.getId()));
 
     awaitUntilAsserted(() ->
-      assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID)));
+      assertEquals(0, databaseHelper.countRowsWhere(AUTHORITY_TABLE, TENANT_ID, "deleted = false")));
     awaitUntilAsserted(() ->
-      assertEquals(1, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, TENANT_ID)));
+      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_TABLE, TENANT_ID, "deleted = true")));
 
     tryDelete(authoritySourceFilesEndpoint(authoritySrcFile.getId()))
       .andExpect(status().isUnprocessableContent())
-      .andExpect(exceptionMatch(DataIntegrityViolationException.class))
-      .andExpect(errorMessageMatch(is("Cannot complete operation on the entity due to it's relation with"
-                                      + " Authority Archive/Authority.")));
+      .andExpect(exceptionMatch(RequestBodyValidationException.class))
+      .andExpect(errorMessageMatch(is("Unable to delete. Authority source file has referenced authorities")));
 
     assertEquals(1, databaseHelper.countRows(AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
   }

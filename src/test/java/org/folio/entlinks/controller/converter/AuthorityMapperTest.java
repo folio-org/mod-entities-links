@@ -16,8 +16,6 @@ import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
 import org.folio.entlinks.domain.dto.AuthorityDtoNote;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthorityArchive;
-import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.entity.AuthorityIdentifier;
 import org.folio.entlinks.domain.entity.AuthorityNote;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
@@ -90,27 +88,6 @@ class AuthorityMapperTest {
   }
 
   @Test
-  void testAuthorityArchiveToDtoWithValidData() {
-    var archive = createAuthorityArchive();
-
-    var dto = authorityMapper.toDto(archive);
-
-    assertThat(dto).isNotNull();
-    assertThat(archive.getId()).isEqualTo(dto.getId());
-    assertThat(archive.getVersion()).isEqualTo(dto.getVersion());
-    assertThat(archive.getSource()).isEqualTo(dto.getSource());
-    assertThat(archive.getNaturalId()).isEqualTo(dto.getNaturalId());
-    assertThat(archive.getAuthoritySourceFile().getId()).isEqualTo(dto.getSourceFileId());
-    AuthorityIdentifier identifier = archive.getIdentifiers().getFirst();
-    assertThat(identifier.getIdentifierTypeId()).isEqualTo(dto.getIdentifiers().getFirst().getIdentifierTypeId());
-    assertThat(identifier.getValue()).isEqualTo(dto.getIdentifiers().getFirst().getValue());
-    assertThat(archive.getNotes().getFirst().getNote()).isEqualTo(dto.getNotes().getFirst().getNote());
-    assertThat(archive.getNotes().getFirst().getStaffOnly()).isEqualTo(dto.getNotes().getFirst().getStaffOnly());
-    assertThat(String.valueOf(archive.getSubjectHeadingCode())).isEqualTo(dto.getSubjectHeadings());
-    assertThat(fromTimestamp(archive.getUpdatedDate())).isEqualTo(dto.getMetadata().getUpdatedDate());
-  }
-
-  @Test
   void testToAuthorityIdentifierWithValidData() {
     var dtoIdentifier = new AuthorityDtoIdentifier();
     dtoIdentifier.setValue(TEST_PROPERTY_VALUE);
@@ -175,7 +152,7 @@ class AuthorityMapperTest {
 
   @Test
   void testToDtoListWithValidData() {
-    AuthorityBase authority = createAuthority();
+    Authority authority = createAuthority();
     var authorityList = new ArrayList<>(List.of(authority));
 
     List<AuthorityDto> dtoList = authorityMapper.toDtoList(authorityList);
@@ -223,7 +200,7 @@ class AuthorityMapperTest {
 
   @Test
   void testToAuthorityCollectionWithValidPage() {
-    AuthorityBase authority = createAuthority();
+    Authority authority = createAuthority();
 
     var authorityList = List.of(authority);
     var authorityPage = new PageImpl<>(authorityList);
@@ -267,26 +244,6 @@ class AuthorityMapperTest {
       .updatedByUserId(TEST_ID)
       .createdByUserId(TEST_ID)
       .build();
-  }
-
-  @NotNull
-  private static AuthorityArchive createAuthorityArchive() {
-    var file = new AuthoritySourceFile();
-    file.setId(TEST_ID);
-    var archive = new AuthorityArchive();
-    archive.setId(TEST_ID);
-    archive.setVersion(TEST_VERSION);
-    archive.setSource(TEST_PROPERTY_VALUE);
-    archive.setNaturalId(TEST_PROPERTY_VALUE);
-    archive.setAuthoritySourceFile(file);
-    archive.setIdentifiers(List.of(new AuthorityIdentifier(TEST_PROPERTY_VALUE, TEST_ID)));
-    archive.setNotes(List.of(new AuthorityNote(TEST_ID, TEST_PROPERTY_VALUE, true)));
-    archive.setSubjectHeadingCode(TEST_PROPERTY_VALUE.charAt(0));
-    archive.setUpdatedDate(TEST_DATE);
-    archive.setCreatedDate(TEST_DATE);
-    archive.setUpdatedByUserId(TEST_ID);
-    archive.setCreatedByUserId(TEST_ID);
-    return archive;
   }
 
   @NotNull

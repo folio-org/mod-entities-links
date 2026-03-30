@@ -5,7 +5,8 @@ module = "mod-entities-links"
 
 [[sources]]
 name = "authority"
-table = "authority"
+sql = "SELECT * FROM ${tenant_id}_mod_entities_links.authority WHERE deleted = false"
+deps = ["authority"]
 
 [[entityTypes]]
 name = "authority"

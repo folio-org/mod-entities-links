@@ -55,7 +55,6 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 @DatabaseCleanup(tables = {
   DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
   DatabaseHelper.AUTHORITY_TABLE,
-  DatabaseHelper.AUTHORITY_ARCHIVE_TABLE,
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE,
 })
 class DataImportCreateEventListenerIT extends IntegrationTestBase {

@@ -7,7 +7,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
-import org.folio.entlinks.controller.delegate.AuthorityArchiveServiceDelegate;
 import org.folio.entlinks.controller.delegate.AuthorityServiceDelegate;
 import org.folio.entlinks.domain.dto.AuthorityBulkRequest;
 import org.folio.entlinks.domain.dto.AuthorityBulkResponse;
@@ -36,7 +35,6 @@ public class AuthorityController implements AuthorityStorageApi {
     "It is not allowed to retrieve authorities in text/plain format";
 
   private final AuthorityServiceDelegate delegate;
-  private final AuthorityArchiveServiceDelegate authorityArchiveServiceDelegate;
 
   @Override
   public ResponseEntity<AuthorityDto> createAuthority(AuthorityDto authority) {
@@ -67,9 +65,7 @@ public class AuthorityController implements AuthorityStorageApi {
                                                                          defaultValue = "application/json")
                                             List<String> acceptingMediaTypes) {
     validateGetParams(idOnly, acceptingMediaTypes);
-    var collectionDto = Boolean.TRUE.equals(deleted)
-                        ? authorityArchiveServiceDelegate.retrieveAuthorityArchives(offset, limit, query, idOnly)
-                        : delegate.retrieveAuthorityCollection(offset, limit, query, idOnly);
+    var collectionDto = delegate.retrieveAuthorityCollection(offset, limit, query, idOnly, deleted);
 
     return getAuthoritiesCollectionResponse(collectionDto, acceptingMediaTypes, idOnly);
   }
@@ -91,7 +87,7 @@ public class AuthorityController implements AuthorityStorageApi {
     produces = {"application/json"}
   )
   public ResponseEntity<Void> expireAuthorities() {
-    authorityArchiveServiceDelegate.expire();
+    delegate.expire();
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }
 

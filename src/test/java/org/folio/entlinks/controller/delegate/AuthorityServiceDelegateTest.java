@@ -6,10 +6,8 @@ import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -28,6 +26,7 @@ import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityIdDto;
 import org.folio.entlinks.domain.dto.AuthorityIdDtoCollection;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.service.authority.AuthoritiesBulkContext;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
@@ -36,8 +35,12 @@ import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.authority.AuthorityUpdateResult;
 import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
+import org.folio.entlinks.service.settings.TenantSetting;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
+import org.folio.tenant.domain.dto.Setting;
+import org.folio.tenant.domain.dto.SettingCollection;
+import org.folio.tenant.settings.service.TenantSettingsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,6 +64,8 @@ class AuthorityServiceDelegateTest {
   @Mock private AuthorityDataStatService dataStatService;
   @Mock private AuthorityS3Service authorityS3Service;
   @Mock private LocalStorageProperties localStorageProperties;
+  @Mock private AuthorityRepository authorityRepository;
+  @Mock private TenantSettingsService tenantSettingsService;
   @InjectMocks
   private AuthorityServiceDelegate delegate;
 
@@ -80,7 +85,7 @@ class AuthorityServiceDelegateTest {
 
     when(service.getAllIds(offset, limit, cql)).thenReturn(page);
 
-    var result = delegate.retrieveAuthorityCollection(offset, limit, cql, true);
+    var result = delegate.retrieveAuthorityCollection(offset, limit, cql, true, false);
 
     assertThat(result).isInstanceOf(AuthorityIdDtoCollection.class);
     var dtoResult = (AuthorityIdDtoCollection) result;
@@ -128,7 +133,7 @@ class AuthorityServiceDelegateTest {
 
     when(mapper.toEntity(modificationDto)).thenReturn(modifiedEntity);
     when(mapper.toDto(any(Authority.class))).thenReturn(oldDto).thenReturn(newDto);
-    when(service.update(eq(modifiedEntity), anyBoolean()))
+    when(service.update(modifiedEntity))
       .thenReturn(new AuthorityUpdateResult(existingEntity, modifiedEntity));
     var captor2 = ArgumentCaptor.forClass(AuthorityDto.class);
 
@@ -139,7 +144,7 @@ class AuthorityServiceDelegateTest {
     verify(eventPublisher).publishUpdateEvent(captor.capture(), captor2.capture());
     assertEquals(oldDto, captor.getValue());
     assertEquals(newDto, captor2.getValue());
-    verify(service).update(any(Authority.class), anyBoolean());
+    verify(service).update(any(Authority.class));
     verifyNoMoreInteractions(service);
     verify(mapper, times(2)).toDto(any(Authority.class));
     verify(mapper).toEntity(any(AuthorityDto.class));
@@ -153,7 +158,7 @@ class AuthorityServiceDelegateTest {
     var entity = new Authority();
     entity.setId(id);
     var dto = new AuthorityDto().id(id);
-    when(service.deleteById(id)).thenReturn(entity);
+    when(service.deleteByIdSoft(id)).thenReturn(entity);
     when(mapper.toDto(entity)).thenReturn(dto);
 
     // when
@@ -186,7 +191,7 @@ class AuthorityServiceDelegateTest {
     when(mapper.toAuthorityCollection(any())).thenReturn(expectedCollection);
 
     // when
-    var result = delegate.retrieveAuthorityCollection(offset, limit, cql, false);
+    var result = delegate.retrieveAuthorityCollection(offset, limit, cql, false, false);
 
     // then
     assertThat(result)
@@ -279,40 +284,83 @@ class AuthorityServiceDelegateTest {
   }
 
   @Test
-  void shouldUseConsortiumServiceWhenCentralTenantPresent() {
-    // given
-    var centralTenant = "central";
-    when(userTenantsService.getCentralTenant(TENANT_ID)).thenReturn(Optional.of(centralTenant));
-
-    var consortiumService = mock(AuthorityService.class);
-    // Re-initialize delegate to pick up the consortium service
-    var consortiumDelegate = new AuthorityServiceDelegate(
-      service,
-      consortiumService,
-      mapper,
-      context,
-      eventPublisher,
-      authorityS3Service,
-      localStorageProperties,
-      userTenantsService,
-      dataStatService
-    );
-
+  void shouldRetrieveDeletedAuthorityCollection_idsOnly() {
     var offset = 0;
     var limit = 2;
     var cql = "query";
-    var total = 5;
+    var total = 3;
     var page = new PageImpl<>(List.of(UUID.randomUUID(), UUID.randomUUID()), Pageable.unpaged(), total);
 
-    when(consortiumService.getAllIds(offset, limit, cql)).thenReturn(page);
+    when(service.getAllDeletedIds(offset, limit, cql)).thenReturn(page);
 
-    // when
-    var result = consortiumDelegate.retrieveAuthorityCollection(offset, limit, cql, true);
+    var result = delegate.retrieveAuthorityCollection(offset, limit, cql, true, true);
 
-    // then
     assertThat(result).isInstanceOf(AuthorityIdDtoCollection.class);
-    verify(consortiumService).getAllIds(offset, limit, cql);
-    verifyNoInteractions(service); // regular service should not be called
+    var dtoResult = (AuthorityIdDtoCollection) result;
+    assertThat(dtoResult.getTotalRecords()).isEqualTo(total);
+    verify(service).getAllDeletedIds(offset, limit, cql);
+    verifyNoMoreInteractions(service);
+  }
+
+  @Test
+  void shouldRetrieveDeletedAuthorityCollection_fullAuthorities() {
+    var offset = 0;
+    var limit = 2;
+    var cql = "query";
+    var total = 3;
+    var authority = new Authority();
+    authority.setId(UUID.randomUUID());
+    var page = new PageImpl<>(List.of(authority), Pageable.unpaged(), total);
+    var dto = new AuthorityDto().id(authority.getId());
+    var expectedCollection = new AuthorityDtoCollection(List.of(dto), total);
+
+    when(service.getAllDeleted(offset, limit, cql)).thenReturn(page);
+    when(mapper.toAuthorityCollection(any())).thenReturn(expectedCollection);
+
+    var result = delegate.retrieveAuthorityCollection(offset, limit, cql, false, true);
+
+    assertThat(result).isEqualTo(expectedCollection);
+    verify(service).getAllDeleted(offset, limit, cql);
+    verify(mapper).toAuthorityCollection(any());
+    verifyNoMoreInteractions(service);
+  }
+
+  @Test
+  void shouldExpireAuthorities() {
+    var retentionDays = 30;
+    var groupSettings = new SettingCollection();
+    var enabledSetting = new Setting().key(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getKey()).value(true);
+    var periodSetting = new Setting().key(TenantSetting.ARCHIVES_EXPIRATION_PERIOD.getKey()).value(retentionDays);
+    groupSettings.setSettings(List.of(enabledSetting, periodSetting));
+
+    var authority = new Authority();
+    authority.setId(UUID.randomUUID());
+    var dto = new AuthorityDto().id(authority.getId());
+
+    when(tenantSettingsService.getGroupSettings(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getGroup()))
+      .thenReturn(Optional.of(groupSettings));
+    doAnswer(invocation -> {
+      java.util.function.Consumer<Authority> callback = invocation.getArgument(1);
+      callback.accept(authority);
+      return null;
+    }).when(service).expireHardDeleted(any(), any());
+    when(mapper.toDto(authority)).thenReturn(dto);
+
+    delegate.expire();
+
+    verify(service).expireHardDeleted(any(), any());
+    verify(eventPublisher).publishHardDeleteEvent(dto);
+  }
+
+  @Test
+  void shouldSkipExpireWhenNoSettings() {
+    when(tenantSettingsService.getGroupSettings(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getGroup()))
+      .thenReturn(Optional.empty());
+
+    delegate.expire();
+
+    verifyNoInteractions(service);
+    verifyNoInteractions(eventPublisher);
   }
 }
 

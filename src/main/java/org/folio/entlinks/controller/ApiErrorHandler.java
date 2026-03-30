@@ -3,14 +3,13 @@ package org.folio.entlinks.controller;
 import static java.util.Collections.emptyList;
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.WARN;
-import static org.folio.entlinks.config.constants.ErrorCode.NOT_EXISTED_AUTHORITY_SOURCE_FILE;
 import static org.folio.entlinks.exception.type.ErrorType.UNKNOWN_ERROR;
 import static org.folio.entlinks.exception.type.ErrorType.VALIDATION_ERROR;
 import static org.folio.entlinks.utils.DatabaseConstraintTranslator.translate;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,10 +17,9 @@ import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
 import org.folio.entlinks.config.constants.ErrorCode;
-import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.exception.AuthoritiesRequestNotSupportedMediaTypeException;
-import org.folio.entlinks.exception.AuthorityArchiveConstraintException;
 import org.folio.entlinks.exception.AuthoritySourceFileHridException;
+import org.folio.entlinks.exception.EntityReferenceNotFoundException;
 import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.exception.ResourceNotFoundException;
@@ -29,7 +27,6 @@ import org.folio.entlinks.exception.type.ErrorType;
 import org.folio.tenant.domain.dto.Error;
 import org.folio.tenant.domain.dto.Errors;
 import org.folio.tenant.domain.dto.Parameter;
-import org.hibernate.TransientPropertyValueException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -67,14 +64,14 @@ public class ApiErrorHandler {
 
   @ExceptionHandler(AuthoritySourceFileHridException.class)
   public ResponseEntity<Errors> handleAuthoritySourceFileHridException(AuthoritySourceFileHridException e) {
-    return buildResponseEntity(e, UNPROCESSABLE_ENTITY, e.getErrorType());
+    return buildResponseEntity(e, UNPROCESSABLE_CONTENT, e.getErrorType());
   }
 
   @ExceptionHandler(RequestBodyValidationException.class)
   public ResponseEntity<Errors> handleRequestValidationException(RequestBodyValidationException e) {
     logException(DEBUG, e);
     var errorResponse = buildValidationError(e, e.getInvalidParameters());
-    return buildResponseEntity(errorResponse, UNPROCESSABLE_ENTITY);
+    return buildResponseEntity(errorResponse, UNPROCESSABLE_CONTENT);
   }
 
   @ExceptionHandler(AuthoritiesRequestNotSupportedMediaTypeException.class)
@@ -102,7 +99,13 @@ public class ApiErrorHandler {
       .toList();
 
     var errorResponse = new Errors().errors(errors).totalRecords(errors.size());
-    return buildResponseEntity(errorResponse, UNPROCESSABLE_ENTITY);
+    return buildResponseEntity(errorResponse, UNPROCESSABLE_CONTENT);
+  }
+
+  @ExceptionHandler(EntityReferenceNotFoundException.class)
+  public ResponseEntity<Errors> handleEntityReferenceNotFoundException(EntityReferenceNotFoundException e) {
+    logException(DEBUG, e);
+    return buildResponseEntity(e, UNPROCESSABLE_CONTENT, VALIDATION_ERROR);
   }
 
   @ExceptionHandler({
@@ -130,24 +133,13 @@ public class ApiErrorHandler {
 
   @ExceptionHandler({
     DataIntegrityViolationException.class,
-    InvalidDataAccessApiUsageException.class,
-    AuthorityArchiveConstraintException.class
+    InvalidDataAccessApiUsageException.class
   })
   public ResponseEntity<Errors> conflict(Exception e) {
     var cause = e.getCause();
     if (cause instanceof ConstraintViolationException cve) {
       var errorCode = translate(cve);
-      return buildResponseEntity(errorCode, VALIDATION_ERROR, UNPROCESSABLE_ENTITY);
-    } else if (cause instanceof IllegalStateException ise) {
-      var innerCause = ise.getCause();
-      if (innerCause instanceof TransientPropertyValueException tpve) {
-        var propertyName = tpve.getPropertyName();
-        var transientEntityName = tpve.getTransientEntityName();
-        if (AuthoritySourceFile.class.getName().equals(transientEntityName)
-            && "authoritySourceFile".equals(propertyName)) {
-          return buildResponseEntity(NOT_EXISTED_AUTHORITY_SOURCE_FILE, VALIDATION_ERROR, UNPROCESSABLE_ENTITY);
-        }
-      }
+      return buildResponseEntity(errorCode, VALIDATION_ERROR, UNPROCESSABLE_CONTENT);
     }
     return buildResponseEntity(e, BAD_REQUEST, VALIDATION_ERROR);
   }

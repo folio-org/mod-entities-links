@@ -3,6 +3,7 @@ package org.folio.entlinks.service.authority;
 import static org.folio.entlinks.utils.ServiceUtils.initId;
 
 import com.google.common.collect.Maps;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
+import org.folio.entlinks.exception.EntityReferenceNotFoundException;
 import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.spring.FolioExecutionContext;
@@ -37,7 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Primary
 @Service("authorityService")
 @RequiredArgsConstructor
-public class AuthorityService implements AuthorityServiceI<Authority> {
+public class AuthorityService {
 
   private final AuthorityRepository repository;
   private final AuthorityJdbcRepository jdbcRepository;
@@ -45,7 +48,6 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
   private final UserTenantsService userTenantsService;
   private final FolioExecutionContext folioExecutionContext;
 
-  @Override
   public Page<Authority> getAll(Integer offset, Integer limit, String cql) {
     log.debug("getAll:: Attempts to find all Authority by [offset: {}, limit: {}, cql: {}]", offset, limit,
       cql);
@@ -57,7 +59,17 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
     return repository.findByCql(cql, new OffsetRequest(offset, limit));
   }
 
-  @Override
+  public Page<Authority> getAllDeleted(Integer offset, Integer limit, String cql) {
+    log.debug("getAllDeleted:: Attempts to find all deleted Authority by [offset: {}, limit: {}, cql: {}]",
+      offset, limit, cql);
+
+    if (StringUtils.isBlank(cql)) {
+      return repository.findAllByDeletedTrue(new OffsetRequest(offset, limit));
+    }
+
+    return repository.findDeletedByCql(cql, new OffsetRequest(offset, limit));
+  }
+
   public Page<UUID> getAllIds(Integer offset, Integer limit, String cql) {
     log.debug("getAll:: Attempts to find all Authority IDs by [offset: {}, limit: {}, cql: {}]",
       offset, limit, cql);
@@ -68,33 +80,53 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
     return repository.findIdsByCql(cql, new OffsetRequest(offset, limit));
   }
 
-  @Override
+  public Page<UUID> getAllDeletedIds(Integer offset, Integer limit, String cql) {
+    log.debug("getAllDeletedIds:: Attempts to find all deleted Authority IDs by [offset: {}, limit: {}, cql: {}]",
+      offset, limit, cql);
+
+    if (StringUtils.isBlank(cql)) {
+      return repository.findAllIdsByDeletedTrue(new OffsetRequest(offset, limit));
+    }
+
+    return repository.findDeletedIdsByCql(cql, new OffsetRequest(offset, limit));
+  }
+
   public Map<UUID, Authority> getAllByIds(Collection<UUID> ids) {
     return repository.findAllByIdInAndDeletedFalse(ids).stream()
       .collect(Collectors.toMap(Authority::getId, Function.identity()));
   }
 
-  @Override
   public Authority getById(UUID id) {
     log.debug("getById:: Loading Authority by ID [id: {}]", id);
 
     return repository.findByIdAndDeletedFalse(id).orElseThrow(() -> new AuthorityNotFoundException(id));
   }
 
-  @Override
   public Authority create(Authority entity) {
-    return createInner(entity);
+    log.debug("create:: Attempting to create Authority [entity: {}]", entity);
+    initId(entity);
+
+    sourceFileCheck(entity);
+
+    return repository.save(entity);
   }
 
-  @Override
   @Transactional
-  public AuthorityUpdateResult update(Authority modified, boolean forced) {
-    return updateInner(modified, forced);
+  public AuthorityUpdateResult update(Authority modified) {
+    log.debug("update:: Attempting to update Authority [authority: {}]", modified);
+
+    var existing = validateOnUpdateAndGetExisting(modified.getId(), modified);
+    var detachedExisting = new Authority(existing);
+
+    copyModifiableFields(existing, modified);
+
+    var saved = repository.saveAndFlush(existing);
+    return new AuthorityUpdateResult(detachedExisting, saved);
   }
 
-  @Override
   @Transactional
   public List<AuthorityUpdateResult> upsert(List<Authority> authorities) {
+    authorities.forEach(this::sourceFileCheck);
     var existingRecordsMap = getAllByIds(authorities.stream().map(Authority::getId).toList());
     final var detachedExistingRecordsMap = Maps.transformEntries(existingRecordsMap,
       (key, value) -> new Authority(value));
@@ -118,16 +150,15 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
       .toList();
   }
 
-  @Override
   @Transactional
-  public void deleteById(UUID id, boolean forced) {
-    deleteByIdInner(id, forced);
-  }
+  public Authority deleteByIdSoft(UUID id) {
+    log.debug("deleteById:: Attempt to delete Authority by [id: {}]", id);
 
-  @Override
-  @Transactional
-  public Authority deleteById(UUID id) {
-    return deleteByIdInner(id, false);
+    var existed = repository.findByIdAndDeletedFalse(id)
+      .orElseThrow(() -> new AuthorityNotFoundException(id));
+    existed.setDeleted(true);
+
+    return repository.save(existed);
   }
 
   /**
@@ -135,9 +166,8 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
    *
    * @param ids collection of authority record ids of {@link UUID} type
    */
-  @Override
   @Transactional
-  public void deleteByIds(Collection<UUID> ids) {
+  public void deleteByIdsHard(Collection<UUID> ids) {
     repository.deleteAllByIdInBatch(ids);
   }
 
@@ -146,10 +176,11 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
    *
    * @param authorityIds list of authority ids to check existence for.
    * @return map of authority ids to boolean values indicating existence.
-   * */
+   *
+   */
   public Map<UUID, Boolean> authoritiesExist(Set<UUID> authorityIds) {
     var existingIds = repository.findExistingIdsByIdsAndDeletedFalse(authorityIds);
-    return contructExistenceMap(authorityIds, existingIds);
+    return constructExistenceMap(authorityIds, existingIds);
   }
 
   /**
@@ -157,7 +188,8 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
    *
    * @param authorityIds list of authority ids to check existence for.
    * @return map of authority ids to boolean values indicating existence.
-   * */
+   *
+   */
   public Map<UUID, Boolean> authoritiesExistForCentralIfOnMember(Set<UUID> authorityIds) {
     var tenant = folioExecutionContext.getTenantId();
     var centralTenant = userTenantsService.getCentralTenant(tenant);
@@ -165,7 +197,7 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
       return Collections.emptyMap();
     }
     var existingIds = jdbcRepository.findExistingIdsByIdsAndDeletedFalse(authorityIds, centralTenant.get());
-    return contructExistenceMap(authorityIds, existingIds);
+    return constructExistenceMap(authorityIds, existingIds);
   }
 
   public Map<UUID, String> findNaturalIdsByIdInAndDeletedFalseForCentralIfOnMember(Collection<UUID> ids) {
@@ -177,36 +209,26 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
     return jdbcRepository.findAuthorityNaturalIdsByIdsAndDeletedFalse(ids, centralTenant.get());
   }
 
-  protected Authority createInner(Authority entity) {
-    log.debug("create:: Attempting to create Authority [entity: {}]", entity);
-    initId(entity);
-
-    return repository.save(entity);
+  @Transactional
+  public void expireHardDeleted(LocalDateTime tillDate, Consumer<Authority> authorityCallback) {
+    try (var authorities = repository.streamByDeletedTrueAndUpdatedDateLessThanEqual(tillDate)) {
+      authorities.forEach(authority -> {
+        repository.delete(authority);
+        authorityCallback.accept(authority);
+      });
+    }
   }
 
-  protected AuthorityUpdateResult updateInner(Authority modified, boolean forced) {
-    log.debug("update:: Attempting to update Authority [authority: {}]", modified);
-
-    var existing = validateOnUpdateAndGetExisting(modified.getId(), modified);
-    var detachedExisting = new Authority(existing);
-
-    copyModifiableFields(existing, modified);
-
-    var saved = repository.saveAndFlush(existing);
-    return new AuthorityUpdateResult(detachedExisting, saved);
+  private void sourceFileCheck(Authority entity) {
+    var sourceFileId = Optional.ofNullable(entity.getAuthoritySourceFile())
+      .map(AuthoritySourceFile::getId)
+      .orElse(null);
+    if (sourceFileId != null && !sourceFileRepository.existsById(sourceFileId)) {
+      throw EntityReferenceNotFoundException.forAuthoritySourceFile();
+    }
   }
 
-  protected Authority deleteByIdInner(UUID id, boolean forced) {
-    log.debug("deleteById:: Attempt to delete Authority by [id: {}]", id);
-
-    var existed = repository.findByIdAndDeletedFalse(id)
-      .orElseThrow(() -> new AuthorityNotFoundException(id));
-    existed.setDeleted(true);
-
-    return repository.save(existed);
-  }
-
-  private Map<UUID, Boolean> contructExistenceMap(Set<UUID> ids, List<UUID> existingIds) {
+  private Map<UUID, Boolean> constructExistenceMap(Set<UUID> ids, List<UUID> existingIds) {
     var existingIdsSet = new HashSet<>(existingIds);
 
     return ids.stream()
@@ -220,8 +242,8 @@ public class AuthorityService implements AuthorityServiceI<Authority> {
     var existing = repository.findByIdAndDeletedFalse(id).orElseThrow(() -> new AuthorityNotFoundException(id));
 
     var sourceFileId = Optional.ofNullable(modified.getAuthoritySourceFile())
-        .map(AuthoritySourceFile::getId)
-        .orElse(null);
+      .map(AuthoritySourceFile::getId)
+      .orElse(null);
     if (sourceFileId != null && !sourceFileRepository.existsById(sourceFileId)) {
       throw new AuthoritySourceFileNotFoundException(sourceFileId);
     }

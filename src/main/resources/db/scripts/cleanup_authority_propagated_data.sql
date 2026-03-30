@@ -13,7 +13,6 @@
 --   Cleans up data in a consortium member tenant (e.g., college, university)
 --   propagated from the consortium central tenant.
 --   Deletes:
---     - authority_archive rows with source = 'CONSORTIUM-MARC'
 --     - authority rows with source = 'CONSORTIUM-MARC'
 --     - instance_authority_link rows for shared MARC bibliographic records
 --   Uses UUID ranges to batch deletions.
@@ -48,14 +47,6 @@ BEGIN
 
     BEGIN
         FOREACH upper IN ARRAY arr LOOP
-            -- Delete shadow copies from the authority_archive
-            EXECUTE format(
-                'DELETE FROM %I_mod_entities_links.authority_archive
-                 WHERE source = ''CONSORTIUM-MARC''
-                   AND id > $1 AND id <= $2',
-                member_tenant
-            ) USING lower, upper;
-
             -- Delete shadow copies from the authority
             EXECUTE format(
                 'DELETE FROM %I_mod_entities_links.authority

@@ -46,7 +46,6 @@ import org.folio.entlinks.domain.dto.RelatedHeading;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordParsedRecord;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
@@ -69,6 +68,7 @@ public class TestDataUtils {
 
   public static final UUID[] AUTHORITY_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID(), randomUUID()};
   public static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3", "naturalId4"};
+  public static final UUID CONTROL_NUMBER_TYPE_ID = UUID.fromString("5d164f4b-0b15-4e42-ae75-cfcf85318ad9");
 
   public static AuthorityDomainEvent domainEvent(String type, AuthorityDto n, AuthorityDto o) {
     return new AuthorityDomainEvent(randomUUID(), o, n, DomainEventType.valueOf(type), TENANT_ID);
@@ -332,19 +332,9 @@ public class TestDataUtils {
       return entity;
     }
 
-    public static AuthorityArchive authorityArchive(int authorityIdNum, int sourceFileIdNum) {
-      var entity = new AuthorityArchive();
-      entity.setId(AUTHORITY_IDS[authorityIdNum]);
-      entity.setSource(SOURCES[authorityIdNum]);
-      entity.setNaturalId(NATURAL_IDS[authorityIdNum]);
-      entity.setHeading(HEADINGS[authorityIdNum]);
-      entity.setHeadingType(HEADING_TYPES[authorityIdNum]);
-      entity.setSubjectHeadingCode(HEADING_CODES[authorityIdNum]);
-      entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
-      entity.setCreatedByUserId(UUID.fromString(USER_ID));
-      entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
-      entity.setUpdatedByUserId(UUID.fromString(USER_ID));
-      entity.setAuthoritySourceFile(authoritySourceFile(sourceFileIdNum));
+    public static Authority authorityArchive(int authorityIdNum, int sourceFileIdNum) {
+      var entity = authority(authorityIdNum, sourceFileIdNum);
+      entity.setDeleted(true);
       return entity;
     }
 
@@ -400,7 +390,7 @@ public class TestDataUtils {
       noteDto.setStaffOnly(false);
       dto.setNotes(List.of(noteDto));
 
-      var identifier = new AuthorityDtoIdentifier("identifier_value", UUID.randomUUID());
+      var identifier = new AuthorityDtoIdentifier("identifier_value", CONTROL_NUMBER_TYPE_ID);
       dto.setIdentifiers(List.of(identifier));
 
       dto.addSftPersonalNameItem("sftPersonalName1");

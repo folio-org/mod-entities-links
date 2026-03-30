@@ -127,6 +127,7 @@ class AuthorityServiceTest {
     var newEntity = new Authority();
     newEntity.setAuthoritySourceFile(sourceFile);
 
+    when(sourceFileRepository.existsById(any(UUID.class))).thenReturn(true);
     when(repository.save(any(Authority.class))).thenReturn(expected);
     var argumentCaptor = ArgumentCaptor.forClass(Authority.class);
 
@@ -146,7 +147,7 @@ class AuthorityServiceTest {
     when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(existed));
     when(sourceFileRepository.existsById(any(UUID.class))).thenReturn(true);
     when(repository.saveAndFlush(any(Authority.class))).thenAnswer(invocation -> invocation.getArgument(0));
-    var updated = service.update(modified, false);
+    var updated = service.update(modified);
 
     assertThat(updated.oldEntity()).isEqualTo(existed);
     assertThat(updated.newEntity()).isEqualTo(modified);
@@ -171,7 +172,7 @@ class AuthorityServiceTest {
     when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(existed));
     when(repository.saveAndFlush(any(Authority.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    var updated = service.update(modified, false);
+    var updated = service.update(modified);
 
     assertThat(updated.newEntity().getAuthoritySourceFile()).isNull();
     verify(repository).findByIdAndDeletedFalse(id);
@@ -191,7 +192,7 @@ class AuthorityServiceTest {
 
     when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(existing));
 
-    var thrown = assertThrows(OptimisticLockingException.class, () -> service.update(modified, false));
+    var thrown = assertThrows(OptimisticLockingException.class, () -> service.update(modified));
 
     assertThat(thrown.getMessage())
       .isEqualTo("Cannot update record " + id + " because it has been changed (optimistic locking): "
@@ -205,7 +206,7 @@ class AuthorityServiceTest {
     when(repository.findByIdAndDeletedFalse(any(UUID.class))).thenReturn(Optional.of(authority));
     when(repository.save(any(Authority.class))).thenReturn(authority);
 
-    service.deleteById(UUID.randomUUID(), false);
+    service.deleteByIdSoft(UUID.randomUUID());
 
     verify(repository).findByIdAndDeletedFalse(any(UUID.class));
     verify(repository).save(any(Authority.class));
@@ -216,7 +217,7 @@ class AuthorityServiceTest {
     var id = UUID.randomUUID();
     when(repository.findByIdAndDeletedFalse(any(UUID.class))).thenReturn(Optional.empty());
 
-    var thrown = assertThrows(AuthorityNotFoundException.class, () -> service.deleteById(id, false));
+    var thrown = assertThrows(AuthorityNotFoundException.class, () -> service.deleteByIdSoft(id));
 
     assertThat(thrown.getMessage()).containsOnlyOnce(id.toString());
     verify(repository).findByIdAndDeletedFalse(any(UUID.class));
@@ -225,7 +226,7 @@ class AuthorityServiceTest {
 
   @Test
   void shouldHardDeleteAuthoritiesByIds() {
-    service.deleteByIds(List.of(UUID.randomUUID()));
+    service.deleteByIdsHard(List.of(UUID.randomUUID()));
 
     verify(repository).deleteAllByIdInBatch(anyIterable());
   }
@@ -308,14 +309,14 @@ class AuthorityServiceTest {
   }
 
   @Test
-  void shouldDeleteByIdAndReturnDeletedAuthority() {
+  void shouldDeleteByIdSoftAndReturnDeletedAuthorityHard() {
     var id = UUID.randomUUID();
     var authority = new Authority();
     authority.setId(id);
     when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(authority));
     when(repository.save(any(Authority.class))).thenReturn(authority);
 
-    var deleted = service.deleteById(id);
+    var deleted = service.deleteByIdSoft(id);
 
     assertThat(deleted).isEqualTo(authority);
     assertThat(deleted.isDeleted()).isTrue();
@@ -432,7 +433,7 @@ class AuthorityServiceTest {
     when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(existing));
     when(sourceFileRepository.existsById(sourceFileId)).thenReturn(false);
 
-    assertThrows(AuthoritySourceFileNotFoundException.class, () -> service.update(modified, false));
+    assertThrows(AuthoritySourceFileNotFoundException.class, () -> service.update(modified));
     verify(repository).findByIdAndDeletedFalse(id);
     verify(sourceFileRepository).existsById(sourceFileId);
     verifyNoMoreInteractions(repository);

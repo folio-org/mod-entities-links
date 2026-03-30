@@ -1,5 +1,5 @@
 ---
-feature_id: authority-heading-types-management
+feature_id: authority-heading-types
 title: Authority Heading Types Management
 updated: 2026-03-30
 ---

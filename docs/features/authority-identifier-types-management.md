@@ -1,5 +1,5 @@
 ---
-feature_id: authority-identifier-types-management
+feature_id: authority-identifier-types
 title: Authority Identifier Types Management
 updated: 2026-03-24
 ---

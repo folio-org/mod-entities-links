@@ -26,4 +26,4 @@ Consumers such as the FOLIO UI need a stable reference list of identifier types 
     - `LCCN`
     - `Other standard identifier`
     - `System control number`.
-- Read access requires the permission `inventory-storage.authority-identifier-types.collection.get`.
+- Read access requires the permission `authority-identifier-types.collection.get`.

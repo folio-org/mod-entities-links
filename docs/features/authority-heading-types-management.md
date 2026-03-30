@@ -13,9 +13,9 @@ Provides a read-only, paginated, CQL-filterable collection endpoint for retrievi
 Authority records store a `headingType` field whose value must correspond to a known heading type code. By exposing heading types through a dedicated API, clients (UI, FQM, search) can dynamically retrieve the valid set of heading types—including which ones are queryable—without hard-coding the list. The `queryable` flag distinguishes primary heading types from their truncated internal variants that should not appear in user-facing filters.
 
 ## Entry point(s)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /authority-heading-types | Returns a paged collection of authority heading types; supports `offset`, `limit`, and CQL `query` parameters |
+| Method | Path                     | Description                                                                                                   |
+|--------|--------------------------|---------------------------------------------------------------------------------------------------------------|
+| GET    | /authority-heading-types | Returns a paged collection of authority heading types; supports `offset`, `limit`, and CQL `query` parameters |
 
 ## Business rules and constraints
 - The endpoint is read-only (GET only); heading types are managed exclusively through database migrations.
@@ -26,9 +26,6 @@ Authority records store a `headingType` field whose value must correspond to a k
 - CQL filtering is supported on all fields (`id`, `name`, `code`, `queryable`).
 - The heading type data is also registered as a private FQM entity type (`authority-heading-type`) for use in FOLIO Query Machine queries.
 
-## Error behavior
-- **400 Bad Request**: Malformed CQL query or invalid request parameters.
-- **500 Internal Server Error**: Unexpected server-side failure.
-
 ## Dependencies and interactions
 - **FQM (FOLIO Query Machine)**: The `authority-heading-type` entity type is configured in `fqm-config.toml` as a private entity type backed by the `authority_heading_type` table, enabling FQM to query heading types for filter value lists.
+- Read access requires the permission `authority-heading-types.collection.get`.

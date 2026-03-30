@@ -1,7 +1,5 @@
 package org.folio.entlinks.domain.entity;
 
-import static org.folio.entlinks.utils.ConsortiumUtils.CONSORTIUM_SOURCE_PREFIX;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -148,14 +146,6 @@ public class Authority extends MetadataEntity implements Persistable<UUID>, Iden
   @PostLoad
   void postLoad() {
     this.isNew = false;
-  }
-
-  public void makeAsConsortiumShadowCopy() {
-    this.setSource(Strings.CS.prependIfMissing(this.getSource(), CONSORTIUM_SOURCE_PREFIX));
-  }
-
-  public boolean isConsortiumShadowCopy() {
-    return ConsortiumUtils.isConsortiumShadowCopy(this.getSource());
   }
 
   private @NonNull List<AuthorityNote> copyNotes(Authority other) {

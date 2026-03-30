@@ -4,6 +4,19 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
 
+  <changeSet id="modelinks-403@@schema-drop-trigger-archive-authority-on-soft-delete" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority"/>
+    </preConditions>
+
+    <comment>Drop archive trigger and function — no longer needed after consolidation</comment>
+
+    <sql>
+      DROP TRIGGER IF EXISTS archive_authority_on_soft_delete ON authority CASCADE;
+      DROP FUNCTION IF EXISTS archive_authority_record();
+    </sql>
+  </changeSet>
+
   <changeSet id="modelinks-403@@data-migrate-authority-archive-to-authority" author="pavlo_smahin">
     <preConditions onFail="MARK_RAN">
       <tableExists tableName="authority"/>
@@ -67,19 +80,6 @@
     <createIndex tableName="authority" indexName="idx_authority_updated_date">
       <column name="updated_date"/>
     </createIndex>
-  </changeSet>
-
-  <changeSet id="modelinks-403@@schema-drop-trigger-archive-authority-on-soft-delete" author="pavlo_smahin">
-    <preConditions onFail="MARK_RAN">
-      <tableExists tableName="authority"/>
-    </preConditions>
-
-    <comment>Drop archive trigger and function — no longer needed after consolidation</comment>
-
-    <sql>
-      DROP TRIGGER IF EXISTS archive_authority_on_soft_delete ON authority CASCADE;
-      DROP FUNCTION IF EXISTS archive_authority_record();
-    </sql>
   </changeSet>
 
   <changeSet id="modelinks-403@@schema-drop-table-authority-archive" author="pavlo_smahin">

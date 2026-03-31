@@ -46,6 +46,7 @@ public interface AuthorityMapper {
 
   AuthorityIdentifier toAuthorityIdentifier(AuthorityDtoIdentifier dto);
 
+  @Mapping(target = "identifierType", ignore = true)
   AuthorityDtoIdentifier toAuthorityDtoIdentifier(AuthorityIdentifier identifier);
 
   AuthorityNote toAuthorityNote(AuthorityDtoNote dto);

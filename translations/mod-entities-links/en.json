@@ -34,6 +34,8 @@
   "fqm.entityType.authority.notes.staff_only._qualified": "Notes — Staff only",
   "fqm.entityType.authority.notes.note": "Note",
   "fqm.entityType.authority.notes.note._qualified": "Notes — Note",
+  "fqm.entityType.authority.notes.note_type": "Note type",
+  "fqm.entityType.authority.notes.note_type._qualified": "Notes — Note type",
   "fqm.entityType.authority.notes.note_type_id": "Note type UUID",
   "fqm.entityType.authority.notes.note_type_id._qualified": "Notes — Note type UUID",
   "fqm.entityType.authority.metadata_created_date": "Created date",

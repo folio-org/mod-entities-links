@@ -51,6 +51,7 @@ public interface AuthorityMapper {
 
   AuthorityNote toAuthorityNote(AuthorityDtoNote dto);
 
+  @Mapping(target = "noteType", ignore = true)
   AuthorityDtoNote toAuthorityDtoNote(AuthorityNote note);
 
   List<AuthorityDto> toDtoList(Iterable<Authority> authorityStorageIterable);

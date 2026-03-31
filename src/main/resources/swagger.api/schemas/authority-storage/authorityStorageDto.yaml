@@ -109,7 +109,7 @@ properties:
   identifiers:
     type: array
     description: An extensible set of name-value pairs of identifiers associated with the resource
-    x-fqm-value-getter: "(:sourceAlias.identifiers)::text"
+    x-fqm-value-getter: "(SELECT jsonb_agg(record.value || jsonb_build_object('identifierType', identifier_type.name) ORDER BY record.value->>'identifierTypeId') FROM jsonb_array_elements((:sourceAlias.identifiers)) record(value) LEFT JOIN ${tenant_id}_mod_fqm_manager.src__authorities__entities_links__authority_identifier_type identifier_type ON (record.value->>'identifierTypeId') = identifier_type.id::text)::text"
     items:
       $ref: './authorityDtoIdentifier.yaml'
   notes:

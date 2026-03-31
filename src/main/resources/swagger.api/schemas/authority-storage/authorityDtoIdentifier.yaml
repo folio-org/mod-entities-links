@@ -11,6 +11,22 @@ properties:
     type: string
     format: uuid
     x-fqm-value-getter: "(SELECT array_agg(elems.value->>'identifierTypeId') FROM jsonb_array_elements(:sourceAlias.identifiers) AS elems)"
+  identifierType:
+    description: Resource identifier type. Used only for FQM queries
+    type: string
+    readOnly: true
+    x-fqm-value-function: ":value"
+    x-fqm-value-getter: "(SELECT array_agg(elems.value->>'identifierTypeId') FROM jsonb_array_elements(:sourceAlias.identifiers) AS elems)"
+    x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'identifierTypeId') FROM jsonb_array_elements(:sourceAlias.identifiers) AS elems)"
+    x-fqm-source: {
+      "entityTypeId": "e1d77962-f469-5a9c-a0e0-30987c1bae99",
+      "columnName": "name"
+    }
+    x-fqm-value-source-api: {
+      "path": "authority-identifier-types",
+      "valueJsonPath": "$.identifierTypes.*.id",
+      "labelJsonPath": "$.identifierTypes.*.name"
+    }
 required:
   - value
   - identifierTypeId

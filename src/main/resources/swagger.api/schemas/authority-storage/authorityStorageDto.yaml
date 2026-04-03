@@ -36,15 +36,25 @@ properties:
     type: string
     description: The authority heading value
     maxLength: 2500
-    x-fqm-value-getter: "lower(:sourceAlias.heading)"
+    x-fqm-value-getter: ":sourceAlias.heading"
     x-fqm-value-function: "lower(:value)"
     x-fqm-visible-by-default: true
   headingType:
     type: string
     description: The type of the authority heading
-    $ref: './headingType.yaml'
-    x-fqm-value-getter: ":sourceAlias.heading_type"
+    x-fqm-value-getter: "(SELECT heading_type.name FROM ${tenant_id}_mod_fqm_manager.src__authorities__entities_links__authority_heading_type heading_type WHERE heading_type.code = :sourceAlias.heading_type)"
+    x-fqm-filter-value-getter: "lower(:sourceAlias.heading_type)"
+    x-fqm-value-function: "lower(:value)"
     x-fqm-visible-by-default: true
+    x-fqm-source: {
+      entityTypeId: '8629d062-2878-5803-b8bf-f08fb1b00d31',
+      columnName: 'name'
+    }
+    x-fqm-value-source-api: {
+      "path": "authority-heading-types",
+      "valueJsonPath": "$.headingTypes[?(@.queryable == true)].code",
+      "labelJsonPath": "$.headingTypes[?(@.queryable == true)].name"
+    }
   _version:
     type: integer
     description: Record version for optimistic locking
@@ -57,7 +67,7 @@ properties:
   sftHeadings:
     type: array
     description: See from tracing headings
-    x-fqm-value-getter: "(:sourceAlias.sft_headings)::text"
+    x-fqm-value-getter: "(SELECT jsonb_agg(elems.value || jsonb_build_object('headingType', ht.name)) FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems LEFT JOIN ${tenant_id}_mod_fqm_manager.src__authorities__entities_links__authority_heading_type ht ON ht.code = elems.value->>'headingType')::text"
     items:
       type: object
       properties:
@@ -69,7 +79,15 @@ properties:
         headingType:
           type: string
           description: Heading type
-          $ref: './headingType.yaml'
+          x-fqm-source: {
+            entityTypeId: '8629d062-2878-5803-b8bf-f08fb1b00d31',
+            columnName: 'name'
+          }
+          x-fqm-value-source-api: {
+            "path": "authority-heading-types",
+            "valueJsonPath": "$.headingTypes[?(@.queryable == true)].code",
+            "labelJsonPath": "$.headingTypes[?(@.queryable == true)].name"
+          }
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
           x-fqm-value-function: ":value"
           x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
@@ -83,7 +101,7 @@ properties:
   saftHeadings:
     type: array
     description: See also from tracing headings
-    x-fqm-value-getter: "(:sourceAlias.saft_headings)::text"
+    x-fqm-value-getter: "(SELECT jsonb_agg(elems.value || jsonb_build_object('headingType', ht.name)) FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems LEFT JOIN ${tenant_id}_mod_fqm_manager.src__authorities__entities_links__authority_heading_type ht ON ht.code = elems.value->>'headingType')::text"
     items:
       type: object
       properties:
@@ -95,7 +113,15 @@ properties:
         headingType:
           type: string
           description: Heading type
-          $ref: './headingType.yaml'
+          x-fqm-source: {
+            entityTypeId: '8629d062-2878-5803-b8bf-f08fb1b00d31',
+            columnName: 'name'
+          }
+          x-fqm-value-source-api: {
+            "path": "authority-heading-types",
+            "valueJsonPath": "$.headingTypes[?(@.queryable == true)].code",
+            "labelJsonPath": "$.headingTypes[?(@.queryable == true)].name"
+          }
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
           x-fqm-value-function: ":value"
           x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"

@@ -46,10 +46,12 @@ public interface AuthorityMapper {
 
   AuthorityIdentifier toAuthorityIdentifier(AuthorityDtoIdentifier dto);
 
+  @Mapping(target = "identifierType", ignore = true)
   AuthorityDtoIdentifier toAuthorityDtoIdentifier(AuthorityIdentifier identifier);
 
   AuthorityNote toAuthorityNote(AuthorityDtoNote dto);
 
+  @Mapping(target = "noteType", ignore = true)
   AuthorityDtoNote toAuthorityDtoNote(AuthorityNote note);
 
   List<AuthorityDto> toDtoList(Iterable<Authority> authorityStorageIterable);

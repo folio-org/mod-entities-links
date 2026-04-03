@@ -25,6 +25,8 @@
 * Implement collection retrieval endpoint for authority identifier types ([MODELINKS-401](https://folio-org.atlassian.net/browse/MODELINKS-401))
 * Implement collection retrieval endpoint for authority heading types ([MODELINKS-404](https://folio-org.atlassian.net/browse/MODELINKS-404))
 * Consolidate authority_archive into authority using soft-delete (deleted flag) ([MODELINKS-403](https://folio-org.atlassian.net/browse/MODELINKS-403))
+* Support identifiers' type names for FQM ([MODELINKS-405](https://folio-org.atlassian.net/browse/MODELINKS-405))
+* Support notes' type names for FQM ([MODELINKS-406](https://folio-org.atlassian.net/browse/MODELINKS-406))
 
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))

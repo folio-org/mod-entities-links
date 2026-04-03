@@ -45,5 +45,14 @@
     "fqm.entityType.authority-source-file": "Authority source file",
     "fqm.entityType.authority-source-file._description": "Source authority file of the heading or reference.",
     "fqm.entityType.authority-source-file.id": "UUID",
-    "fqm.entityType.authority-source-file.name": "Name"
+    "fqm.entityType.authority-source-file.name": "Name",
+    "fqm.entityType.authority-identifier-type": "Identifier type",
+    "fqm.entityType.authority-identifier-type._description": "Authority Identifier type.",
+    "fqm.entityType.authority-identifier-type.id": "UUID",
+    "fqm.entityType.authority-identifier-type.name": "Name",
+    "fqm.entityType.authority-identifier-type.code": "Code",
+    "fqm.entityType.authority.identifiers.identifier_type": "Identifier type",
+    "fqm.entityType.authority.identifiers.identifier_type._qualified": "Identifier type",
+    "fqm.entityType.authority.notes.note_type": "Note type",
+    "fqm.entityType.authority.notes.note_type._qualified": "Notes — Note type"
 }

@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import jakarta.validation.ConstraintViolationException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.folio.entlinks.exception.AuthoritiesRequestNotSupportedMediaTypeException;
@@ -23,11 +25,13 @@ import org.folio.entlinks.exception.ReindexJobNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.exception.ResourceNotFoundException;
 import org.folio.entlinks.exception.type.ErrorType;
+import org.folio.spring.cql.CqlQueryValidationException;
 import org.folio.tenant.domain.dto.Errors;
 import org.folio.tenant.domain.dto.Parameter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -115,7 +119,7 @@ class ApiErrorHandlerTest {
     ResponseEntity<Errors> responseEntity = apiErrorHandler.handleAuthoritySourceFileHridException(exception);
 
     // Assert
-    assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.UNPROCESSABLE_ENTITY, responseEntity,
+    assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.UNPROCESSABLE_CONTENT, responseEntity,
       TEST_ERROR_MESSAGE);
   }
 
@@ -127,7 +131,7 @@ class ApiErrorHandlerTest {
     ResponseEntity<Errors> responseEntity = apiErrorHandler.handleRequestValidationException(exception);
 
     // Assert
-    assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.UNPROCESSABLE_ENTITY, responseEntity,
+    assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.UNPROCESSABLE_CONTENT, responseEntity,
       TEST_ERROR_MESSAGE);
 
     var error = Objects.requireNonNull(responseEntity.getBody()).getErrors().getFirst();
@@ -182,7 +186,7 @@ class ApiErrorHandlerTest {
       apiErrorHandler.handleMethodArgumentNotValidException(exception);
 
     // Assert
-    assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.UNPROCESSABLE_ENTITY, responseEntity,
+    assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.UNPROCESSABLE_CONTENT, responseEntity,
       TEST_ERROR_MESSAGE);
 
     var error = Objects.requireNonNull(responseEntity.getBody()).getErrors().getFirst();
@@ -232,6 +236,49 @@ class ApiErrorHandlerTest {
     assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.BAD_REQUEST, responseEntity, exception.getMessage());
   }
 
+  @ParameterizedTest
+  @MethodSource("constraintViolationExceptionsProvider")
+  void handleConstraintViolationException_ReturnsBadRequestResponse(
+      ConstraintViolationException exception, String expectedMessage) {
+    // Act
+    ResponseEntity<Errors> responseEntity = apiErrorHandler.handleConstraintViolationException(exception);
+
+    // Assert
+    assertNotNull(responseEntity);
+    assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+
+    Errors errors = responseEntity.getBody();
+    assertNotNull(errors);
+    assertEquals(1, errors.getTotalRecords());
+    assertEquals(1, errors.getErrors().size());
+
+    var error = errors.getErrors().getFirst();
+    assertEquals(expectedMessage, error.getMessage());
+    assertEquals(exception.getClass().getSimpleName(), error.getType());
+    assertEquals(VALIDATION_ERROR.getValue(), error.getCode());
+  }
+
+  @Test
+  void handleCqlQueryValidationException_ReturnsUnprocessableEntityResponse() {
+    // Act
+    ResponseEntity<Errors> responseEntity = apiErrorHandler.handleCqlQueryValidationException(
+        cqlQueryValidationException());
+
+    // Assert
+    assertNotNull(responseEntity);
+    assertEquals(HttpStatus.UNPROCESSABLE_CONTENT, responseEntity.getStatusCode());
+
+    Errors errors = responseEntity.getBody();
+    assertNotNull(errors);
+    assertEquals(1, errors.getTotalRecords());
+    assertEquals(1, errors.getErrors().size());
+
+    var error = errors.getErrors().getFirst();
+    assertEquals("Not implemented yet node type: CQLTermNode", error.getMessage());
+    assertEquals(CqlQueryValidationException.class.getSimpleName(), error.getType());
+    assertEquals(VALIDATION_ERROR.getValue(), error.getCode());
+  }
+
   private static List<Parameter> createInvalidParameter() {
     var parameter = new Parameter(FIELD_NAME);
     parameter.setValue(INVALID_VALUE);
@@ -262,6 +309,28 @@ class ApiErrorHandlerTest {
       mock(DataIntegrityViolationException.class),
       mock(InvalidDataAccessApiUsageException.class)
     );
+  }
+
+  private static Stream<Arguments> constraintViolationExceptionsProvider() {
+    return Stream.of(
+        Arguments.of(constraintViolationException("offset: must be greater than or equal to 0"),
+            "offset: must be greater than or equal to 0"),
+        Arguments.of(constraintViolationException("limit: must be less than or equal to 2000"),
+            "limit: must be less than or equal to 2000")
+    );
+  }
+
+  private static ConstraintViolationException constraintViolationException(String message) {
+    var exception = mock(ConstraintViolationException.class);
+    when(exception.getMessage()).thenReturn(message);
+    when(exception.getConstraintViolations()).thenReturn(Set.of());
+    return exception;
+  }
+
+  private static CqlQueryValidationException cqlQueryValidationException() {
+    var exception = mock(CqlQueryValidationException.class);
+    when(exception.getMessage()).thenReturn("Not implemented yet node type: CQLTermNode");
+    return exception;
   }
 
   private static void assertErrorResponse(Exception exception, ErrorType errorType, HttpStatus expectedStatus,

@@ -37,7 +37,7 @@ class AuthorityHeadingTypesControllerIT extends IntegrationTestBase {
     doGet(authorityHeadingTypesEndpoint() + "?query={cql}", "(cql.allRecords=1)sortby name/sort.ascending")
       .andExpect(jsonPath("totalRecords", is(DEFAULT_HEADING_TYPES_COUNT)))
       .andExpect(jsonPath("headingTypes[0].id", is(FIRST_SORTED_HEADING_TYPE_ID.toString())))
-      .andExpect(jsonPath("headingTypes[0].name", is("Chron Subdivision")))
+      .andExpect(jsonPath("headingTypes[0].name", is("Chronological subdivision")))
       .andExpect(jsonPath("headingTypes[0].code", is("chronSubdivision")))
       .andExpect(jsonPath("headingTypes[0].queryable", is(true)));
   }
@@ -47,7 +47,7 @@ class AuthorityHeadingTypesControllerIT extends IntegrationTestBase {
   void getAuthorityHeadingTypes_positive_entityFoundByCqlQuery() throws Exception {
     doGet(authorityHeadingTypesEndpoint() + "?query=({cql})", "id = " + FILTERED_HEADING_TYPE_ID)
       .andExpect(jsonPath("headingTypes[0].id", is(FILTERED_HEADING_TYPE_ID.toString())))
-      .andExpect(jsonPath("headingTypes[0].name", is("Personal Name")))
+      .andExpect(jsonPath("headingTypes[0].name", is("Personal name")))
       .andExpect(jsonPath("headingTypes[0].code", is("personalName")))
       .andExpect(jsonPath("headingTypes[0].queryable", is(true)))
       .andExpect(jsonPath("headingTypes[1]").doesNotExist())
@@ -60,7 +60,7 @@ class AuthorityHeadingTypesControllerIT extends IntegrationTestBase {
     var cqlQuery = "(cql.allRecords=1)sortby name/sort.ascending";
     doGet(authorityHeadingTypesEndpoint() + "?limit={limit}&offset={offset}&query={cql}", "1", "1", cqlQuery)
       .andExpect(jsonPath("headingTypes[0].id", is(SECOND_SORTED_HEADING_TYPE_ID.toString())))
-      .andExpect(jsonPath("headingTypes[0].name", is("Chron Subdivision Trunc")))
+      .andExpect(jsonPath("headingTypes[0].name", is("Chronological subdivision - Truncated")))
       .andExpect(jsonPath("headingTypes[0].code", is("chronSubdivisionTrunc")))
       .andExpect(jsonPath("headingTypes[0].queryable", is(false)))
       .andExpect(jsonPath("headingTypes[1]").doesNotExist())

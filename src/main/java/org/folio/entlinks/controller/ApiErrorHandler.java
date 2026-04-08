@@ -24,6 +24,7 @@ import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.exception.ResourceNotFoundException;
 import org.folio.entlinks.exception.type.ErrorType;
+import org.folio.spring.cql.CqlQueryValidationException;
 import org.folio.tenant.domain.dto.Error;
 import org.folio.tenant.domain.dto.Errors;
 import org.folio.tenant.domain.dto.Parameter;
@@ -142,6 +143,18 @@ public class ApiErrorHandler {
       return buildResponseEntity(errorCode, VALIDATION_ERROR, UNPROCESSABLE_CONTENT);
     }
     return buildResponseEntity(e, BAD_REQUEST, VALIDATION_ERROR);
+  }
+
+  @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+  public ResponseEntity<Errors> handleConstraintViolationException(jakarta.validation.ConstraintViolationException e) {
+    logException(DEBUG, e);
+    return buildResponseEntity(e, BAD_REQUEST, VALIDATION_ERROR);
+  }
+
+  @ExceptionHandler(CqlQueryValidationException.class)
+  public ResponseEntity<Errors> handleCqlQueryValidationException(CqlQueryValidationException e) {
+    logException(DEBUG, e);
+    return buildResponseEntity(e, UNPROCESSABLE_CONTENT, VALIDATION_ERROR);
   }
 
   private static ResponseEntity<Errors> buildResponseEntity(Exception e, HttpStatus status, ErrorType type) {

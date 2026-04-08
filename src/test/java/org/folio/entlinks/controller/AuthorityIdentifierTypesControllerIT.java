@@ -1,17 +1,28 @@
 package org.folio.entlinks.controller;
 
+import static org.folio.support.MatchUtils.errorMessageMatch;
+import static org.folio.support.MatchUtils.errorTypeMatch;
 import static org.folio.support.base.TestConstants.authorityIdentifierTypesEndpoint;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import jakarta.validation.ConstraintViolationException;
 import java.util.UUID;
+import java.util.stream.Stream;
+import lombok.SneakyThrows;
 import org.folio.entlinks.config.JpaConfig;
+import org.folio.spring.cql.CqlQueryValidationException;
 import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.context.annotation.Import;
 
 @IntegrationTest
@@ -92,5 +103,34 @@ class AuthorityIdentifierTypesControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("identifierTypes[0].metadata.updatedByUserId", is(DEFAULT_USER_ID)))
       .andExpect(jsonPath("identifierTypes[1]").doesNotExist())
       .andExpect(jsonPath("totalRecords", is(5)));
+  }
+
+  @Test
+  @SneakyThrows
+  @DisplayName("Get Collection: return 422 for invalid CQL query (CqlQueryValidationException)")
+  void getAuthorityIdentifierTypes_negative_invalidCqlQuery() {
+    tryGet(authorityIdentifierTypesEndpoint() + "?query=(cql.allRecordss=1)")
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(errorTypeMatch(is(CqlQueryValidationException.class.getSimpleName())))
+        .andExpect(errorMessageMatch(
+            containsString("Not implemented yet node type: CQLTermNode, CQL: cql.allRecordss = 1")));
+  }
+
+  @ParameterizedTest
+  @MethodSource("invalidRequestParamsProvider")
+  @SneakyThrows
+  @DisplayName("Get Collection: return 400 for invalid request parameters (ConstraintViolationException)")
+  void getAuthorityIdentifierTypes_negative_invalidRequestParams(String url, String expectedMessage) {
+    tryGet(url)
+        .andExpect(status().isBadRequest())
+        .andExpect(errorTypeMatch(is(ConstraintViolationException.class.getSimpleName())))
+        .andExpect(errorMessageMatch(containsString(expectedMessage)));
+  }
+
+  private static Stream<Arguments> invalidRequestParamsProvider() {
+    return Stream.of(
+        Arguments.of(authorityIdentifierTypesEndpoint() + "?offset=-1", "offset: must be greater than or equal to 0"),
+        Arguments.of(authorityIdentifierTypesEndpoint() + "?limit=2001", "limit: must be less than or equal to 2000")
+    );
   }
 }

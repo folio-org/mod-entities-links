@@ -27,6 +27,7 @@
 * Consolidate authority_archive into authority using soft-delete (deleted flag) ([MODELINKS-403](https://folio-org.atlassian.net/browse/MODELINKS-403))
 * Support identifiers' type names for FQM ([MODELINKS-405](https://folio-org.atlassian.net/browse/MODELINKS-405))
 * Support notes' type names for FQM ([MODELINKS-406](https://folio-org.atlassian.net/browse/MODELINKS-406))
+* Add handlers for ConstraintViolationException and CqlQueryValidationException ([MODELINKS-407](https://folio-org.atlassian.net/browse/MODELINKS-407))
 
 ### Bug fixes
 * Fix authority source file propagation to propagate all codes ([MODELINKS-315](https://folio-org.atlassian.net/browse/MODELINKS-315))

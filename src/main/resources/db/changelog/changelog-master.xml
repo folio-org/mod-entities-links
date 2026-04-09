@@ -36,4 +36,5 @@
   <include file="/changes/v5.0/cleanup-authority-data-stat.xml" relativeToChangelogFile="true" />
   <include file="/changes/v5.0/create-authority-identifier-type.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v5.0/consolidate-authority-archive.xml" relativeToChangelogFile="true"/>
+  <include file="/changes/v5.0/create-authority-heading-type.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

@@ -54,5 +54,11 @@
   "fqm.entityType.authority-identifier-type._description": "Authority Identifier type.",
   "fqm.entityType.authority-identifier-type.id": "UUID",
   "fqm.entityType.authority-identifier-type.name": "Name",
-  "fqm.entityType.authority-identifier-type.code": "Code"
+  "fqm.entityType.authority-identifier-type.code": "Code",
+  "fqm.entityType.authority-heading-type": "Authority heading type",
+  "fqm.entityType.authority-heading-type._description": "Authority heading type",
+  "fqm.entityType.authority-heading-type.id": "UUID",
+  "fqm.entityType.authority-heading-type.name": "Name",
+  "fqm.entityType.authority-heading-type.code": "Code",
+  "fqm.entityType.authority-heading-type.queryable": "Queryable"
 }

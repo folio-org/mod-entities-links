@@ -312,6 +312,21 @@
       ]
     },
     {
+      "id": "authority-heading-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/authority-heading-types",
+          "permissionsRequired": [
+            "authority-heading-types.collection.get"
+          ]
+        }
+      ]
+    },
+    {
       "id": "authority-source-files",
       "version": "2.2",
       "handlers": [
@@ -674,6 +689,11 @@
       "permissionName": "authority-identifier-types.collection.get",
       "displayName": "inventory storage - get authority-identifier-type collection",
       "description": "get authority-identifier-type collection from storage"
+    },
+    {
+      "permissionName": "authority-heading-types.collection.get",
+      "displayName": "authority heading types - get  collection",
+      "description": "get authority-heading-type collection"
     },
     {
       "permissionName": "inventory-storage.authority-source-files.collection.get",

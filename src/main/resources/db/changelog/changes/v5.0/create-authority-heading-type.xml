@@ -1,0 +1,277 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="MODELINKS-401@@schema-create-table-authority-heading-type" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="authority_heading_type"/>
+      </not>
+    </preConditions>
+
+    <comment>Create authority_heading_type table</comment>
+
+    <createTable tableName="authority_heading_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_authority_heading_type"/>
+      </column>
+      <column name="name" type="varchar(250)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="authority_heading_type_name_unq"/>
+      </column>
+      <column name="code" type="varchar(100)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="authority_heading_type_code_unq"/>
+      </column>
+      <column name="queryable" type="boolean" defaultValueBoolean="true">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODELINKS-401@@data-seed-table-authority-heading-type-default-values" author="pavlo_smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority_heading_type"/>
+    </preConditions>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="0802e085-468c-5f1c-8d6b-c5763b227168"/>
+      <column name="name" value="Personal name"/>
+      <column name="code" value="personalName"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="a0f79353-df60-5689-9bb1-5319f6f7cf39"/>
+      <column name="name" value="Personal name title"/>
+      <column name="code" value="personalNameTitle"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="4e42a279-0497-5f5c-b362-ecbd76e1ea55"/>
+      <column name="name" value="Corporate name"/>
+      <column name="code" value="corporateName"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="59bca2f3-434c-5aab-81f5-18bd175f3896"/>
+      <column name="name" value="Corporate name title"/>
+      <column name="code" value="corporateNameTitle"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="8c99ab3b-62e4-50dc-b473-dffeeb5325a1"/>
+      <column name="name" value="Conference name"/>
+      <column name="code" value="meetingName"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="a4c25ce9-6e89-59e3-9c17-308f60e317fb"/>
+      <column name="name" value="Conference name title"/>
+      <column name="code" value="meetingNameTitle"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="6cd13752-a10a-5084-b0c8-a276d9e3aefc"/>
+      <column name="name" value="Uniform title"/>
+      <column name="code" value="uniformTitle"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="6d2f4215-10f0-51e9-b4ff-4fe929390d7f"/>
+      <column name="name" value="Named event"/>
+      <column name="code" value="namedEvent"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="4c4eb9f6-2ed7-516d-8783-8e8bce24e773"/>
+      <column name="name" value="Topical term"/>
+      <column name="code" value="topicalTerm"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="c427f57a-fdb7-5bc7-9ad4-eff914b5c1a9"/>
+      <column name="name" value="Geographic name"/>
+      <column name="code" value="geographicName"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="12284cbf-de7b-55af-86a5-b524d62ba5a0"/>
+      <column name="name" value="Genre term"/>
+      <column name="code" value="genreTerm"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="cec2a792-8a9f-5a8a-b061-1df136ca2d70"/>
+      <column name="name" value="Chronological term"/>
+      <column name="code" value="chronTerm"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="e4dcde49-492b-54a6-9876-67809ec0763d"/>
+      <column name="name" value="Medium of performance term"/>
+      <column name="code" value="mediumPerfTerm"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="f3062489-26d9-57e4-905a-273aeaa57f29"/>
+      <column name="name" value="General subdivision"/>
+      <column name="code" value="generalSubdivision"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="dd65aa8d-56d8-5940-b235-902315da2fdd"/>
+      <column name="name" value="Geographic subdivision"/>
+      <column name="code" value="geographicSubdivision"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="7654d533-14c4-509d-8336-a4dd76187990"/>
+      <column name="name" value="Chronological subdivision"/>
+      <column name="code" value="chronSubdivision"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="cb259c90-bcc3-5528-89e3-15900cd4fed7"/>
+      <column name="name" value="Form subdivision"/>
+      <column name="code" value="formSubdivision"/>
+      <column name="queryable" valueBoolean="true"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="cf1af18b-d7c9-57ed-ac11-0d69afc6deb3"/>
+      <column name="name" value="Personal name - Truncated"/>
+      <column name="code" value="personalNameTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="567bc9a5-ba08-50a3-8c98-88ff6c660dd5"/>
+      <column name="name" value="Personal name title - Truncated"/>
+      <column name="code" value="personalNameTitleTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="85d6986f-73ca-5982-83df-96f594abb926"/>
+      <column name="name" value="Corporate name - Truncated"/>
+      <column name="code" value="corporateNameTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="c014009c-8c00-52c8-af35-21d0794dd1dc"/>
+      <column name="name" value="Corporate name title - Truncated"/>
+      <column name="code" value="corporateNameTitleTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="a1be61fc-3ab5-5130-8fe2-a21d528e5ab6"/>
+      <column name="name" value="Conference name - Truncated"/>
+      <column name="code" value="meetingNameTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="475cf74a-8f4f-59c8-b6d1-8c0944215c58"/>
+      <column name="name" value="Conference name title - Truncated"/>
+      <column name="code" value="meetingNameTitleTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="9aeacd73-28ae-5f02-980a-f6b2c5ad7b3d"/>
+      <column name="name" value="Uniform title - Truncated"/>
+      <column name="code" value="uniformTitleTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="d97e6d08-c921-5ea3-ad34-c7d314f9d19e"/>
+      <column name="name" value="Topical term - Truncated"/>
+      <column name="code" value="topicalTermTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="85bb533d-0b65-5fb1-9457-347d821485bf"/>
+      <column name="name" value="Geographic name - Truncated"/>
+      <column name="code" value="geographicNameTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="963dd6e4-cdca-50e5-974b-9ddf40f06000"/>
+      <column name="name" value="Genre term - Truncated"/>
+      <column name="code" value="genreTermTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="e0f58e08-dc16-5363-83c5-8081774c9bcc"/>
+      <column name="name" value="Named event - Truncated"/>
+      <column name="code" value="namedEventTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="2b3530ab-f537-52ce-b5a2-90ce2b514c03"/>
+      <column name="name" value="Chronological term - Truncated"/>
+      <column name="code" value="chronTermTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="4706e226-b083-593e-8800-7c9205bcd51f"/>
+      <column name="name" value="Medium of performance term - Truncated"/>
+      <column name="code" value="mediumPerfTermTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="6769bf2b-a81a-5eeb-8cfb-a7844295a994"/>
+      <column name="name" value="General subdivision - Truncated"/>
+      <column name="code" value="generalSubdivisionTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="cb6260e2-c509-5c4d-9d33-46693b45a4c2"/>
+      <column name="name" value="Geographic subdivision - Truncated"/>
+      <column name="code" value="geographicSubdivisionTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="9bee2c50-6598-511d-a6b1-4970d44c3751"/>
+      <column name="name" value="Chronological subdivision - Truncated"/>
+      <column name="code" value="chronSubdivisionTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+    <insert tableName="authority_heading_type">
+      <column name="id" value="0228e3e4-636a-5348-8ac6-584990527a92"/>
+      <column name="name" value="Form subdivision - Truncated"/>
+      <column name="code" value="formSubdivisionTrunc"/>
+      <column name="queryable" valueBoolean="false"/>
+    </insert>
+
+  </changeSet>
+
+</databaseChangeLog>

@@ -8,6 +8,7 @@
 * Provides `instance-authority-links-statistics v3.0`
 * Provides `instance-authority-links v2.2`
 * Provides `authority-identifier-types v1.0`
+* Provides `authority-heading-types v1.0`
 * Change `instance-storage` from required to optional ([MODELINKS-378](https://folio-org.atlassian.net/browse/MODELINKS-378))
 * Change `mapping-rules-provider` from required to optional ([MODELINKS-379](https://folio-org.atlassian.net/browse/MODELINKS-379))
 
@@ -22,6 +23,7 @@
 * Create migration script for entities links: drop duplicate links/authorities/sats ([MODELINKS-388](https://folio-org.atlassian.net/browse/MODELINKS-388))
 * Add authorities integration with FQM ([MODELINKS-373](https://folio-org.atlassian.net/browse/MODELINKS-373))
 * Implement collection retrieval endpoint for authority identifier types ([MODELINKS-401](https://folio-org.atlassian.net/browse/MODELINKS-401))
+* Implement collection retrieval endpoint for authority heading types ([MODELINKS-404](https://folio-org.atlassian.net/browse/MODELINKS-404))
 * Consolidate authority_archive into authority using soft-delete (deleted flag) ([MODELINKS-403](https://folio-org.atlassian.net/browse/MODELINKS-403))
 * Support identifiers' type names for FQM ([MODELINKS-405](https://folio-org.atlassian.net/browse/MODELINKS-405))
 * Support notes' type names for FQM ([MODELINKS-406](https://folio-org.atlassian.net/browse/MODELINKS-406))

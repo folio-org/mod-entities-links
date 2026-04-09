@@ -1,0 +1,31 @@
+description: An authority heading type
+type: object
+properties:
+  id:
+    description: Unique ID of the authority heading type; a UUID
+    type: string
+    format: uuid
+    x-fqm-value-getter: ":sourceAlias.id"
+  name:
+    type: string
+    description: Name of the authority heading type
+    x-fqm-essential: true
+    x-fqm-id-column-name: "code"
+    x-fqm-visible-by-default: true
+    x-fqm-value-getter: ":sourceAlias.name"
+    x-fqm-value-source-api: {
+      "path": "authority-heading-types",
+      "valueJsonPath": "$.headingTypes[?(@.queryable == true)].code",
+      "labelJsonPath": "$.headingTypes[?(@.queryable == true)].name"
+    }
+  code:
+    type: string
+    description: Code of the authority heading type
+    x-fqm-value-getter: ":sourceAlias.code"
+  queryable:
+    type: boolean
+    description: Whether this heading type is queryable
+    x-fqm-value-getter: ":sourceAlias.queryable"
+required:
+  - name
+  - code

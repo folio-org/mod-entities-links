@@ -35,6 +35,7 @@
 * Fix outdated linking rules by removing the cache for linking rules ([MODELINKS-333](https://folio-org.atlassian.net/browse/MODELINKS-333))
 * Remove unused search.authorities.collection.get permission ([MODELINKS-336](https://folio-org.atlassian.net/browse/MODELINKS-336))
 * Update Authority source file name FROM LC Demographic Group Terms (LCFGT) TO LC Demographic Group Terms (LCDGT) ([MODELINKS-342](https://folio-org.atlassian.net/browse/MODELINKS-342))
+* Update translations for heading type and metadata fields ([MODELINKS-408](https://folio-org.atlassian.net/browse/MODELINKS-408))
 
 ### Tech Dept
 * Re-work all s3 related envs var and standardization ([MODELINKS-324](https://folio-org.atlassian.net/browse/MODELINKS-324))

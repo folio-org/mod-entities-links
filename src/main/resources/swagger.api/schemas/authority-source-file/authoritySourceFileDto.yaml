@@ -6,6 +6,7 @@ properties:
     type: string
     format: uuid
     x-fqm-essential: true
+    x-fqm-visibility: hidden
     x-fqm-value-getter: ":sourceAlias.id"
   name:
     type: string

@@ -5,6 +5,7 @@ properties:
     description: Note type id
     type: string
     format: uuid
+    x-fqm-visibility: hidden
     x-fqm-value-getter: "(SELECT array_agg(elems.value->>'noteTypeId') FROM jsonb_array_elements(:sourceAlias.notes) AS elems)"
   noteType:
     description: Note type. Used only for FQM queries
@@ -30,6 +31,7 @@ properties:
   staffOnly:
     type: boolean
     description: Whether the note is visible to staff only
+    x-fqm-visibility: hidden
     x-fqm-value-getter: "(SELECT array_agg(elems.value->>'staffOnly') FROM jsonb_array_elements(:sourceAlias.notes) AS elems)"
     x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'staffOnly')) FROM jsonb_array_elements(:sourceAlias.notes) AS elems)"
 required:

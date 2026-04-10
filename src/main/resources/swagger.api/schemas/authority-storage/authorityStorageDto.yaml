@@ -1,4 +1,4 @@
-description: An authority storage record aligned with the authority DB table
+description: An authority storage record aligned with the authority DB table (used only for FQM)
 type: object
 properties:
   id:

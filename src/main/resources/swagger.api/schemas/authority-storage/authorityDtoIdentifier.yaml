@@ -10,6 +10,7 @@ properties:
     description: Resource identifier type (e.g. Control number, LCCN, Other standard identifier, System control number)
     type: string
     format: uuid
+    x-fqm-visibility: hidden
     x-fqm-value-getter: "(SELECT array_agg(elems.value->>'identifierTypeId') FROM jsonb_array_elements(:sourceAlias.identifiers) AS elems)"
   identifierType:
     description: Resource identifier type. Used only for FQM queries

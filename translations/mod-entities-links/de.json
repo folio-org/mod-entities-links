@@ -19,7 +19,7 @@
     "fqm.entityType.authority.saft_headings.relationship_type": "Relationship type",
     "fqm.entityType.authority.saft_headings.relationship_type._qualified": "See also from reference — Relationship type",
     "fqm.entityType.authority.saft_headings.heading_type": "Tracing type",
-    "fqm.entityType.authority.saft_headings.heading_type._qualified": "See also from reference — Heading type",
+    "fqm.entityType.authority.saft_headings.heading_type._qualified": "See also from reference — Tracing type",
     "fqm.entityType.authority.saft_headings.heading": "Tracing",
     "fqm.entityType.authority.saft_headings.heading._qualified": "See also from reference — Tracing",
     "fqm.entityType.authority.identifiers": "Identifikatoren",
@@ -54,5 +54,11 @@
     "fqm.entityType.authority.identifiers.identifier_type": "Identifier type",
     "fqm.entityType.authority.identifiers.identifier_type._qualified": "Identifier type",
     "fqm.entityType.authority.notes.note_type": "Note type",
-    "fqm.entityType.authority.notes.note_type._qualified": "Notes — Note type"
+    "fqm.entityType.authority.notes.note_type._qualified": "Notes — Note type",
+    "fqm.entityType.authority-heading-type": "Authority heading type",
+    "fqm.entityType.authority-heading-type._description": "Authority heading type",
+    "fqm.entityType.authority-heading-type.id": "UUID",
+    "fqm.entityType.authority-heading-type.name": "Name",
+    "fqm.entityType.authority-heading-type.code": "Code",
+    "fqm.entityType.authority-heading-type.queryable": "Queryable"
 }

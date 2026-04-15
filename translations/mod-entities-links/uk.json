@@ -54,5 +54,11 @@
     "fqm.entityType.authority.identifiers.identifier_type": "Identifier type",
     "fqm.entityType.authority.identifiers.identifier_type._qualified": "Identifier type",
     "fqm.entityType.authority.notes.note_type": "Note type",
-    "fqm.entityType.authority.notes.note_type._qualified": "Notes — Note type"
+    "fqm.entityType.authority.notes.note_type._qualified": "Notes — Note type",
+    "fqm.entityType.authority-heading-type": "Authority heading type",
+    "fqm.entityType.authority-heading-type._description": "Authority heading type",
+    "fqm.entityType.authority-heading-type.id": "UUID",
+    "fqm.entityType.authority-heading-type.name": "Name",
+    "fqm.entityType.authority-heading-type.code": "Code",
+    "fqm.entityType.authority-heading-type.queryable": "Queryable"
 }

@@ -3,13 +3,14 @@ updates:
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
-      interval: weekly
+      interval: "weekly"
+      day: "sunday"
     commit-message:
       prefix: fix
       prefix-development: chore
       include: scope
     groups:
-      production-dependencies:
-        dependency-type: "production"
-      development-dependencies:
+      dev-deps:
         dependency-type: "development"
+      prod-deps:
+        dependency-type: "production"

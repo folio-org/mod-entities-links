@@ -1,4 +1,4 @@
-## v5.0.0 YYYY-mm-DD
+## v5.0.0 2026-04-16
 ### Breaking changes
 * Use internal module configuration instead of shared configuration from mod-settings ([MODELINKS-376](https://folio-org.atlassian.net/browse/MODELINKS-376))
 * Migrate to Spring Boot 4.0.x ([MODELINKS-349](https://folio-org.atlassian.net/browse/MODELINKS-349))
@@ -9,8 +9,10 @@
 * Provides `instance-authority-links v2.2`
 * Provides `authority-identifier-types v1.0`
 * Provides `authority-heading-types v1.0`
+* Provides `authorities-config v1.0`
 * Change `instance-storage` from required to optional ([MODELINKS-378](https://folio-org.atlassian.net/browse/MODELINKS-378))
 * Change `mapping-rules-provider` from required to optional ([MODELINKS-379](https://folio-org.atlassian.net/browse/MODELINKS-379))
+* Add optional `mapping-metadata-provider v1.1`
 
 ### Features
 * Pass userId from authority kafka event to link update events ([MODELINKS-322](https://folio-org.atlassian.net/browse/MODELINKS-322))
@@ -46,9 +48,21 @@
 * Use GitHub Workflow` for build ([MODELINKS-381](https://folio-org.atlassian.net/browse/MODELINKS-381))
 
 ### Dependencies
-* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
-* Add `LIB_NAME VERSION`
-* Remove `LIB_NAME`
+* Bump `spring-boot` from `3.4.3` to `4.0.2`
+* Bump `folio-spring-support` from `9.0.0` to `10.0.0`
+* Bump `folio-service-tools` from `5.0.0` to `6.0.0`
+* Bump `folio-s3-client` from `2.3.0` to `3.0.0`
+* Bump `mod-record-specifications-dto` from `2.0.0` to `3.0.0`
+* Bump `aws-sdk-java` from `2.31.0` to `2.42.34`
+* Add `folio-spring-tenant-settings 10.0.0`
+* Add `data-import-processing-core 5.0.0`
+* Add `spring-boot-starter-kafka`
+* Add `spring-boot-starter-jackson`
+* Remove `spring-kafka`
+* Remove `spring-retry`
+* Remove `jackson-datatype-jsr310`
+* Remove `jackson-module-jaxb-annotations`
+* Remove `jackson-datatype-jdk8`
 
 ---
 

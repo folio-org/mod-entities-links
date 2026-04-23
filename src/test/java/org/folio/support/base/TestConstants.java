@@ -55,6 +55,7 @@ public class TestConstants {
   public static final String JOB_EXECUTION_ID = "jobExecutionId";
   public static final String PATH = "classpath:di-authority/";
   public static final String DI_CREATE_AUTHORITY_PATH = PATH + "create.json";
+  public static final String DI_CREATE_INVALID_AUTHORITY_PATH = PATH + "createInvalidAuthority.json";
   public static final String DI_UPDATE_AUTHORITY_PATH = PATH + "update.json";
   public static final String DI_DELETE_AUTHORITY_PATH = PATH + "delete.json";
   public static final String TEST_STRING = "test, ";

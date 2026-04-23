@@ -1,8 +1,10 @@
 package org.folio.entlinks.integration.di.handler;
 
 import static org.folio.ActionProfile.FolioRecord.AUTHORITY;
+import static org.folio.entlinks.exception.type.ErrorType.VALIDATION_ERROR;
 
 import io.vertx.core.json.JsonObject;
+import jakarta.validation.ConstraintViolationException;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -16,6 +18,9 @@ import org.folio.processing.events.services.handler.EventHandler;
 import org.folio.processing.exceptions.EventProcessingException;
 import org.folio.rest.jaxrs.model.ProfileSnapshotWrapper;
 import org.folio.rest.jaxrs.model.ProfileType;
+import org.folio.tenant.domain.dto.Error;
+import org.folio.tenant.domain.dto.Errors;
+import org.folio.tenant.domain.dto.Parameter;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
@@ -34,10 +39,17 @@ public class AuthorityCreateEventHandler implements EventHandler {
 
   @Override
   public CompletableFuture<DataImportEventPayload> handle(DataImportEventPayload payload) {
-    var authority = sourceMapper.map(payload);
-    var createdAuthority = delegate.createAuthority(authority);
-    preparePayload(payload, createdAuthority);
-    return CompletableFuture.completedFuture(payload);
+    try {
+      preparePayload(payload);
+      var authority = sourceMapper.map(payload);
+      var createdAuthority = delegate.createAuthorityIfValid(authority);
+      preparePayload(payload, createdAuthority);
+      return CompletableFuture.completedFuture(payload);
+    } catch (ConstraintViolationException e) {
+      return CompletableFuture.failedFuture(
+          new EventProcessingException(jsonMapper.writeValueAsString(buildValidationError(e)))
+      );
+    }
   }
 
   @Override
@@ -68,9 +80,29 @@ public class AuthorityCreateEventHandler implements EventHandler {
     }
   }
 
+  private void preparePayload(DataImportEventPayload payload) {
+    payload.setEventType(DataImportEventTypes.DI_INVENTORY_AUTHORITY_CREATED.value());
+    payload.getEventsChain().add(payload.getEventType());
+    payload.getContext().put(AUTHORITY.value(), new JsonObject().encode());
+  }
+
   private boolean isEligibleActionProfile(ProfileSnapshotWrapper currentNode) {
     var actionProfile = JsonObject.mapFrom(currentNode.getContent()).mapTo(ActionProfile.class);
     return ActionProfile.Action.CREATE == actionProfile.getAction()
            && AUTHORITY == actionProfile.getFolioRecord();
+  }
+
+  private Errors buildValidationError(ConstraintViolationException e) {
+    var errors = e.getConstraintViolations().stream()
+        .map(violation -> {
+          var field = String.valueOf(violation.getPropertyPath());
+          var invalidValue = String.valueOf(violation.getInvalidValue());
+          return new Error("%s: %s".formatted(field, violation.getMessage()))
+              .type(violation.getClass().getSimpleName())
+              .code(VALIDATION_ERROR.getValue())
+              .addParametersItem(new Parameter(field).value(invalidValue));
+        })
+        .toList();
+    return new Errors().errors(errors).totalRecords(errors.size());
   }
 }

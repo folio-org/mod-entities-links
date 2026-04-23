@@ -1,5 +1,6 @@
 package org.folio.entlinks.controller.delegate;
 
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -31,8 +32,10 @@ import org.folio.tenant.domain.dto.SettingCollection;
 import org.folio.tenant.settings.service.TenantSettingsService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 @Log4j2
+@Validated
 @Service
 public class AuthorityServiceDelegate {
 
@@ -86,6 +89,10 @@ public class AuthorityServiceDelegate {
     var created = service.create(entity);
     createConsumer().accept(created);
     return mapper.toDto(created);
+  }
+
+  public AuthorityDto createAuthorityIfValid(@Valid AuthorityDto authorityDto) {
+    return createAuthority(authorityDto);
   }
 
   public void updateAuthority(UUID id, AuthorityDto authorityDto) {

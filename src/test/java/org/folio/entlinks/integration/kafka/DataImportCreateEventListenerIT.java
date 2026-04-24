@@ -9,6 +9,7 @@ import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
 import static org.folio.support.base.TestConstants.DI_AUTHORITY_CREATED_POST_PROCESSING_TOPIC;
 import static org.folio.support.base.TestConstants.DI_CREATED_TYPE;
 import static org.folio.support.base.TestConstants.DI_CREATE_AUTHORITY_PATH;
+import static org.folio.support.base.TestConstants.DI_CREATE_INVALID_AUTHORITY_PATH;
 import static org.folio.support.base.TestConstants.DI_ERROR_TOPIC;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
@@ -180,7 +181,29 @@ class DataImportCreateEventListenerIT extends IntegrationTestBase {
     assertions.then(received.key()).as("key").isEqualTo(AUTHORITY_CREATE_ID.toString());
     assertions.then(received.topic()).as("topic").contains(DI_ERROR_TOPIC);
     assertions.then(received.value().getEventPayload())
-      .contains("ERROR: duplicate key value violates unique constraint");
+        .contains("ERROR: duplicate key value violates unique constraint");
+    assertions.assertAll();
+  }
+
+  @SneakyThrows
+  @Test
+  void shouldHandleDataImportAuthorityCreatedEvent_negative_validationError() {
+    // send DI authority created event
+    var eventPayload = readFile(DI_CREATE_INVALID_AUTHORITY_PATH);
+    var event = TestDataUtils.diAuthorityEvent(DI_CREATED_TYPE,
+        eventPayload, AUTHORITY_CREATE_ID.toString(), TENANT_ID);
+    sendKafkaMessage(dataImportAuthorityCreatedTopic(), AUTHORITY_CREATE_ID.toString(), event,
+        getDataImportKafkaHeaders(AUTHORITY_CREATE_ID.toString()));
+
+    // check sent DI error event
+    var received = getReceivedEvent();
+
+    var assertions = new BDDSoftAssertions();
+    assertions.then(received).isNotNull();
+    assertions.then(received.key()).as("key").isEqualTo(AUTHORITY_CREATE_ID.toString());
+    assertions.then(received.topic()).as("topic").contains(DI_ERROR_TOPIC);
+    assertions.then(received.value().getEventPayload())
+        .contains("identifiers[0].value: must not be null");
     assertions.assertAll();
   }
 

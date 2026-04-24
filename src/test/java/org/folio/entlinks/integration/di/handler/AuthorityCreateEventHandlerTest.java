@@ -75,7 +75,7 @@ class AuthorityCreateEventHandlerTest {
   @SneakyThrows
   void handle_positive() {
     when(sourceMapper.map(payload)).thenReturn(authorityDto);
-    when(delegate.createAuthority(authorityDto)).thenReturn(authorityDto);
+    when(delegate.createAuthorityIfValid(authorityDto)).thenReturn(authorityDto);
     when(jsonMapper.writeValueAsString(authorityDto)).thenReturn(MOCKED_AUTHORITY_DTO_AS_STRING);
 
     var future = handler.handle(payload);
@@ -91,7 +91,7 @@ class AuthorityCreateEventHandlerTest {
   void handle_negative() {
     // Arrange
     when(sourceMapper.map(payload)).thenReturn(authorityDto);
-    when(delegate.createAuthority(authorityDto)).thenReturn(authorityDto);
+    when(delegate.createAuthorityIfValid(authorityDto)).thenReturn(authorityDto);
     when(jsonMapper.writeValueAsString(authorityDto))
         .thenThrow(new StreamReadException(null, "test error"));
     // Act + Assert

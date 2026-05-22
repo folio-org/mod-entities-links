@@ -124,11 +124,12 @@ class AuthorityIdentifierTypesControllerIT extends IntegrationTestBase {
     tryGet(url)
         .andExpect(status().isBadRequest())
         .andExpect(errorTypeMatch(is(ConstraintViolationException.class.getSimpleName())))
-        .andExpect(errorMessageMatch(containsString(expectedMessage)));
+        .andExpect(errorMessageMatch(is(expectedMessage)));
   }
 
   private static Stream<Arguments> invalidRequestParamsProvider() {
     return Stream.of(
+        Arguments.of(authorityIdentifierTypesEndpoint() + "?limit=0", "limit: must be greater than or equal to 1"),
         Arguments.of(authorityIdentifierTypesEndpoint() + "?offset=-1", "offset: must be greater than or equal to 0"),
         Arguments.of(authorityIdentifierTypesEndpoint() + "?limit=2001", "limit: must be less than or equal to 2000")
     );

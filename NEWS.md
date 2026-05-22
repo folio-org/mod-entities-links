@@ -7,7 +7,7 @@
 * Requires `API_NAME vX.Y`
 
 ### Features
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Enhance error handling for constraint violations ([MODELINKS-410](https://folio-org.atlassian.net/browse/MODELINKS-410))
 
 ### Bug fixes
 * Add validation for Authority record creation during Data Import ([MODELINKS-417](https://folio-org.atlassian.net/browse/MODELINKS-417))

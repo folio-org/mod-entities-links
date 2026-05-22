@@ -24,6 +24,7 @@ import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.exception.ResourceNotFoundException;
 import org.folio.entlinks.exception.type.ErrorType;
+import org.folio.entlinks.utils.ConstraintViolationResolver;
 import org.folio.spring.cql.CqlQueryValidationException;
 import org.folio.tenant.domain.dto.Error;
 import org.folio.tenant.domain.dto.Errors;
@@ -77,7 +78,7 @@ public class ApiErrorHandler {
 
   @ExceptionHandler(AuthoritiesRequestNotSupportedMediaTypeException.class)
   public ResponseEntity<String> handleAuthoritiesMediaTypeValidationException(
-      AuthoritiesRequestNotSupportedMediaTypeException e) {
+    AuthoritiesRequestNotSupportedMediaTypeException e) {
     logException(DEBUG, e);
     var errorResponse = buildPlainTextValidationError(e, e.getInvalidParameters());
     var headers = new HttpHeaders();
@@ -148,7 +149,11 @@ public class ApiErrorHandler {
   @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
   public ResponseEntity<Errors> handleConstraintViolationException(jakarta.validation.ConstraintViolationException e) {
     logException(DEBUG, e);
-    return buildResponseEntity(e, BAD_REQUEST, VALIDATION_ERROR);
+    var errors = e.getConstraintViolations().stream()
+      .map(ConstraintViolationResolver::toError)
+      .toList();
+    var errorsBody = new Errors().errors(errors).totalRecords(errors.size());
+    return buildResponseEntity(errorsBody, BAD_REQUEST);
   }
 
   @ExceptionHandler(CqlQueryValidationException.class)
@@ -193,10 +198,10 @@ public class ApiErrorHandler {
 
   private String buildPlainTextValidationError(Exception e, List<Parameter> parameters) {
     return "message: " + e.getMessage() + System.lineSeparator()
-          + "type: " + e.getClass().getSimpleName() + System.lineSeparator()
-          + "code: " + VALIDATION_ERROR.getValue() + System.lineSeparator()
-          + "parameters: [" + parameters.stream()
-              .map(param -> "(key: " + param.getKey() + ", value: " + param.getValue() + ")")
-              .collect(Collectors.joining(",")) + "]";
+           + "type: " + e.getClass().getSimpleName() + System.lineSeparator()
+           + "code: " + VALIDATION_ERROR.getValue() + System.lineSeparator()
+           + "parameters: [" + parameters.stream()
+             .map(param -> "(key: " + param.getKey() + ", value: " + param.getValue() + ")")
+             .collect(Collectors.joining(",")) + "]";
   }
 }

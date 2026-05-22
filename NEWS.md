@@ -1,6 +1,14 @@
+## v5.0.2 2026-05-28
+### Features
+* Enhance error handling for constraint violations ([MODELINKS-410](https://folio-org.atlassian.net/browse/MODELINKS-410))
+
+---
+
 ## v5.0.1 2026-05-12
 ### Bug fixes
 * Add validation for Authority record creation during Data Import ([MODELINKS-417](https://folio-org.atlassian.net/browse/MODELINKS-417))
+
+---
 
 ## v5.0.0 2026-04-16
 ### Breaking changes

@@ -76,6 +76,7 @@ properties:
           description: Heading value
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'heading') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
           x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'heading')) FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
+          x-fqm-value-function: "lower(:value)"
         headingType:
           type: string
           description: Heading type
@@ -89,14 +90,14 @@ properties:
             "labelJsonPath": "$.headingTypes[?(@.queryable == true)].name"
           }
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
-          x-fqm-value-function: ":value"
+          x-fqm-value-function: "lower(:value)"
           x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
         relationshipType:
           type: string
           description: Relationship type
           enum: [BROADER_TERM, NARROWER_TERM, EARLIER_HEADING, LATER_HEADING]
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'relationshipType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
-          x-fqm-value-function: ":value"
+          x-fqm-value-function: "lower(:value)"
           x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'relationshipType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
   saftHeadings:
     type: array
@@ -110,6 +111,7 @@ properties:
           description: Heading value
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'heading') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
           x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'heading')) FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
+          x-fqm-value-function: "lower(:value)"
         headingType:
           type: string
           description: Heading type
@@ -123,14 +125,14 @@ properties:
             "labelJsonPath": "$.headingTypes[?(@.queryable == true)].name"
           }
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
-          x-fqm-value-function: ":value"
+          x-fqm-value-function: "lower(:value)"
           x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
         relationshipType:
           type: string
           description: Relationship type
           enum: [BROADER_TERM, NARROWER_TERM, EARLIER_HEADING, LATER_HEADING]
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'relationshipType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
-          x-fqm-value-function: ":value"
+          x-fqm-value-function: "lower(:value)"
           x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'relationshipType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
   identifiers:
     type: array

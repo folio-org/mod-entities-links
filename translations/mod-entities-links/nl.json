@@ -51,14 +51,14 @@
     "fqm.entityType.authority-identifier-type.id": "UUID",
     "fqm.entityType.authority-identifier-type.name": "Naam",
     "fqm.entityType.authority-identifier-type.code": "Code",
-    "fqm.entityType.authority.identifiers.identifier_type": "Identifier type",
-    "fqm.entityType.authority.identifiers.identifier_type._qualified": "Identifier type",
-    "fqm.entityType.authority.notes.note_type": "Note type",
-    "fqm.entityType.authority.notes.note_type._qualified": "Notes — Note type",
-    "fqm.entityType.authority-heading-type": "Authority heading type",
-    "fqm.entityType.authority-heading-type._description": "Authority heading type",
+    "fqm.entityType.authority.identifiers.identifier_type": "Type Identificatiekenmerk",
+    "fqm.entityType.authority.identifiers.identifier_type._qualified": "Type Identificatiekenmerk",
+    "fqm.entityType.authority.notes.note_type": "Opmerking type",
+    "fqm.entityType.authority.notes.note_type._qualified": "Opmerking - Opmerkingstype",
+    "fqm.entityType.authority-heading-type": "Authority type titel",
+    "fqm.entityType.authority-heading-type._description": "Authority type titel",
     "fqm.entityType.authority-heading-type.id": "UUID",
-    "fqm.entityType.authority-heading-type.name": "Name",
+    "fqm.entityType.authority-heading-type.name": "Naam",
     "fqm.entityType.authority-heading-type.code": "Code",
-    "fqm.entityType.authority-heading-type.queryable": "Queryable"
+    "fqm.entityType.authority-heading-type.queryable": "Opvraagbaar"
 }

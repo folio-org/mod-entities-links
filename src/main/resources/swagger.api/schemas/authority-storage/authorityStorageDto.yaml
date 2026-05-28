@@ -91,7 +91,7 @@ properties:
           }
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
           x-fqm-value-function: "lower(:value)"
-          x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
+          x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'headingType')) FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
         relationshipType:
           type: array
           items:
@@ -99,7 +99,7 @@ properties:
           description: Relationship type
           enum: [BROADER_TERM, NARROWER_TERM, EARLIER_HEADING, LATER_HEADING]
           x-fqm-value-getter: "(SELECT array_agg(relationship_types.value) FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(elems.value->'relationshipType', '[]'::jsonb)) AS relationship_types(value))"
-          x-fqm-filter-value-getter: "(SELECT array_agg(relationship_types.value) FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(elems.value->'relationshipType', '[]'::jsonb)) AS relationship_types(value))"
+          x-fqm-filter-value-getter: "(SELECT array_agg(lower(relationship_types.value)) FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(elems.value->'relationshipType', '[]'::jsonb)) AS relationship_types(value))"
           x-fqm-value-function: "lower(:value)"
   saftHeadings:
     type: array
@@ -128,7 +128,7 @@ properties:
           }
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
           x-fqm-value-function: "lower(:value)"
-          x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
+          x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'headingType')) FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
         relationshipType:
           type: array
           items:
@@ -136,7 +136,7 @@ properties:
           description: Relationship type
           enum: [BROADER_TERM, NARROWER_TERM, EARLIER_HEADING, LATER_HEADING]
           x-fqm-value-getter: "(SELECT array_agg(relationship_types.value) FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(elems.value->'relationshipType', '[]'::jsonb)) AS relationship_types(value))"
-          x-fqm-filter-value-getter: "(SELECT array_agg(relationship_types.value) FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(elems.value->'relationshipType', '[]'::jsonb)) AS relationship_types(value))"
+          x-fqm-filter-value-getter: "(SELECT array_agg(lower(relationship_types.value)) FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(elems.value->'relationshipType', '[]'::jsonb)) AS relationship_types(value))"
           x-fqm-value-function: "lower(:value)"
   identifiers:
     type: array

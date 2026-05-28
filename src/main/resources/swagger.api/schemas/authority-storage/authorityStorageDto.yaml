@@ -93,9 +93,6 @@ properties:
           x-fqm-value-function: "lower(:value)"
           x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'headingType')) FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
         relationshipType:
-          type: array
-          items:
-            type: string
           description: Relationship type
           enum: [BROADER_TERM, NARROWER_TERM, EARLIER_HEADING, LATER_HEADING]
           x-fqm-data-type: "arrayType"
@@ -131,9 +128,6 @@ properties:
           x-fqm-value-function: "lower(:value)"
           x-fqm-filter-value-getter: "(SELECT array_agg(lower(elems.value->>'headingType')) FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
         relationshipType:
-          type: array
-          items:
-            type: string
           description: Relationship type
           enum: [BROADER_TERM, NARROWER_TERM, EARLIER_HEADING, LATER_HEADING]
           x-fqm-data-type: "arrayType"

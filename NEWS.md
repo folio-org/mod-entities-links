@@ -10,6 +10,7 @@
 * Enhance error handling for constraint violations ([MODELINKS-410](https://folio-org.atlassian.net/browse/MODELINKS-410))
 
 ### Bug fixes
+* Fix FQM querying for authority see-from and see-also-from relationship types [MODFQMMGR-1161](https://folio-org.atlassian.net/browse/MODFQMMGR-1161)
 * Add validation for Authority record creation during Data Import ([MODELINKS-417](https://folio-org.atlassian.net/browse/MODELINKS-417))
 
 ### Tech Dept

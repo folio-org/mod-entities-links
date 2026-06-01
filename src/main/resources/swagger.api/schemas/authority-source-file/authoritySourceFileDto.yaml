@@ -15,10 +15,6 @@ properties:
     x-fqm-id-column-name: "id"
     x-fqm-visible-by-default: true
     x-fqm-value-getter: ":sourceAlias.name"
-    x-fqm-source: {
-      "entityTypeId": "c788d4b8-2a7e-5d6c-8d6b-c548f95455e5",
-      "columnName": "name"
-    }
     x-fqm-value-source-api: {
       "path": "authority-source-files",
       "valueJsonPath": "$.authoritySourceFiles.*.id",

@@ -50,11 +50,6 @@ properties:
       entityTypeId: '8629d062-2878-5803-b8bf-f08fb1b00d31',
       columnName: 'name'
     }
-    x-fqm-value-source-api: {
-      "path": "authority-heading-types",
-      "valueJsonPath": "$.headingTypes[?(@.queryable == true)].code",
-      "labelJsonPath": "$.headingTypes[?(@.queryable == true)].name"
-    }
   _version:
     type: integer
     description: Record version for optimistic locking
@@ -83,11 +78,6 @@ properties:
           x-fqm-source: {
             entityTypeId: '8629d062-2878-5803-b8bf-f08fb1b00d31',
             columnName: 'name'
-          }
-          x-fqm-value-source-api: {
-            "path": "authority-heading-types",
-            "valueJsonPath": "$.headingTypes[?(@.queryable == true)].code",
-            "labelJsonPath": "$.headingTypes[?(@.queryable == true)].name"
           }
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
           x-fqm-value-function: "lower(:value)"
@@ -118,11 +108,6 @@ properties:
           x-fqm-source: {
             entityTypeId: '8629d062-2878-5803-b8bf-f08fb1b00d31',
             columnName: 'name'
-          }
-          x-fqm-value-source-api: {
-            "path": "authority-heading-types",
-            "valueJsonPath": "$.headingTypes[?(@.queryable == true)].code",
-            "labelJsonPath": "$.headingTypes[?(@.queryable == true)].name"
           }
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'headingType') FROM jsonb_array_elements(:sourceAlias.saft_headings) AS elems)"
           x-fqm-value-function: "lower(:value)"

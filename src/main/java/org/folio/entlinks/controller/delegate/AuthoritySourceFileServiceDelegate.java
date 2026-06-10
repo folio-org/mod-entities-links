@@ -31,7 +31,7 @@ import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthoritySourceFilePropagationService;
 import org.folio.entlinks.service.consortium.propagation.model.AuthoritySourceFilePropagationData;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -52,7 +52,7 @@ public class AuthoritySourceFileServiceDelegate {
   private final AuthoritySourceFileDomainEventPublisher eventPublisher;
   private final ConsortiumAuthoritySourceFilePropagationService propagationService;
   private final FolioExecutionContext context;
-  private final SystemUserScopedExecutionService executionService;
+  private final FolioExecutionContextService executionService;
   private final ConsortiumTenantsService consortiumTenantsService;
 
   @Transactional
@@ -117,7 +117,7 @@ public class AuthoritySourceFileServiceDelegate {
   public AuthoritySourceFileHridDto getAuthoritySourceFileNextHrid(UUID id) {
     log.debug("nextHrid:: Attempting to get next AuthoritySourceFile HRID [id: {}]", id);
     var tenantId = tenantsService.getCentralTenant(context.getTenantId()).orElse(context.getTenantId());
-    var hrid = executionService.executeSystemUserScoped(tenantId, () -> service.nextHrid(id));
+    var hrid = executionService.execute(tenantId, context.getOkapiHeaders(), () -> service.nextHrid(id));
 
     return new AuthoritySourceFileHridDto().id(id).hrid(hrid);
   }

@@ -1,12 +1,13 @@
 package org.folio.entlinks.integration.kafka;
 
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.integration.internal.MarcSpecificationUpdateService;
 import org.folio.rspec.domain.dto.Family;
 import org.folio.rspec.domain.dto.FamilyProfile;
 import org.folio.rspec.domain.dto.SpecificationUpdatedEvent;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SpecificationChangedEventListener {
 
-  private final SystemUserScopedExecutionService executionService;
+  private final FolioExecutionContextService executionService;
   private final MarcSpecificationUpdateService updateService;
 
   @KafkaListener(id = "mod-entities-links-specification-storage-listener",
@@ -26,7 +27,7 @@ public class SpecificationChangedEventListener {
   public void handleEvent(SpecificationUpdatedEvent event) {
     log.info("Processing specification changed Kafka event [{}]", event);
     if (isMarcBibSpecFullUpdateExtent(event)) {
-      executionService.executeSystemUserScoped(event.tenantId(), () -> {
+      executionService.execute(event.tenantId(), Map.of(), () -> {
         updateService.sendSpecificationRequests();
         return null;
       });

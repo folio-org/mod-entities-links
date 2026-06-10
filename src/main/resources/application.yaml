@@ -76,12 +76,6 @@ folio:
       data-import-canceled-job-cache:
         maximum-size: ${DI_CANCELED_JOB_CACHE_MAX_SIZE:500}
         ttl: ${DI_CANCELED_JOB_CACHE_TTL:24h}
-  system-user:
-    enabled: ${SYSTEM_USER_ENABLED:true}
-    username: ${SYSTEM_USER_USERNAME:mod-entities-links}
-    password: ${SYSTEM_USER_PASSWORD}
-    lastname: Automated linking update
-    permissionsFilePath: permissions/mod-entities-links-permissions.csv
   kafka:
     topics:
       - name: authority.authority-source-file

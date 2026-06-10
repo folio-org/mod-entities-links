@@ -2,10 +2,12 @@ package org.folio.entlinks.integration.kafka;
 
 import static java.util.Collections.singletonList;
 import static org.folio.entlinks.utils.HeaderUtils.extractHeaderValue;
+import static org.folio.spring.integration.XOkapiHeaders.URL;
+import static org.folio.spring.integration.XOkapiHeaders.USER_ID;
 import static org.folio.spring.tools.config.RetryTemplateConfiguration.DEFAULT_KAFKA_RETRY_TEMPLATE_NAME;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,8 +19,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.logging.log4j.message.FormattedMessageFactory;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.service.messaging.authority.InstanceAuthorityLinkUpdateService;
-import org.folio.spring.integration.XOkapiHeaders;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -29,7 +30,7 @@ import org.springframework.stereotype.Component;
 public class AuthorityEventListener {
 
   private final InstanceAuthorityLinkUpdateService instanceAuthorityLinkUpdateService;
-  private final SystemUserScopedExecutionService executionService;
+  private final FolioExecutionContextService executionService;
   private final MessageBatchProcessor messageBatchProcessor;
 
   @KafkaListener(id = "mod-entities-links-authority-listener",
@@ -47,9 +48,11 @@ public class AuthorityEventListener {
 
   private void handleAuthorityEventsForTenant(String tenant,
                                               List<ConsumerRecord<String, AuthorityDomainEvent>> records) {
+    var url = extractHeaderValue(URL, records.getFirst().headers())
+      .orElseThrow(() -> new IllegalStateException("URL header is missing"));
     records.stream()
       .collect(Collectors.groupingBy(consumerRecord ->
-        extractHeaderValue(XOkapiHeaders.USER_ID, consumerRecord.headers())))
+        extractHeaderValue(USER_ID, consumerRecord.headers())))
       .forEach((userId, consumerRecords) -> {
         var events = consumerRecords.stream()
           .map(consumerRecord -> {
@@ -58,16 +61,16 @@ public class AuthorityEventListener {
             return value;
           })
           .toList();
-        handleAuthorityEventsForUser(tenant, userId, events);
+        handleAuthorityEventsForUser(tenant, userId, url, events);
       });
   }
 
   private void handleAuthorityEventsForUser(String tenant, Optional<String> userIdOptional,
-                                            List<AuthorityDomainEvent> events) {
-    var headers = userIdOptional
-      .map(userId -> Map.<String, Collection<String>>of(XOkapiHeaders.USER_ID, singletonList(userId)))
-      .orElseGet(Collections::emptyMap);
-    executionService.executeSystemUserScoped(tenant, headers, () -> {
+                                            String url, List<AuthorityDomainEvent> events) {
+    Map<String, Collection<String>> headers = new HashMap<>();
+    headers.put(URL, singletonList(url));
+    userIdOptional.ifPresent(userId -> headers.put(USER_ID, singletonList(userId)));
+    executionService.execute(tenant, headers, () -> {
       log.info("Triggering updates for authority records [number of records: {}, tenant: {}, userId: {}]",
         events.size(), tenant, userIdOptional.orElse(null));
       messageBatchProcessor.consumeBatchWithFallback(events, DEFAULT_KAFKA_RETRY_TEMPLATE_NAME,

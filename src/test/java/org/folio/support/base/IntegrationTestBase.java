@@ -341,8 +341,7 @@ public class IntegrationTestBase {
 
   @SneakyThrows
   protected static void sendKafkaMessage(String topic, String key, Object event) {
-    var future = kafkaTemplate.send(topic, key, new ObjectMapper().writeValueAsString(event));
-    awaitUntilAsserted(() -> Assertions.assertTrue(future.isDone(), "Message was not sent"));
+    sendKafkaMessage(topic, key, event, Map.of(URL, okapi.getOkapiUrl()));
   }
 
   @SneakyThrows

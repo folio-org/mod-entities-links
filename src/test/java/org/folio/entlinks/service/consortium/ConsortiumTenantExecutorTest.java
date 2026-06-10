@@ -3,6 +3,8 @@ package org.folio.entlinks.service.consortium;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -10,12 +12,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,7 +32,7 @@ class ConsortiumTenantExecutorTest {
   private FolioExecutionContext folioExecutionContext;
 
   @Mock
-  private SystemUserScopedExecutionService scopedExecutionService;
+  private FolioExecutionContextService scopedExecutionService;
 
   @InjectMocks
   private ConsortiumTenantExecutor consortiumTenantExecutor;
@@ -62,9 +63,9 @@ class ConsortiumTenantExecutorTest {
     when(userTenantsService.getCentralTenant(memberTenant)).thenReturn(Optional.of(centralTenant));
 
     var captor = ArgumentCaptor.forClass(String.class);
-    when(scopedExecutionService.executeSystemUserScoped(captor.capture(), ArgumentMatchers.any()))
+    when(scopedExecutionService.execute(captor.capture(), eq(folioExecutionContext), any(Callable.class)))
         .thenAnswer(invocation -> {
-          var argument = invocation.getArgument(1, Callable.class);
+          var argument = invocation.getArgument(2, Callable.class);
           return argument.call();
         });
     var result = consortiumTenantExecutor.executeAsCentralTenant(operation);

@@ -5,7 +5,6 @@ import static org.folio.entlinks.utils.AuthorityChangeUtils.getAuthorityChanges;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,7 +24,7 @@ import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeField
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -40,7 +39,7 @@ public class InstanceAuthorityLinkUpdateService {
   private final AuthoritySourceRecordService sourceRecordService;
   private final ConsortiumTenantsService consortiumTenantsService;
   private final FolioExecutionContext folioExecutionContext;
-  private final SystemUserScopedExecutionService executionService;
+  private final FolioExecutionContextService executionService;
 
   public InstanceAuthorityLinkUpdateService(AuthorityDataStatService authorityDataStatService,
                                             AuthorityMappingRulesProcessingService mappingRulesProcessingService,
@@ -50,7 +49,7 @@ public class InstanceAuthorityLinkUpdateService {
                                             AuthoritySourceRecordService sourceRecordService,
                                             ConsortiumTenantsService consortiumTenantsService,
                                             FolioExecutionContext folioExecutionContext,
-                                            SystemUserScopedExecutionService executionService) {
+                                            FolioExecutionContextService executionService) {
     this.authorityDataStatService = authorityDataStatService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.linkingService = linkingService;
@@ -155,14 +154,11 @@ public class InstanceAuthorityLinkUpdateService {
     if (consortiumTenants.isEmpty()) {
       return;
     }
-    var userId = Optional.ofNullable(folioExecutionContext.getUserId())
-        .map(UUID::toString)
-        .orElse(null);
     log.debug("processChangesForConsortiumMemberTenants:: for authorities [{}]", authorityIds);
     consortiumTenants.forEach(memberTenant -> {
       var changeHolderCopies = changeHolders.stream().map(AuthorityChangeHolder::copy).toList();
 
-      executionService.executeSystemUserScoped(memberTenant, userId, () -> {
+      executionService.execute(memberTenant, folioExecutionContext, () -> {
         var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(authorityIds);
 
         changeHolderCopies.forEach(changeHolder -> {

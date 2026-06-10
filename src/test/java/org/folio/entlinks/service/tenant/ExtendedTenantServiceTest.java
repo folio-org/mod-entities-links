@@ -28,20 +28,16 @@ class ExtendedTenantServiceTest {
   @Mock
   private ExtendedKafkaAdminService kafkaAdminService;
   @Mock
-  private OkapiSystemUserService prepareSystemUserService;
-  @Mock
   private TempSettingsMigrationService settingsMigrationService;
 
   @Test
   void initializeTenant_positive() {
     when(context.getTenantId()).thenReturn(TENANT_ID);
-    doNothing().when(prepareSystemUserService).prepareSystemUser();
     doNothing().when(kafkaAdminService).createTopics(TENANT_ID);
     doNothing().when(kafkaAdminService).restartEventListeners();
 
     tenantService.afterTenantUpdate(tenantAttributes());
 
-    verify(prepareSystemUserService).prepareSystemUser();
     verify(kafkaAdminService).createTopics(TENANT_ID);
     verify(kafkaAdminService).restartEventListeners();
     verify(settingsMigrationService).migrateSettings();

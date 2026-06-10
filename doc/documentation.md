@@ -81,9 +81,6 @@ docker run -t -i -p 8081:8081 mod-entities-links
 | DB_INITIALIZATION_FAIL_TIMEOUT                          | 30000                    | This property controls whether the pool will "fail fast" if the pool cannot be seeded with an initial connection successfully                                                                        |
 | DB_LEAK_DETECTION_THRESHOLD                             | 30000                    | This property controls the amount of time that a connection can be out of the pool before a message is logged indicating a possible connection leak (0 - disabled)                                   |
 | OKAPI_URL                                               | -                        | Okapi URL                                                                                                                                                                                            |
-| SYSTEM_USER_ENABLED                                     | true                     | Defines if system user must be created at service tenant initialization or used for egress service requests                                                                                          |
-| SYSTEM_USER_USERNAME                                    | mod-entities-links       | Username for system user                                                                                                                                                                             |
-| SYSTEM_USER_PASSWORD                                    | -                        | Password for system user                                                                                                                                                                             |
 | KAFKA_HOST                                              | kafka                    | Kafka broker hostname                                                                                                                                                                                |
 | KAFKA_PORT                                              | 9092                     | Kafka broker port                                                                                                                                                                                    |
 | KAFKA_SECURITY_PROTOCOL                                 | PLAINTEXT                | Kafka security protocol used to communicate with brokers (SSL or PLAINTEXT)                                                                                                                          |
@@ -126,15 +123,12 @@ documentation [Spring Boot Externalized Configuration](https://docs.spring.io/sp
 
 ### Folio modules communication
 
-| Module name               | Interface                     | Notes                                                                      |
-|---------------------------|-------------------------------|----------------------------------------------------------------------------|
-| mod-login                 | login                         | For system user creation and authentication                                |
-| mod-permissions           | permissions                   | For system user creation                                                   |
-| mod-users                 | users                         | For system user creation                                                   |
-| mod-source-record-manager | mapping-rules-provider        | For fetching MARC bibliographic-to-Instance mapping rules                  |
-| mod-source-record-storage | source-storage-source-records | For fetching Authority source records in MARC format                       |
-| mod-inventory-storage     | authority-source-files        | For fetching Authority source file reference data                          |
-| mod-inventory-storage     | instance-storage              | For fetching Instance data for statistic                                   |
+| Module name               | Interface                     | Notes                                                     |
+|---------------------------|-------------------------------|-----------------------------------------------------------|
+| mod-source-record-manager | mapping-rules-provider        | For fetching MARC bibliographic-to-Instance mapping rules |
+| mod-source-record-storage | source-storage-source-records | For fetching Authority source records in MARC format      |
+| mod-inventory-storage     | authority-source-files        | For fetching Authority source file reference data         |
+| mod-inventory-storage     | instance-storage              | For fetching Instance data for statistic                  |
 
 
 ### Consuming Kafka messages

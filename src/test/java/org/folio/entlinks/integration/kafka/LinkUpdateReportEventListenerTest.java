@@ -9,6 +9,7 @@ import static org.folio.support.TestDataUtils.report;
 import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.folio.support.KafkaTestUtils;
@@ -34,7 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class LinkUpdateReportEventListenerTest {
 
-  @Mock private SystemUserScopedExecutionService executionService;
+  @Mock private FolioExecutionContextService executionService;
   @Mock private MessageBatchProcessor messageBatchProcessor;
   @Mock private InstanceAuthorityLinkingService linkingService;
 
@@ -43,8 +44,8 @@ class LinkUpdateReportEventListenerTest {
 
   @BeforeEach
   void setUp() {
-    lenient().when(executionService.executeSystemUserScoped(any(), any())).thenAnswer(invocation -> {
-      var argument = invocation.getArgument(1, Callable.class);
+    lenient().when(executionService.execute(any(), anyMap(), any(Callable.class))).thenAnswer(invocation -> {
+      var argument = invocation.getArgument(2, Callable.class);
       return argument.call();
     });
   }
@@ -66,8 +67,8 @@ class LinkUpdateReportEventListenerTest {
 
     listener.handleEvents(consumerRecords);
 
-    verify(executionService).executeSystemUserScoped(eq(TENANT_ID), any());
-    verify(executionService).executeSystemUserScoped(eq(CENTRAL_TENANT_ID), any());
+    verify(executionService).execute(eq(TENANT_ID), anyMap(), any(Callable.class));
+    verify(executionService).execute(eq(CENTRAL_TENANT_ID), anyMap(), any(Callable.class));
     verify(messageBatchProcessor, times(2))
       .consumeBatchWithFallback(any(), any(), any(), any());
 
@@ -92,7 +93,7 @@ class LinkUpdateReportEventListenerTest {
 
     listener.handleEvents(consumerRecords);
 
-    verify(executionService).executeSystemUserScoped(eq(TENANT_ID), any());
+    verify(executionService).execute(eq(TENANT_ID), anyMap(), any(Callable.class));
     verify(messageBatchProcessor).consumeBatchWithFallback(any(), any(), any(), any());
     verify(linkingService).updateForReports(jobId, reports);
   }

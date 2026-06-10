@@ -8,6 +8,7 @@ import static org.folio.rspec.domain.dto.SpecificationUpdatedEvent.UpdateExtent.
 import static org.folio.rspec.domain.dto.SpecificationUpdatedEvent.UpdateExtent.PARTIAL;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
@@ -16,7 +17,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import java.util.concurrent.Callable;
 import org.folio.entlinks.integration.internal.MarcSpecificationUpdateService;
 import org.folio.rspec.domain.dto.SpecificationUpdatedEvent;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,13 +31,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class SpecificationChangedEventListenerTest {
 
   private @InjectMocks SpecificationChangedEventListener listener;
-  private @Mock SystemUserScopedExecutionService executionService;
+  private @Mock FolioExecutionContextService executionService;
   private @Mock MarcSpecificationUpdateService updateService;
 
   @BeforeEach
   void setUp() {
-    lenient().when(executionService.executeSystemUserScoped(eq(TENANT_ID), any()))
-      .thenAnswer(invocation -> ((Callable<?>) invocation.getArgument(1)).call());
+    lenient().when(executionService.execute(eq(TENANT_ID), anyMap(), any(Callable.class)))
+      .thenAnswer(invocation -> ((Callable<?>) invocation.getArgument(2)).call());
   }
 
   @Test
@@ -65,7 +66,7 @@ class SpecificationChangedEventListenerTest {
 
     listener.handleEvent(event);
 
-    verify(executionService).executeSystemUserScoped(eq(TENANT_ID), any());
+    verify(executionService).execute(eq(TENANT_ID), anyMap(), any(Callable.class));
     verify(updateService).sendSpecificationRequests();
   }
 }

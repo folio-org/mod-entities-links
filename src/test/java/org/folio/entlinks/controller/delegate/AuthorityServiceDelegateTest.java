@@ -35,12 +35,12 @@ import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.authority.AuthorityUpdateResult;
 import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
+import org.folio.entlinks.service.settings.SettingsService;
 import org.folio.entlinks.service.settings.TenantSetting;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.tenant.domain.dto.Setting;
 import org.folio.tenant.domain.dto.SettingCollection;
-import org.folio.tenant.settings.service.TenantSettingsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,7 +65,7 @@ class AuthorityServiceDelegateTest {
   @Mock private AuthorityS3Service authorityS3Service;
   @Mock private LocalStorageProperties localStorageProperties;
   @Mock private AuthorityRepository authorityRepository;
-  @Mock private TenantSettingsService tenantSettingsService;
+  @Mock private SettingsService settingsService;
   @InjectMocks
   private AuthorityServiceDelegate delegate;
 
@@ -337,7 +337,7 @@ class AuthorityServiceDelegateTest {
     authority.setId(UUID.randomUUID());
     var dto = new AuthorityDto().id(authority.getId());
 
-    when(tenantSettingsService.getGroupSettings(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getGroup()))
+    when(settingsService.getGroupSettings(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getGroup()))
       .thenReturn(Optional.of(groupSettings));
     doAnswer(invocation -> {
       java.util.function.Consumer<Authority> callback = invocation.getArgument(1);
@@ -354,7 +354,7 @@ class AuthorityServiceDelegateTest {
 
   @Test
   void shouldSkipExpireWhenNoSettings() {
-    when(tenantSettingsService.getGroupSettings(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getGroup()))
+    when(settingsService.getGroupSettings(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getGroup()))
       .thenReturn(Optional.empty());
 
     delegate.expire();

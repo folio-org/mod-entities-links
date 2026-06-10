@@ -4,7 +4,6 @@ import org.folio.entlinks.client.ConsortiumTenantsClient;
 import org.folio.entlinks.client.InstanceStorageClient;
 import org.folio.entlinks.client.MappingMetadataClient;
 import org.folio.entlinks.client.MappingRulesClient;
-import org.folio.entlinks.client.SettingsClient;
 import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.client.UserTenantsClient;
 import org.folio.entlinks.client.UsersClient;
@@ -33,11 +32,6 @@ public class ExchangeClientsConfiguration {
   @Bean
   public MappingMetadataClient mappingMetadataClient(HttpServiceProxyFactory factory) {
     return factory.createClient(MappingMetadataClient.class);
-  }
-
-  @Bean
-  public SettingsClient settingsClient(HttpServiceProxyFactory factory) {
-    return factory.createClient(SettingsClient.class);
   }
 
   @Bean

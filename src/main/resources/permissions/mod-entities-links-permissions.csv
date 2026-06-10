@@ -1,6 +1,0 @@
-inventory-storage.instances.item.get
-inventory-storage.instances.item.put
-source-storage.source-records.item.get
-users.collection.get
-user-tenants.collection.get
-source-storage.parsed-records.fetch.collection.post

@@ -10,6 +10,7 @@ import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -43,7 +44,7 @@ import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthoritySourceFilePropagationService;
 import org.folio.entlinks.service.consortium.propagation.model.AuthoritySourceFilePropagationData;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.support.TestDataUtils;
 import org.folio.tenant.domain.dto.Parameter;
@@ -76,7 +77,7 @@ class AuthoritySourceFileServiceDelegateTest {
   @Mock
   private FolioExecutionContext context;
   @Mock
-  private SystemUserScopedExecutionService executionService;
+  private FolioExecutionContextService executionService;
   @Mock
   private ConsortiumTenantsService consortiumTenantsService;
   @Mock
@@ -388,8 +389,8 @@ class AuthoritySourceFileServiceDelegateTest {
 
     mockAsNonConsortiumTenant();
     when(service.nextHrid(id)).thenReturn(code);
-    when(executionService.executeSystemUserScoped(eq(TENANT_ID), any()))
-      .thenAnswer(invocation -> ((Callable<?>) invocation.getArgument(1)).call());
+    when(executionService.execute(eq(TENANT_ID), anyMap(), any(Callable.class)))
+      .thenAnswer(invocation -> ((Callable<?>) invocation.getArgument(2)).call());
 
     var hridDto = delegate.getAuthoritySourceFileNextHrid(id);
 
@@ -406,8 +407,8 @@ class AuthoritySourceFileServiceDelegateTest {
 
     mockAsConsortiumMemberTenant();
     when(service.nextHrid(id)).thenReturn(code);
-    when(executionService.executeSystemUserScoped(eq(CENTRAL_TENANT_ID), any()))
-      .thenAnswer(invocation -> ((Callable<?>) invocation.getArgument(1)).call());
+    when(executionService.execute(eq(CENTRAL_TENANT_ID), anyMap(), any(Callable.class)))
+      .thenAnswer(invocation -> ((Callable<?>) invocation.getArgument(2)).call());
 
     var hridDto = delegate.getAuthoritySourceFileNextHrid(id);
 

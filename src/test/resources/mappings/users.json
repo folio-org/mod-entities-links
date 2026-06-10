@@ -3,19 +3,6 @@
     {
       "request": {
         "method": "GET",
-        "url": "/users?query=username%3D%3D%22mod-entities-links%22"
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n \"users\": [\n {\n \"id\": \"38d3a441-c100-5e8d-bd12-71bde492b723\",\n \"username\": \"mod-entities-links\",\n \"personal\": {\n \"firstName\": \"John\",\n \"lastName\": \"Doe\"\n }\n }\n ],\n \"totalRecords\": 1\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      }
-    },
-    {
-      "request": {
-        "method": "GET",
         "url": "/users?query=id%3D%2838d3a441-c100-5e8d-bd12-71bde492b723%29"
       },
       "response": {
@@ -34,30 +21,6 @@
       "response": {
         "status": 200,
         "body": "{\n \"users\": [\n {\n \"id\": \"4df34034-dc86-4364-8d8a-65ab22d44063\",\n \"username\": \"nikola.tesla\",\n \"personal\": {\n \"firstName\": \"Nikola\",\n \"lastName\": \"Tesla\"\n }\n }\n ],\n \"totalRecords\": 1\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      }
-    },
-    {
-      "request": {
-        "method": "POST",
-        "url": "/users"
-      },
-      "response": {
-        "status": 200,
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      }
-    },
-    {
-      "request": {
-        "method": "PUT",
-        "url": "/users"
-      },
-      "response": {
-        "status": 200,
         "headers": {
           "Content-Type": "application/json"
         }

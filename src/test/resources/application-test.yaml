@@ -30,12 +30,6 @@ spring:
 
 folio:
   environment: folio-test
-  system-user:
-    enabled: true
-    username: mod-entities-links
-    password: mod-entities-links
-    lastname: System
-    permissionsFilePath: permissions/test-permissions.csv
   exchange:
     enabled: true
   kafka:

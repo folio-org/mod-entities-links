@@ -9,7 +9,7 @@ import static org.folio.support.base.TestConstants.TEST_ID;
 
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
@@ -45,7 +45,7 @@ class AuthoritySourceFileMapperTest {
     assertThat(entity.getId()).isEqualTo(dto.getId());
     assertThat(entity.getName()).isEqualTo(dto.getName());
     assertThat(entity.getType()).isEqualTo(dto.getType());
-    assertThat(entity.getFullBaseUrl()).isEqualTo(StringUtils.appendIfMissing(dto.getBaseUrl(), "/"));
+    assertThat(entity.getFullBaseUrl()).isEqualTo(Strings.CI.appendIfMissing(dto.getBaseUrl(), "/"));
     assertThat(entity.getSource()).isEqualTo(AuthoritySourceFileSource.LOCAL);
     assertThat(entity.getAuthoritySourceFileCodes()).hasSize(1);
     assertThat(entity.getAuthoritySourceFileCodes().iterator().next().getCode()).isEqualTo(dto.getCode());

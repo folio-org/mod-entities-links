@@ -3,9 +3,7 @@ package org.folio.entlinks.service.consortium;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.domain.entity.AuthoritySourceFileSource.LOCAL;
 import static org.folio.support.base.TestConstants.TENANT_ID;
-import static org.folio.support.base.TestConstants.TEST_ID;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -20,9 +18,8 @@ import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthoritySour
 import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
 import org.folio.entlinks.service.consortium.propagation.model.AuthoritySourceFilePropagationData;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.folio.spring.testing.type.UnitTest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -36,14 +33,9 @@ class ConsortiumAuthoritySourceFilePropagationServiceTest {
 
   private @Mock AuthoritySourceFileService authorityService;
   private @Mock ConsortiumTenantsService tenantsService;
-  private @Mock SystemUserScopedExecutionService executionService;
+  private @Mock FolioExecutionContextService executionService;
   private @Mock FolioExecutionContext context;
   private @InjectMocks ConsortiumAuthoritySourceFilePropagationService propagationService;
-
-  @BeforeEach
-  void setUp() {
-    when(context.getUserId()).thenReturn(TEST_ID);
-  }
 
   @Test
   void testPropagateCreate() throws FolioIntegrationException {
@@ -55,7 +47,7 @@ class ConsortiumAuthoritySourceFilePropagationServiceTest {
 
     assertThat(sourceFile.getSource()).isEqualTo(LOCAL);
     verify(tenantsService).getConsortiumTenants(TENANT_ID);
-    verify(executionService, times(3)).executeAsyncSystemUserScoped(any(), anyString(), any());
+    verify(executionService, times(3)).execute(any(), any(FolioExecutionContext.class), any(Runnable.class));
     verify(authorityService, times(3)).create(sourceFile);
   }
 
@@ -70,7 +62,7 @@ class ConsortiumAuthoritySourceFilePropagationServiceTest {
 
     assertThat(sourceFile.getSource()).isEqualTo(LOCAL);
     verify(tenantsService, times(1)).getConsortiumTenants(any());
-    verify(executionService, times(3)).executeAsyncSystemUserScoped(any(), anyString(), any());
+    verify(executionService, times(3)).execute(any(), any(FolioExecutionContext.class), any(Runnable.class));
     verify(authorityService, times(3)).update(sourceFile.getId(), sourceFile, null);
   }
 
@@ -85,7 +77,7 @@ class ConsortiumAuthoritySourceFilePropagationServiceTest {
 
     assertThat(sourceFile.getSource()).isEqualTo(LOCAL);
     verify(tenantsService, times(1)).getConsortiumTenants(any());
-    verify(executionService, times(3)).executeAsyncSystemUserScoped(any(), anyString(), any());
+    verify(executionService, times(3)).execute(any(), any(FolioExecutionContext.class), any(Runnable.class));
     verify(authorityService, times(3)).deleteById(sourceFile.getId());
   }
 
@@ -98,7 +90,7 @@ class ConsortiumAuthoritySourceFilePropagationServiceTest {
       ConsortiumPropagationService.PropagationType.CREATE, TENANT_ID);
 
     verify(tenantsService, times(1)).getConsortiumTenants(any());
-    verify(executionService, times(0)).executeAsyncSystemUserScoped(any(), any());
+    verify(executionService, times(0)).execute(any(), any(FolioExecutionContext.class), any(Runnable.class));
     verify(authorityService, times(0)).create(any());
   }
 
@@ -107,7 +99,7 @@ class ConsortiumAuthoritySourceFilePropagationServiceTest {
     doAnswer(invocation -> {
       ((Runnable) invocation.getArgument(2)).run();
       return null;
-    }).when(executionService).executeAsyncSystemUserScoped(any(), any(), any());
+    }).when(executionService).execute(any(), any(FolioExecutionContext.class), any(Runnable.class));
   }
 
   private AuthoritySourceFilePropagationData<AuthoritySourceFile> getMockData(AuthoritySourceFile asf) {

@@ -3,6 +3,7 @@ package org.folio.entlinks.integration.kafka;
 import static org.folio.spring.tools.config.RetryTemplateConfiguration.DEFAULT_KAFKA_RETRY_TEMPLATE_NAME;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -10,7 +11,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.logging.log4j.message.FormattedMessageFactory;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class LinkUpdateReportEventListener {
 
-  private final SystemUserScopedExecutionService executionService;
+  private final FolioExecutionContextService executionService;
   private final MessageBatchProcessor messageBatchProcessor;
   private final InstanceAuthorityLinkingService linkingService;
 
@@ -39,7 +40,7 @@ public class LinkUpdateReportEventListener {
   }
 
   private void handleReportEventsForTenant(String tenant, List<LinkUpdateReport> events) {
-    executionService.executeSystemUserScoped(tenant, () -> {
+    executionService.execute(tenant, Map.of(), () -> {
       log.info("Triggering updates for stats records [tenant: {}, number of records: {}]", tenant, events.size());
       messageBatchProcessor.consumeBatchWithFallback(events, DEFAULT_KAFKA_RETRY_TEMPLATE_NAME,
         this::handleReportEventsByJobId, this::logFailedEvent);

@@ -2,10 +2,8 @@ package org.folio.entlinks.service.messaging.authority;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.support.base.TestConstants.TENANT_ID;
-import static org.folio.support.base.TestConstants.USER_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
@@ -38,7 +36,7 @@ import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHan
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +63,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
   private @Mock AuthoritySourceRecordService sourceRecordService;
   private @Mock ConsortiumTenantsService consortiumTenantsService;
   private @Mock FolioExecutionContext folioExecutionContext;
-  private @Mock SystemUserScopedExecutionService executionService;
+  private @Mock FolioExecutionContextService executionService;
 
   private InstanceAuthorityLinkUpdateService service;
 
@@ -246,7 +244,6 @@ class InstanceAuthorityLinkUpdateServiceTest {
     when(sourceRecordService.getAuthoritySourceRecordById(any())).thenReturn(sourceRecord);
     when(updateHandler.handle(changeHolderCaptor.capture())).thenReturn(List.of(expected));
     when(folioExecutionContext.getTenantId()).thenReturn(TENANT_ID);
-    when(folioExecutionContext.getUserId()).thenReturn(UUID.fromString(USER_ID));
     when(consortiumTenantsService.getConsortiumTenants(TENANT_ID)).thenReturn(memberTenants);
     when(authorityDataStatService.createInBatch(anyList())).thenReturn(List.of(new AuthorityDataStat()));
     mockExecutionService();
@@ -254,8 +251,8 @@ class InstanceAuthorityLinkUpdateServiceTest {
     service.handleAuthoritiesChanges(authorityEvents);
 
     verify(eventProducer, times(3)).sendMessages(eventCaptor.capture());
-    verify(executionService).executeSystemUserScoped(eq(memberTenants.get(0)), eq(USER_ID), any());
-    verify(executionService).executeSystemUserScoped(eq(memberTenants.get(1)), eq(USER_ID), any());
+    verify(executionService).execute(eq(memberTenants.get(0)), any(FolioExecutionContext.class), any(Callable.class));
+    verify(executionService).execute(eq(memberTenants.get(1)), any(FolioExecutionContext.class), any(Callable.class));
 
     var messages = eventCaptor.getAllValues().stream().flatMap(Collection::stream).toList();
     assertThat(messages).hasSize(3);
@@ -274,6 +271,6 @@ class InstanceAuthorityLinkUpdateServiceTest {
   @SuppressWarnings("unchecked")
   private void mockExecutionService() {
     doAnswer(invocationOnMock -> ((Callable<Object>) invocationOnMock.getArgument(2)).call())
-      .when(executionService).executeSystemUserScoped(any(), anyString(), any());
+      .when(executionService).execute(any(), any(FolioExecutionContext.class), any(Callable.class));
   }
 }

@@ -39,7 +39,6 @@ Configuration is managed via the `.env` file in this directory.
 | `WIREMOCK_PORT`          | WireMock (Okapi mock) port    | `9130`                 |
 | `OKAPI_URL`              | Okapi URL for the module      | `http://wiremock:8080` |
 | `PGADMIN_PORT`           | PgAdmin port                  | `5050`                 |
-| `SYSTEM_USER_ENABLED`    | Enable system user            | `false`                |
 
 ## 🚀 Services
 

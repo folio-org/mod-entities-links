@@ -77,7 +77,7 @@ class ConsortiumAuthoritySourceFilesIT extends IntegrationTestBase {
 
     // try to delete in central tenant the authority source file with reference in member tenant
     tryDelete(authoritySourceFilesEndpoint(sourceFileId), tenantHeaders(CENTRAL_TENANT_ID))
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(exceptionMatch(RequestBodyValidationException.class))
       .andExpect(errorMessageMatch(is("Unable to delete. Authority source file has referenced authorities")));
 

@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.scope.FolioExecutionContextService;
 import org.springframework.stereotype.Component;
 
 @Log4j2
@@ -15,7 +15,7 @@ public class ConsortiumTenantExecutor {
 
   private final UserTenantsService userTenantsService;
   private final FolioExecutionContext folioExecutionContext;
-  private final SystemUserScopedExecutionService scopedExecutionService;
+  private final FolioExecutionContextService executionService;
 
   /**
    * Executes the given operation within the context of the central tenant of the consortium.
@@ -47,6 +47,6 @@ public class ConsortiumTenantExecutor {
     }
 
     log.info("Changing context from {} to {}", tenantId, centralTenantId.get());
-    return scopedExecutionService.executeSystemUserScoped(centralTenantId.get(), operation::get);
+    return executionService.execute(centralTenantId.get(), folioExecutionContext, operation::get);
   }
 }

@@ -230,7 +230,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
     ));
 
     tryPut(linksInstanceEndpoint(), incomingLinks, instanceId)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
@@ -272,7 +272,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
     var incomingLinks = linksDtoCollection(List.of(invalidLink));
 
     tryPut(linksInstanceEndpoint(), incomingLinks, instanceId)
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("MethodArgumentNotValidException")))
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))

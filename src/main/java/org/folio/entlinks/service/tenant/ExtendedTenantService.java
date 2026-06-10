@@ -3,7 +3,7 @@ package org.folio.entlinks.service.tenant;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.service.dataloader.ReferenceDataLoader;
 import org.folio.entlinks.service.kafka.ExtendedKafkaAdminService;
-import org.folio.entlinks.service.settings.TempSettingsMigrationService;
+import org.folio.entlinks.service.settings.SettingsOverrideService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.liquibase.FolioSpringLiquibase;
 import org.folio.spring.service.TenantService;
@@ -20,7 +20,7 @@ public class ExtendedTenantService extends TenantService {
   private final FolioExecutionContext folioExecutionContext;
   private final ExtendedKafkaAdminService kafkaAdminService;
   private final ReferenceDataLoader referenceDataLoader;
-  private final TempSettingsMigrationService settingsMigrationService;
+  private final SettingsOverrideService settingsOverrideService;
 
   public ExtendedTenantService(JdbcTemplate jdbcTemplate,
                                FolioExecutionContext context,
@@ -28,12 +28,12 @@ public class ExtendedTenantService extends TenantService {
                                FolioSpringLiquibase folioSpringLiquibase,
                                FolioExecutionContext folioExecutionContext,
                                ReferenceDataLoader referenceDataLoader,
-                               TempSettingsMigrationService settingsMigrationService) {
+                               SettingsOverrideService settingsOverrideService) {
     super(jdbcTemplate, context, folioSpringLiquibase);
     this.folioExecutionContext = folioExecutionContext;
     this.kafkaAdminService = kafkaAdminService;
     this.referenceDataLoader = referenceDataLoader;
-    this.settingsMigrationService = settingsMigrationService;
+    this.settingsOverrideService = settingsOverrideService;
   }
 
   @Override
@@ -46,7 +46,7 @@ public class ExtendedTenantService extends TenantService {
     super.afterTenantUpdate(tenantAttributes);
     kafkaAdminService.createTopics(folioExecutionContext.getTenantId());
     kafkaAdminService.restartEventListeners();
-    settingsMigrationService.migrateSettings();
+    settingsOverrideService.overrideSettings();
   }
 
   @Override

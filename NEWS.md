@@ -15,6 +15,7 @@
 
 ### Tech Dept
 * Remove use of deprecated folio-spring-system-user ([MODELINKS-339](https://folio-org.atlassian.net/browse/MODELINKS-339))
+* Remove use of deprecated TempSettingsMigrationService ([MODELINKS-380](https://folio-org.atlassian.net/browse/MODELINKS-380))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

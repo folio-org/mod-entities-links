@@ -22,6 +22,7 @@ properties:
     type: string
     description: Code of the authority heading type
     x-fqm-value-getter: ":sourceAlias.code"
+    x-fqm-essential: true
   queryable:
     type: boolean
     description: Whether this heading type is queryable

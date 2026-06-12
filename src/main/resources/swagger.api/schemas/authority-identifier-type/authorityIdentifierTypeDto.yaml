@@ -6,6 +6,7 @@ properties:
     type: string
     format: uuid
     x-fqm-value-getter: ":sourceAlias.id"
+    x-fqm-essential: true
   name:
     type: string
     description: Name of the authority identifier type

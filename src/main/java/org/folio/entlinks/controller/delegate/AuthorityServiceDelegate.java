@@ -25,11 +25,11 @@ import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.authority.AuthorityS3Service;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
+import org.folio.entlinks.service.settings.SettingsService;
 import org.folio.entlinks.service.settings.TenantSetting;
 import org.folio.tenant.domain.dto.Parameter;
 import org.folio.tenant.domain.dto.Setting;
 import org.folio.tenant.domain.dto.SettingCollection;
-import org.folio.tenant.settings.service.TenantSettingsService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -45,7 +45,7 @@ public class AuthorityServiceDelegate {
   private final AuthorityS3Service authorityS3Service;
   private final LocalStorageProperties localStorageProperties;
   private final AuthorityDataStatService dataStatService;
-  private final TenantSettingsService tenantSettingsService;
+  private final SettingsService settingsService;
 
   public AuthorityServiceDelegate(AuthorityService service,
                                   AuthorityMapper mapper,
@@ -53,14 +53,14 @@ public class AuthorityServiceDelegate {
                                   AuthorityS3Service authorityS3Service,
                                   LocalStorageProperties localStorageProperties,
                                   AuthorityDataStatService dataStatService,
-                                  TenantSettingsService tenantSettingsService) {
+                                  SettingsService settingsService) {
     this.dataStatService = dataStatService;
     this.service = service;
     this.mapper = mapper;
     this.eventPublisher = eventPublisher;
     this.authorityS3Service = authorityS3Service;
     this.localStorageProperties = localStorageProperties;
-    this.tenantSettingsService = tenantSettingsService;
+    this.settingsService = settingsService;
   }
 
   public AuthorityFullDtoCollection retrieveAuthorityCollection(Integer offset, Integer limit, String cqlQuery,
@@ -156,7 +156,7 @@ public class AuthorityServiceDelegate {
   }
 
   private Optional<Integer> fetchAuthoritiesRetentionDuration() {
-    var groupSettings = tenantSettingsService.getGroupSettings(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getGroup());
+    var groupSettings = settingsService.getGroupSettings(TenantSetting.ARCHIVES_EXPIRATION_ENABLED.getGroup());
     if (groupSettings.isEmpty()) {
       log.warn("No settings were found for the tenant");
       return Optional.empty();

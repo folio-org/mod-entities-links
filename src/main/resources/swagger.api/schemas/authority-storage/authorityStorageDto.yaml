@@ -95,6 +95,7 @@ properties:
           type: string
           description: Relationship type
           enum: [BROADER_TERM, NARROWER_TERM, EARLIER_HEADING, LATER_HEADING]
+          x-fqm-visibility: 'hidden-non-queryable'
           x-fqm-value-getter: "(SELECT array_agg(elems.value->>'relationshipType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"
           x-fqm-value-function: ":value"
           x-fqm-filter-value-getter: "(SELECT array_agg(elems.value->>'relationshipType') FROM jsonb_array_elements(:sourceAlias.sft_headings) AS elems)"

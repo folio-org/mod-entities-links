@@ -1,6 +1,7 @@
 ## v5.0.2 2026-05-28
 ### Features
 * Enhance error handling for constraint violations ([MODELINKS-410](https://folio-org.atlassian.net/browse/MODELINKS-410))
+* Hide relationshipType in sftHeadings for fqm ([MODELINKS-425](https://folio-org.atlassian.net/browse/MODELINKS-425))
 
 ---
 

@@ -33,6 +33,60 @@ x-fqm-joins-to-raw = [
 ]
 x-fqm-visibility = 'hidden'
 
+[[entityTypes.fieldAdditions]]
+name = "shared"
+sourceAlias = "src__authorities__entities_links__authority"
+essential = true
+dataType = { dataType = "stringType" }
+isIdColumn = false
+queryable = true
+visibleByDefault = false
+valueGetter = "CASE WHEN '${central_tenant_id}' = '${tenant_id}' THEN 'Shared' ELSE 'Local' END"
+ecsOnly = true
+
+[[entityTypes.fieldAdditions.values]]
+value = "Shared"
+label = "Shared"
+
+[[entityTypes.fieldAdditions.values]]
+value = "Local"
+label = "Local"
+
+[[entityTypes.fieldAdditions]]
+name = "tenant_id"
+sourceAlias = "src__authorities__entities_links__authority"
+essential = true
+dataType = { dataType = "stringType" }
+isIdColumn = true
+queryable = false
+visibleByDefault = false
+valueGetter = "'${tenant_id}'"
+ecsOnly = true
+
+[entityTypes.fieldAdditions.source]
+columnName = "tenant_id"
+entityTypeId = "8c7c1bc2-f35a-5a23-a6f0-5021f79b06d7"
+type = "fqm"
+name = "tenant_id"
+
+[[entityTypes.fieldAdditions]]
+name = "tenant_name"
+essential = true
+dataType = { dataType = "stringType" }
+queryable = true
+visibleByDefault = false
+valueGetter = "(SELECT name FROM ${central_tenant_id}_mod_fqm_manager.src_consortia_tenant WHERE id = '${tenant_id}')"
+filterValueGetter = "(SELECT lower(name) FROM ${central_tenant_id}_mod_fqm_manager.src_consortia_tenant WHERE id = '${tenant_id}')"
+valueFunction = "lower(:value)"
+idColumnName = "tenant_id"
+ecsOnly = true
+
+[entityTypes.fieldAdditions.source]
+columnName = "tenant_name"
+entityTypeId = "8c7c1bc2-f35a-5a23-a6f0-5021f79b06d7"
+type = "fqm"
+name = "tenant_name"
+
 [[sources]]
 name = "authority-note-type"
 table = "authority_note_type"

@@ -9,6 +9,7 @@
 ### Features
 * Enhance error handling for constraint violations ([MODELINKS-410](https://folio-org.atlassian.net/browse/MODELINKS-410))
 * Hide relationshipType in sftHeadings for fqm ([MODELINKS-425](https://folio-org.atlassian.net/browse/MODELINKS-425))
+* Add shared, tenant_id, tenant_name fields for fqm ([MODELINKS-413](https://folio-org.atlassian.net/browse/MODELINKS-413))
 
 ### Bug fixes
 * Fix FQM querying for authority see-from and see-also-from relationship types  ([MODELINKS-423](https://folio-org.atlassian.net/browse/MODELINKS-423))

@@ -23,11 +23,6 @@ properties:
       "entityTypeId": "e1d77962-f469-5a9c-a0e0-30987c1bae99",
       "columnName": "name"
     }
-    x-fqm-value-source-api: {
-      "path": "authority-identifier-types",
-      "valueJsonPath": "$.identifierTypes.*.id",
-      "labelJsonPath": "$.identifierTypes.*.name"
-    }
 required:
   - value
   - identifierTypeId

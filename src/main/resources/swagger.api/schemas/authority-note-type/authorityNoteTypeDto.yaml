@@ -6,10 +6,19 @@ properties:
     type: string
     format: uuid
     x-fqm-value-getter: ":sourceAlias.id"
+    x-fqm-essential: true
   name:
     type: string
     description: Name of the Authority note type
+    x-fqm-essential: true
+    x-fqm-id-column-name: "id"
+    x-fqm-visible-by-default: true
     x-fqm-value-getter: ":sourceAlias.name"
+    x-fqm-value-source-api: {
+      "path": "authority-note-types",
+      "valueJsonPath": "$.authorityNoteTypes.*.id",
+      "labelJsonPath": "$.authorityNoteTypes.*.name"
+    }
   source:
     type: string
     description: label indicating where the Authority note type entry originates from, i.e. 'folio' or 'local'

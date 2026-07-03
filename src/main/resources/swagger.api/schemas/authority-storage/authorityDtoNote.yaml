@@ -18,11 +18,6 @@ properties:
       "entityTypeId": "369af782-637c-5ab7-af1f-f66a3e45acad",
       "columnName": "name"
     }
-    x-fqm-value-source-api: {
-      "path": "authority-note-types",
-      "valueJsonPath": "$.authorityNoteTypes.*.id",
-      "labelJsonPath": "$.authorityNoteTypes.*.name"
-    }
   note:
     type: string
     description: Text content of the note

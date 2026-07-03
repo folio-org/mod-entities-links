@@ -45,6 +45,7 @@
   "fqm.entityType.authority.shared": "Shared",
   "fqm.entityType.authority.tenant_id": "Tenant ID",
   "fqm.entityType.authority.tenant_name": "Affiliation name",
+  "fqm.entityType.authority.number_of_links": "Number of linked bibliographic records",
   "fqm.entityType.authority-note-type": "Authority note type",
   "fqm.entityType.authority-note-type._description": "Authority note type.",
   "fqm.entityType.authority-note-type.id": "UUID",

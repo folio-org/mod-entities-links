@@ -87,6 +87,16 @@ entityTypeId = "8c7c1bc2-f35a-5a23-a6f0-5021f79b06d7"
 type = "fqm"
 name = "tenant_name"
 
+[[entityTypes.fieldAdditions]]
+name = "number_of_links"
+dataType = { dataType = 'integerType' }
+sourceAlias = "src__authorities__entities_links__authority"
+queryable = true
+essential = true
+visibleByDefault = false
+valueGetter = """( SELECT COUNT(DISTINCT ial.instance_id) FROM ${tenant_id}_mod_entities_links.instance_authority_link ial WHERE ial.authority_id = :sourceAlias.id )"""
+valueFunction = "(:value)::integer"
+
 [[sources]]
 name = "authority-note-type"
 table = "authority_note_type"

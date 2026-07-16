@@ -60,5 +60,9 @@
     "fqm.entityType.authority-heading-type.id": "UUID",
     "fqm.entityType.authority-heading-type.name": "Name",
     "fqm.entityType.authority-heading-type.code": "Code",
-    "fqm.entityType.authority-heading-type.queryable": "Queryable"
+    "fqm.entityType.authority-heading-type.queryable": "Queryable",
+    "fqm.entityType.authority.shared": "Shared",
+    "fqm.entityType.authority.tenant_id": "Tenant ID",
+    "fqm.entityType.authority.tenant_name": "Affiliation name",
+    "fqm.entityType.authority.number_of_links": "Number of linked bibliographic records"
 }

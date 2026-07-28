@@ -42,9 +42,6 @@ class AuthorityDeleteEventHandlerTest {
 
   @BeforeEach
   void setUp() {
-    var childWrapper = new ProfileSnapshotWrapper();
-    childWrapper.setContentType(ProfileType.MAPPING_PROFILE);
-
     var actionProfile = new ActionProfile();
     actionProfile.setAction(ActionProfile.Action.DELETE);
     actionProfile.setFolioRecord(ActionProfile.FolioRecord.MARC_AUTHORITY);
@@ -52,7 +49,6 @@ class AuthorityDeleteEventHandlerTest {
     var parentWrapper = new ProfileSnapshotWrapper();
     parentWrapper.setContentType(ProfileType.ACTION_PROFILE);
     parentWrapper.setContent(actionProfile);
-    parentWrapper.setChildSnapshotWrappers(List.of(childWrapper));
 
     var context = new HashMap<String, String>();
     context.put(AUTHORITY_RECORD_ID, AUTHORITY_ID.toString());

@@ -44,7 +44,6 @@ public class AuthorityDeleteEventHandler implements EventHandler {
   private void preparePayload(DataImportEventPayload payload) {
     payload.setEventType(DataImportEventTypes.DI_INVENTORY_AUTHORITY_CREATED.value());
     payload.getEventsChain().add(payload.getEventType());
-    payload.setCurrentNode(payload.getCurrentNode().getChildSnapshotWrappers().getFirst());
   }
 
   private boolean isEligibleActionProfile(ProfileSnapshotWrapper currentNode) {

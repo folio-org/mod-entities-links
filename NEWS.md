@@ -16,6 +16,7 @@
 * Fix FQM querying for authority see-from and see-also-from relationship types  ([MODELINKS-423](https://folio-org.atlassian.net/browse/MODELINKS-423))
 * Add validation for Authority record creation during Data Import ([MODELINKS-417](https://folio-org.atlassian.net/browse/MODELINKS-417))
 * Fix x-fqm-source/x-fqm-value-source-api conflicts for fqm ([MODELINKS-429](https://folio-org.atlassian.net/browse/MODELINKS-429))
+* Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))
 
 ### Tech Dept
 * Remove use of deprecated folio-spring-system-user ([MODELINKS-339](https://folio-org.atlassian.net/browse/MODELINKS-339))

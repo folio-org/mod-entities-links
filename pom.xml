@@ -30,22 +30,23 @@
     <folio-s3-client.version>3.0.2</folio-s3-client.version>
     <data-import-processing-core.version>5.0.0</data-import-processing-core.version>
     <mod-record-specifications-dto.version>3.0.0</mod-record-specifications-dto.version>
-    <aws-sdk-java.version>2.49.3</aws-sdk-java.version>
+    <aws-sdk-java.version>2.50.0</aws-sdk-java.version>
     <mapstruct.version>1.6.3</mapstruct.version>
     <lombok.mapstruct-binding.version>0.2.0</lombok.mapstruct-binding.version>
     <marc4j.version>2.9.6</marc4j.version>
     <awaitility.version>4.3.0</awaitility.version>
 
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
-    <!-- Pinned to 7.23.0: 7.24.0 hard-codes @JsonInclude(NON_NULL) on optional non-nullable fields,
-         overriding the global Jackson inclusion policy. Bump back to 7.24.0+ once
-         https://github.com/OpenAPITools/openapi-generator/pull/24428 (opt-out config options) is merged/released. -->
+    <!-- Pinned to 7.23.0: 7.24.0 generates duplicate @JsonInclude on array fields (NON_EMPTY + NON_NULL),
+         causing "not a repeatable annotation" compile errors. Bump once the opt-out config option
+         generateJsonIncludeAnnotations from https://github.com/OpenAPITools/openapi-generator/pull/24428
+         is released (merged but not yet in a release). -->
     <maven-openapi-generator-plugin.version>7.23.0</maven-openapi-generator-plugin.version>
     <maven-copy-rename-plugin.version>1.0.1</maven-copy-rename-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <folio-java-checkstyle.version>1.2.0</folio-java-checkstyle.version>
     <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
-    <checkstyle.version>13.8.0</checkstyle.version>
+    <checkstyle.version>13.9.0</checkstyle.version>
     <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
     <maven-failsafe-plugin.version>3.5.6</maven-failsafe-plugin.version>
     <maven-release-plugin.version>3.3.1</maven-release-plugin.version>

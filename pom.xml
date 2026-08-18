@@ -37,10 +37,11 @@
     <awaitility.version>4.3.0</awaitility.version>
 
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
-    <!-- Pinned to 7.23.0: 7.24.0 hard-codes @JsonInclude(NON_NULL) on optional non-nullable fields,
-         overriding the global Jackson inclusion policy. Bump back to 7.24.0+ once
-         https://github.com/OpenAPITools/openapi-generator/pull/24428 (opt-out config options) is merged/released. -->
-    <maven-openapi-generator-plugin.version>7.24.0</maven-openapi-generator-plugin.version>
+    <!-- Pinned to 7.23.0: 7.24.0 generates duplicate @JsonInclude on array fields (NON_EMPTY + NON_NULL),
+         causing "not a repeatable annotation" compile errors. Bump once the opt-out config option
+         generateJsonIncludeAnnotations from https://github.com/OpenAPITools/openapi-generator/pull/24428
+         is released (merged but not yet in a release). -->
+    <maven-openapi-generator-plugin.version>7.23.0</maven-openapi-generator-plugin.version>
     <maven-copy-rename-plugin.version>1.0.1</maven-copy-rename-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <folio-java-checkstyle.version>1.2.0</folio-java-checkstyle.version>

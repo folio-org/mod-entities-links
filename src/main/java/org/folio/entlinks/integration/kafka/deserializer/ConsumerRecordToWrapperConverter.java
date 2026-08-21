@@ -3,7 +3,7 @@ package org.folio.entlinks.integration.kafka.deserializer;
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.CHUNK_ID_HEADER;
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.JOB_EXECUTION_ID_HEADER;
 import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.RECORD_ID_HEADER;
-import static org.folio.rest.util.OkapiConnectionParams.USER_ID_HEADER;
+import static org.folio.entlinks.integration.di.handler.DataImportEventHandlerUtils.USER_ID_HEADER;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;

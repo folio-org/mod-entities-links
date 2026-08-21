@@ -11,6 +11,7 @@ public class DataImportEventHandlerUtils {
   public static final String RECORD_ID_HEADER = "recordId";
   public static final String CHUNK_ID_HEADER = "chunkId";
   public static final String JOB_EXECUTION_ID_HEADER = "jobExecutionId";
+  public static final String USER_ID_HEADER = "userId";
   public static final String MARC_SOURCE = "MARC";
 
   private static final String DI_LOG_TEMPLATE = "{} [jobExecutionId: {}, chunkId: {}, recordId: {}]";

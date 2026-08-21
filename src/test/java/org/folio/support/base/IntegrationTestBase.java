@@ -4,7 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
-import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.hc.core5.http.HttpStatus.SC_OK;
 import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -105,7 +105,7 @@ import tools.jackson.databind.ObjectMapper;
 @AutoConfigureMockMvc
 @Import({
   IntegrationTestBase.KafkaTemplateTestConfiguration.class})
-public class IntegrationTestBase {
+public abstract class IntegrationTestBase {
 
   protected static final String DOMAIN_EVENT_HEADER_KEY = "domain-event-type";
   protected static final List<String> DOMAIN_EVENT_HEADER_KEYS =

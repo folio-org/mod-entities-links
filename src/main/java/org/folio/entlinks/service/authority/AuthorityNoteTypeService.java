@@ -5,7 +5,6 @@ import static org.folio.entlinks.utils.ServiceUtils.initId;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import javax.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +14,7 @@ import org.folio.entlinks.exception.AuthorityNoteTypeNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.data.OffsetRequest;
 import org.folio.tenant.domain.dto.Parameter;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,7 +94,7 @@ public class AuthorityNoteTypeService {
   }
 
   @Transactional
-  public AuthorityNoteType update(@Nonnull UUID id, AuthorityNoteType authorityNoteType) {
+  public AuthorityNoteType update(@NonNull UUID id, AuthorityNoteType authorityNoteType) {
     log.debug("update:: Attempting to update AuthorityNoteType [id: {}]", id);
 
     if (!Objects.equals(id, authorityNoteType.getId())) {

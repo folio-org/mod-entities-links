@@ -41,9 +41,13 @@ public class ConsumerRecordToWrapperConverter implements RecordMessageConverter 
     addHeaderToPayloadContext(payload, CHUNK_ID_HEADER, headers);
     addHeaderToPayloadContext(payload, JOB_EXECUTION_ID_HEADER, headers);
     addHeaderToPayloadContext(payload, USER_ID_HEADER, headers);
-    //add okapi header to be picked up by FolioExecutionContext on handler
+    //add okapi headers to be picked up by FolioExecutionContext on handler
     Optional.ofNullable(headers.get(USER_ID_HEADER))
       .ifPresent(userId -> headers.put(XOkapiHeaders.USER_ID, userId));
+    if (!headers.containsKey(XOkapiHeaders.URL)) {
+      Optional.ofNullable(payload.getOkapiUrl())
+        .ifPresent(url -> headers.put(XOkapiHeaders.URL, url));
+    }
 
     DataImportEventWrapper wrapper = new DataImportEventWrapper(payload, headers,
       headers.get(FolioKafkaProperties.TENANT_ID));

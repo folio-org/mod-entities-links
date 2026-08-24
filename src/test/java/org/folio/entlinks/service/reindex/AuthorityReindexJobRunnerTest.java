@@ -9,11 +9,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.folio.entlinks.controller.converter.AuthorityMapper;
 import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.ReindexJob;
 import org.folio.entlinks.domain.entity.ReindexJobResource;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -22,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+@UnitTest
 @ExtendWith(MockitoExtension.class)
 class AuthorityReindexJobRunnerTest {
 
@@ -36,6 +40,9 @@ class AuthorityReindexJobRunnerTest {
 
   @Mock
   private ReindexService reindexService;
+
+  @Mock
+  private AuthorityMapper mapper;
 
   @InjectMocks
   private AuthorityReindexJobRunner jobRunner;
@@ -52,8 +59,11 @@ class AuthorityReindexJobRunnerTest {
     expectedDto.setNaturalId("10");
     expectedDto.setSubjectHeadings("a");
 
+    var authorityEntity = new Authority();
+
     when(jdbcTemplate.queryForObject(any(), eq(Integer.class))).thenReturn(1);
-    when(jdbcTemplate.queryForStream(anyString(), any())).thenReturn(Stream.of(expectedDto));
+    when(jdbcTemplate.queryForStream(anyString(), any())).thenReturn(Stream.of(authorityEntity));
+    when(mapper.toDto(authorityEntity)).thenReturn(expectedDto);
     var authorityCaptor = ArgumentCaptor.forClass(AuthorityDto.class);
     var progressCaptor = ArgumentCaptor.forClass(ReindexJobProgressTracker.class);
     var jobIdCaptor = ArgumentCaptor.forClass(UUID.class);

@@ -4,8 +4,10 @@ import static org.folio.entlinks.exception.type.ErrorType.VALIDATION_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import java.util.Collections;
 import java.util.List;
@@ -25,14 +27,17 @@ import org.folio.entlinks.exception.ReindexJobNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.exception.ResourceNotFoundException;
 import org.folio.entlinks.exception.type.ErrorType;
+import org.folio.entlinks.utils.ConstraintViolationResolver;
 import org.folio.spring.cql.CqlQueryValidationException;
+import org.folio.spring.testing.type.UnitTest;
+import org.folio.tenant.domain.dto.Error;
 import org.folio.tenant.domain.dto.Errors;
 import org.folio.tenant.domain.dto.Parameter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.MockedStatic;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.NonTransientDataAccessException;
@@ -48,6 +53,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+@UnitTest
 class ApiErrorHandlerTest {
   private static final String TEST_ERROR_MESSAGE = "Test error message";
   private static final String FIELD_NAME = "fieldName";
@@ -236,26 +242,28 @@ class ApiErrorHandlerTest {
     assertErrorResponse(exception, VALIDATION_ERROR, HttpStatus.BAD_REQUEST, responseEntity, exception.getMessage());
   }
 
-  @ParameterizedTest
-  @MethodSource("constraintViolationExceptionsProvider")
-  void handleConstraintViolationException_ReturnsBadRequestResponse(
-      ConstraintViolationException exception, String expectedMessage) {
-    // Act
-    ResponseEntity<Errors> responseEntity = apiErrorHandler.handleConstraintViolationException(exception);
+  @Test
+  @SuppressWarnings("unchecked")
+  void handleConstraintViolationException_ReturnsBadRequestResponse() {
+    var violation = mock(ConstraintViolation.class);
+    var exception = mock(ConstraintViolationException.class);
+    when(exception.getConstraintViolations()).thenReturn(Set.of(violation));
+    var expectedError = new Error(TEST_ERROR_MESSAGE).type("type").code("code");
 
-    // Assert
-    assertNotNull(responseEntity);
-    assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    try (MockedStatic<ConstraintViolationResolver> cvr = mockStatic(ConstraintViolationResolver.class)) {
+      cvr.when(() -> ConstraintViolationResolver.toError(violation)).thenReturn(expectedError);
 
-    Errors errors = responseEntity.getBody();
-    assertNotNull(errors);
-    assertEquals(1, errors.getTotalRecords());
-    assertEquals(1, errors.getErrors().size());
+      // Act
+      ResponseEntity<Errors> responseEntity = apiErrorHandler.handleConstraintViolationException(exception);
 
-    var error = errors.getErrors().getFirst();
-    assertEquals(expectedMessage, error.getMessage());
-    assertEquals(exception.getClass().getSimpleName(), error.getType());
-    assertEquals(VALIDATION_ERROR.getValue(), error.getCode());
+      // Assert
+      assertNotNull(responseEntity);
+      assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+      var errors = responseEntity.getBody();
+      assertNotNull(errors);
+      assertEquals(1, errors.getTotalRecords());
+      assertEquals(List.of(expectedError), errors.getErrors());
+    }
   }
 
   @Test
@@ -309,22 +317,6 @@ class ApiErrorHandlerTest {
       mock(DataIntegrityViolationException.class),
       mock(InvalidDataAccessApiUsageException.class)
     );
-  }
-
-  private static Stream<Arguments> constraintViolationExceptionsProvider() {
-    return Stream.of(
-        Arguments.of(constraintViolationException("offset: must be greater than or equal to 0"),
-            "offset: must be greater than or equal to 0"),
-        Arguments.of(constraintViolationException("limit: must be less than or equal to 2000"),
-            "limit: must be less than or equal to 2000")
-    );
-  }
-
-  private static ConstraintViolationException constraintViolationException(String message) {
-    var exception = mock(ConstraintViolationException.class);
-    when(exception.getMessage()).thenReturn(message);
-    when(exception.getConstraintViolations()).thenReturn(Set.of());
-    return exception;
   }
 
   private static CqlQueryValidationException cqlQueryValidationException() {

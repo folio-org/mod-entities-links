@@ -41,7 +41,7 @@
          causing "not a repeatable annotation" compile errors. Bump once the opt-out config option
          generateJsonIncludeAnnotations from https://github.com/OpenAPITools/openapi-generator/pull/24428
          is released (merged but not yet in a release). -->
-    <maven-openapi-generator-plugin.version>7.24.0</maven-openapi-generator-plugin.version>
+    <maven-openapi-generator-plugin.version>7.23.0</maven-openapi-generator-plugin.version>
     <maven-copy-rename-plugin.version>1.0.1</maven-copy-rename-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <folio-java-checkstyle.version>1.2.0</folio-java-checkstyle.version>

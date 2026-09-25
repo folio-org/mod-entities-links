@@ -3,6 +3,7 @@ package org.folio.entlinks.integration.kafka;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomStringUtils.insecure;
+import static org.folio.spring.integration.XOkapiHeaders.URL;
 import static org.folio.support.MockingTestUtils.mockBatchFailedHandling;
 import static org.folio.support.MockingTestUtils.mockBatchSuccessHandling;
 import static org.folio.support.TestDataUtils.report;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
@@ -119,5 +121,32 @@ class LinkUpdateReportEventListenerTest {
     listener.handleEvents(consumerRecords);
 
     verifyNoInteractions(linkingService);
+  }
+
+  @Test
+  void shouldPassUrlHeaderOfFirstRecordToContext() {
+    var jobId = UUID.randomUUID();
+    var consumerRecords = KafkaTestUtils.consumerRecords(
+      List.of(report(TENANT_ID, jobId), report(TENANT_ID, jobId)));
+    consumerRecords.getFirst().headers().add(URL, "http://localhost:8081".getBytes());
+    consumerRecords.getLast().headers().add(URL, "http://other:8081".getBytes());
+
+    mockBatchSuccessHandling(messageBatchProcessor);
+
+    listener.handleEvents(consumerRecords);
+
+    verify(executionService).execute(eq(TENANT_ID), eq(Map.of(URL, List.of("http://localhost:8081"))),
+      any(Callable.class));
+  }
+
+  @Test
+  void shouldPassEmptyHeadersToContextWhenNoUrlHeader() {
+    var consumerRecords = KafkaTestUtils.consumerRecords(List.of(report(TENANT_ID, UUID.randomUUID())));
+
+    mockBatchSuccessHandling(messageBatchProcessor);
+
+    listener.handleEvents(consumerRecords);
+
+    verify(executionService).execute(eq(TENANT_ID), eq(Map.of()), any(Callable.class));
   }
 }

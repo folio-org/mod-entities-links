@@ -1,8 +1,15 @@
 package org.folio.entlinks.integration.kafka;
 
+import static org.folio.entlinks.utils.HeaderUtils.extractHeaderValue;
+import static org.folio.spring.integration.XOkapiHeaders.URL;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.integration.internal.MarcSpecificationUpdateService;
 import org.folio.rspec.domain.dto.Family;
 import org.folio.rspec.domain.dto.FamilyProfile;
@@ -24,10 +31,13 @@ public class SpecificationChangedEventListener {
                  topicPattern = "#{folioKafkaProperties.listener['specification-storage'].topicPattern}",
                  groupId = "#{folioKafkaProperties.listener['specification-storage'].groupId}",
                  concurrency = "#{folioKafkaProperties.listener['specification-storage'].concurrency}")
-  public void handleEvent(SpecificationUpdatedEvent event) {
+  public void handleEvent(ConsumerRecord<String, SpecificationUpdatedEvent> consumerRecord) {
+    var event = consumerRecord.value();
     log.info("Processing specification changed Kafka event [{}]", event);
     if (isMarcBibSpecFullUpdateExtent(event)) {
-      executionService.execute(event.tenantId(), Map.of(), () -> {
+      Map<String, Collection<String>> headers = new HashMap<>();
+      extractHeaderValue(URL, consumerRecord.headers()).ifPresent(url -> headers.put(URL, List.of(url)));
+      executionService.execute(event.tenantId(), headers, () -> {
         updateService.sendSpecificationRequests();
         return null;
       });

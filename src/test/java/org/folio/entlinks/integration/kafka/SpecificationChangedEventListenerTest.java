@@ -6,6 +6,7 @@ import static org.folio.rspec.domain.dto.FamilyProfile.AUTHORITY;
 import static org.folio.rspec.domain.dto.FamilyProfile.BIBLIOGRAPHIC;
 import static org.folio.rspec.domain.dto.SpecificationUpdatedEvent.UpdateExtent.FULL;
 import static org.folio.rspec.domain.dto.SpecificationUpdatedEvent.UpdateExtent.PARTIAL;
+import static org.folio.spring.integration.XOkapiHeaders.URL;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -14,7 +15,10 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.integration.internal.MarcSpecificationUpdateService;
 import org.folio.rspec.domain.dto.SpecificationUpdatedEvent;
 import org.folio.spring.scope.FolioExecutionContextService;
@@ -44,7 +48,7 @@ class SpecificationChangedEventListenerTest {
   void handleEvent_positive_skipPartialUpdateEvents() {
     var event = new SpecificationUpdatedEvent(randomUUID(), TENANT_ID, MARC, BIBLIOGRAPHIC, PARTIAL);
 
-    listener.handleEvent(event);
+    listener.handleEvent(new ConsumerRecord<>("topic", 0, 0, "key", event));
 
     verifyNoInteractions(executionService);
     verifyNoInteractions(updateService);
@@ -54,7 +58,7 @@ class SpecificationChangedEventListenerTest {
   void handleEvent_positive_skipFullAuthorityUpdateEvents() {
     var event = new SpecificationUpdatedEvent(randomUUID(), TENANT_ID, MARC, AUTHORITY, FULL);
 
-    listener.handleEvent(event);
+    listener.handleEvent(new ConsumerRecord<>("topic", 0, 0, "key", event));
 
     verifyNoInteractions(executionService);
     verifyNoInteractions(updateService);
@@ -64,9 +68,31 @@ class SpecificationChangedEventListenerTest {
   void handleEvent_positive_callUpdateService() {
     var event = new SpecificationUpdatedEvent(randomUUID(), TENANT_ID, MARC, BIBLIOGRAPHIC, FULL);
 
-    listener.handleEvent(event);
+    listener.handleEvent(new ConsumerRecord<>("topic", 0, 0, "key", event));
 
     verify(executionService).execute(eq(TENANT_ID), anyMap(), any(Callable.class));
     verify(updateService).sendSpecificationRequests();
+  }
+
+  @Test
+  void handleEvent_positive_passUrlHeaderToContext() {
+    var event = new SpecificationUpdatedEvent(randomUUID(), TENANT_ID, MARC, BIBLIOGRAPHIC, FULL);
+    var consumerRecord = new ConsumerRecord<>("topic", 0, 0, "key", event);
+    consumerRecord.headers().add(URL, "http://localhost:8081".getBytes());
+
+    listener.handleEvent(consumerRecord);
+
+    verify(executionService).execute(eq(TENANT_ID), eq(Map.of(URL, List.of("http://localhost:8081"))),
+      any(Callable.class));
+    verify(updateService).sendSpecificationRequests();
+  }
+
+  @Test
+  void handleEvent_positive_passEmptyHeadersToContextWhenNoUrlHeader() {
+    var event = new SpecificationUpdatedEvent(randomUUID(), TENANT_ID, MARC, BIBLIOGRAPHIC, FULL);
+
+    listener.handleEvent(new ConsumerRecord<>("topic", 0, 0, "key", event));
+
+    verify(executionService).execute(eq(TENANT_ID), eq(Map.of()), any(Callable.class));
   }
 }

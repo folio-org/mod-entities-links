@@ -17,6 +17,7 @@
 * Add validation for Authority record creation during Data Import ([MODELINKS-417](https://folio-org.atlassian.net/browse/MODELINKS-417))
 * Fix x-fqm-source/x-fqm-value-source-api conflicts for fqm ([MODELINKS-429](https://folio-org.atlassian.net/browse/MODELINKS-429))
 * Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))
+* Pass URL header from Kafka message into execution context ([MODELINKS-441](https://folio-org.atlassian.net/browse/MODELINKS-441))
 
 ### Tech Dept
 * Remove use of deprecated folio-spring-system-user ([MODELINKS-339](https://folio-org.atlassian.net/browse/MODELINKS-339))

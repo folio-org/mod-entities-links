@@ -1,7 +1,11 @@
 package org.folio.entlinks.integration.kafka;
 
+import static org.folio.entlinks.utils.HeaderUtils.extractHeaderValue;
+import static org.folio.spring.integration.XOkapiHeaders.URL;
 import static org.folio.spring.tools.config.RetryTemplateConfiguration.DEFAULT_KAFKA_RETRY_TEMPLATE_NAME;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,13 +38,16 @@ public class LinkUpdateReportEventListener {
     log.info("Processing stats from Kafka events [number of records: {}]", consumerRecords.size());
 
     consumerRecords.stream()
-      .map(ConsumerRecord::value)
-      .collect(Collectors.groupingBy(LinkUpdateReport::getTenant))
+      .collect(Collectors.groupingBy(consumerRecord -> consumerRecord.value().getTenant()))
       .forEach(this::handleReportEventsForTenant);
   }
 
-  private void handleReportEventsForTenant(String tenant, List<LinkUpdateReport> events) {
-    executionService.execute(tenant, Map.of(), () -> {
+  private void handleReportEventsForTenant(String tenant,
+                                           List<ConsumerRecord<String, LinkUpdateReport>> records) {
+    Map<String, Collection<String>> headers = new HashMap<>();
+    extractHeaderValue(URL, records.getFirst().headers()).ifPresent(url -> headers.put(URL, List.of(url)));
+    var events = records.stream().map(ConsumerRecord::value).toList();
+    executionService.execute(tenant, headers, () -> {
       log.info("Triggering updates for stats records [tenant: {}, number of records: {}]", tenant, events.size());
       messageBatchProcessor.consumeBatchWithFallback(events, DEFAULT_KAFKA_RETRY_TEMPLATE_NAME,
         this::handleReportEventsByJobId, this::logFailedEvent);

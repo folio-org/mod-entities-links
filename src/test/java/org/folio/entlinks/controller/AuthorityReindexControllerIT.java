@@ -22,11 +22,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.UnsupportedEncodingException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.controller.converter.ReindexJobMapper;
@@ -44,7 +46,6 @@ import org.folio.support.TestDataUtils;
 import org.folio.support.base.IntegrationTestBase;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -135,7 +136,7 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
 
     tryPost(authorityReindexEndpoint(), null).andExpect(status().isCreated());
 
-    var receivedEvents = List.of(getReceivedEvent(), getReceivedEvent(), getReceivedEvent());
+    var receivedEvents = awaitReindexEventsFor(dtos);
     verifyReceivedEvents(receivedEvents, dtos);
     assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_REINDEX_JOB_TABLE, TENANT_ID));
     awaitUntilAsserted(() ->
@@ -198,15 +199,36 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
 
   private void verifyReceivedEvents(List<ConsumerRecord<String, AuthorityDomainEvent>> receivedEvents,
                                     List<AuthorityDto> dtos) {
+    assertThat(receivedEvents).hasSameSizeAs(dtos);
     for (var receivedEvent : receivedEvents) {
-      dtos.stream()
-        .filter(dto -> dto.getId().toString().equals(receivedEvent.key()))
+      var dto = dtos.stream()
+        .filter(d -> d.getId().toString().equals(receivedEvent.key()))
         .findFirst()
-        .ifPresentOrElse(
-          dto -> verifyConsumedAuthorityEvent(receivedEvent, DomainEventType.REINDEX, dto),
-          Assertions::fail
-        );
+        .orElseThrow();
+      verifyConsumedAuthorityEvent(receivedEvent, DomainEventType.REINDEX, dto);
     }
+  }
+
+  /**
+   * Collects REINDEX events for the expected authorities, ignoring unrelated records that may be present on the
+   * shared topic (e.g. leftovers from previously executed tests).
+   */
+  private List<ConsumerRecord<String, AuthorityDomainEvent>> awaitReindexEventsFor(List<AuthorityDto> dtos) {
+    var expectedIds = dtos.stream().map(dto -> dto.getId().toString()).collect(Collectors.toSet());
+    var found = new LinkedHashMap<String, ConsumerRecord<String, AuthorityDomainEvent>>();
+    var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+    while (found.size() < expectedIds.size() && System.nanoTime() < deadline) {
+      var receivedEvent = getReceivedEvent();
+      if (receivedEvent != null && expectedIds.contains(receivedEvent.key()) && isReindexEvent(receivedEvent)) {
+        found.put(receivedEvent.key(), receivedEvent);
+      }
+    }
+    return List.copyOf(found.values());
+  }
+
+  private boolean isReindexEvent(ConsumerRecord<String, AuthorityDomainEvent> consumerRecord) {
+    var header = consumerRecord.headers().lastHeader(DOMAIN_EVENT_HEADER_KEY);
+    return header != null && DomainEventType.REINDEX.name().equals(new String(header.value()));
   }
 
   private ReindexJob createReindexJob() {
